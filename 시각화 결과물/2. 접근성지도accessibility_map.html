@@ -1,0 +1,3370 @@
+<!DOCTYPE html>
+<html>
+<head>
+    
+    <meta http-equiv="content-type" content="text/html; charset=UTF-8" />
+    <script src="https://cdn.jsdelivr.net/npm/leaflet@1.9.3/dist/leaflet.js"></script>
+    <script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.2.2/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/Leaflet.awesome-markers/2.0.2/leaflet.awesome-markers.js"></script>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/leaflet@1.9.3/dist/leaflet.css"/>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.2.2/dist/css/bootstrap.min.css"/>
+    <link rel="stylesheet" href="https://netdna.bootstrapcdn.com/bootstrap/3.0.0/css/bootstrap-glyphicons.css"/>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free@6.2.0/css/all.min.css"/>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/Leaflet.awesome-markers/2.0.2/leaflet.awesome-markers.css"/>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/python-visualization/folium/folium/templates/leaflet.awesome.rotate.min.css"/>
+    
+            <meta name="viewport" content="width=device-width,
+                initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+            <style>
+                #map_756d00aed9a3375ed0e7d5a3db7186e0 {
+                    position: relative;
+                    width: 100.0%;
+                    height: 100.0%;
+                    left: 0.0%;
+                    top: 0.0%;
+                }
+                .leaflet-container { font-size: 1rem; }
+            </style>
+
+            <style>html, body {
+                width: 100%;
+                height: 100%;
+                margin: 0;
+                padding: 0;
+            }
+            </style>
+
+            <style>#map {
+                position:absolute;
+                top:0;
+                bottom:0;
+                right:0;
+                left:0;
+                }
+            </style>
+
+            <script>
+                L_NO_TOUCH = false;
+                L_DISABLE_3D = false;
+            </script>
+
+        
+</head>
+<body>
+    
+    
+        <div style="position: fixed; 
+                    top: 10px; right: 10px; width: 250px; height: auto; 
+                    background-color: white; z-index:9999; font-size:14px;
+                    border:2px solid grey; border-radius: 5px; padding: 10px">
+            <h4>접근 가능한 위탁병원</h4>
+            <p>총 65개 병원</p>
+            <p>10km 이내: 9개</p>
+            <p>30km 이내: 23개</p>
+            <p>가장 가까운 병원: 김안과의원</p>
+        </div>
+        
+    
+            <div class="folium-map" id="map_756d00aed9a3375ed0e7d5a3db7186e0" ></div>
+        
+</body>
+<script>
+    
+    
+            var map_756d00aed9a3375ed0e7d5a3db7186e0 = L.map(
+                "map_756d00aed9a3375ed0e7d5a3db7186e0",
+                {
+                    center: [36.6284, 127.4573],
+                    crs: L.CRS.EPSG3857,
+                    ...{
+  "zoom": 10,
+  "zoomControl": true,
+  "preferCanvas": false,
+}
+
+                }
+            );
+
+            
+
+        
+    
+            var tile_layer_c1731514741cd47b908c3a26dcd8a95d = L.tileLayer(
+                "https://tile.openstreetmap.org/{z}/{x}/{y}.png",
+                {
+  "minZoom": 0,
+  "maxZoom": 19,
+  "maxNativeZoom": 19,
+  "noWrap": false,
+  "attribution": "\u0026copy; \u003ca href=\"https://www.openstreetmap.org/copyright\"\u003eOpenStreetMap\u003c/a\u003e contributors",
+  "subdomains": "abc",
+  "detectRetina": false,
+  "tms": false,
+  "opacity": 1,
+}
+
+            );
+        
+    
+            tile_layer_c1731514741cd47b908c3a26dcd8a95d.addTo(map_756d00aed9a3375ed0e7d5a3db7186e0);
+        
+    
+            var marker_301f3f7ca91533831d6adbf1fe95bf94 = L.marker(
+                [36.6284, 127.4573],
+                {
+}
+            ).addTo(map_756d00aed9a3375ed0e7d5a3db7186e0);
+        
+    
+            var icon_86917002533a906e85fc348c5946eb7d = L.AwesomeMarkers.icon(
+                {
+  "markerColor": "black",
+  "iconColor": "white",
+  "icon": "home",
+  "prefix": "glyphicon",
+  "extraClasses": "fa-rotate-0",
+}
+            );
+        
+    
+        var popup_227275a01a970ca76e2556684e19e622 = L.popup({
+  "maxWidth": "100%",
+});
+
+        
+            
+                var html_ec2c162f3a032bf66b215a7e956309e9 = $(`<div id="html_ec2c162f3a032bf66b215a7e956309e9" style="width: 100.0%; height: 100.0%;">현재 위치</div>`)[0];
+                popup_227275a01a970ca76e2556684e19e622.setContent(html_ec2c162f3a032bf66b215a7e956309e9);
+            
+        
+
+        marker_301f3f7ca91533831d6adbf1fe95bf94.bindPopup(popup_227275a01a970ca76e2556684e19e622)
+        ;
+
+        
+    
+    
+                marker_301f3f7ca91533831d6adbf1fe95bf94.setIcon(icon_86917002533a906e85fc348c5946eb7d);
+            
+    
+            var marker_d70c730a0bb52f8321402c67a8da1c66 = L.marker(
+                [36.63445556, 127.4571483],
+                {
+}
+            ).addTo(map_756d00aed9a3375ed0e7d5a3db7186e0);
+        
+    
+            var icon_a097416a90df7c9e4c5f7548a0f61189 = L.AwesomeMarkers.icon(
+                {
+  "markerColor": "green",
+  "iconColor": "white",
+  "icon": "hospital-o",
+  "prefix": "fa",
+  "extraClasses": "fa-rotate-0",
+}
+            );
+        
+    
+        var popup_2663e05599568875c919ed6cf44c490d = L.popup({
+  "maxWidth": 300,
+});
+
+        
+            
+                var html_e3adc10b5fd594c519dae65e76d839b2 = $(`<div id="html_e3adc10b5fd594c519dae65e76d839b2" style="width: 100.0%; height: 100.0%;">             <div style="font-family: Arial, sans-serif; width: 250px;">                 <h4>김안과의원</h4>                 <p><b>거리:</b> 0.7km</p>                 <p><b>종별:</b> 의원</p>                 <p><b>병상수:</b> 2개</p>                 <p><b>진료과수:</b> 1개</p>                 <p><b>주소:</b> 서원구 사직대로 88</p>                 <p><b>전화:</b> 043-268-4131</p>             </div>             </div>`)[0];
+                popup_2663e05599568875c919ed6cf44c490d.setContent(html_e3adc10b5fd594c519dae65e76d839b2);
+            
+        
+
+        marker_d70c730a0bb52f8321402c67a8da1c66.bindPopup(popup_2663e05599568875c919ed6cf44c490d)
+        ;
+
+        
+    
+    
+            marker_d70c730a0bb52f8321402c67a8da1c66.bindTooltip(
+                `<div>
+                     1. 김안과의원 (0.7km)
+                 </div>`,
+                {
+  "sticky": true,
+}
+            );
+        
+    
+                marker_d70c730a0bb52f8321402c67a8da1c66.setIcon(icon_a097416a90df7c9e4c5f7548a0f61189);
+            
+    
+            var poly_line_7a8d9c7da3952c667afd0499103f7311 = L.polyline(
+                [[36.6284, 127.4573], [36.63445556, 127.4571483]],
+                {"bubblingMouseEvents": true, "color": "blue", "dashArray": "5, 10", "dashOffset": null, "fill": false, "fillColor": "blue", "fillOpacity": 0.2, "fillRule": "evenodd", "lineCap": "round", "lineJoin": "round", "noClip": false, "opacity": 1.0, "smoothFactor": 1.0, "stroke": true, "weight": 3}
+            ).addTo(map_756d00aed9a3375ed0e7d5a3db7186e0);
+        
+    
+            var marker_3bebb5d4f040b910ab403420dc5ec023 = L.marker(
+                [36.63631074, 127.4529084],
+                {
+}
+            ).addTo(map_756d00aed9a3375ed0e7d5a3db7186e0);
+        
+    
+            var icon_e17972458c7f663ed8fa6951119f1ae5 = L.AwesomeMarkers.icon(
+                {
+  "markerColor": "darkred",
+  "iconColor": "white",
+  "icon": "hospital-o",
+  "prefix": "fa",
+  "extraClasses": "fa-rotate-0",
+}
+            );
+        
+    
+        var popup_1cebef558e652300a7c39fd81fba79d5 = L.popup({
+  "maxWidth": 300,
+});
+
+        
+            
+                var html_546801bf66afe9d480850a21303fabe9 = $(`<div id="html_546801bf66afe9d480850a21303fabe9" style="width: 100.0%; height: 100.0%;">             <div style="font-family: Arial, sans-serif; width: 250px;">                 <h4>청주원광효도요양병원</h4>                 <p><b>거리:</b> 1.0km</p>                 <p><b>종별:</b> 요양병원</p>                 <p><b>병상수:</b> 303개</p>                 <p><b>진료과수:</b> 7개</p>                 <p><b>주소:</b> 흥덕구 월명로 15 (복대동) 원광효도요양병원</p>                 <p><b>전화:</b> 043-267-0301</p>             </div>             </div>`)[0];
+                popup_1cebef558e652300a7c39fd81fba79d5.setContent(html_546801bf66afe9d480850a21303fabe9);
+            
+        
+
+        marker_3bebb5d4f040b910ab403420dc5ec023.bindPopup(popup_1cebef558e652300a7c39fd81fba79d5)
+        ;
+
+        
+    
+    
+            marker_3bebb5d4f040b910ab403420dc5ec023.bindTooltip(
+                `<div>
+                     2. 청주원광효도요양병원 (1.0km)
+                 </div>`,
+                {
+  "sticky": true,
+}
+            );
+        
+    
+                marker_3bebb5d4f040b910ab403420dc5ec023.setIcon(icon_e17972458c7f663ed8fa6951119f1ae5);
+            
+    
+            var poly_line_1b2b1dda33bba8b972210ff66ad45b18 = L.polyline(
+                [[36.6284, 127.4573], [36.63631074, 127.4529084]],
+                {"bubblingMouseEvents": true, "color": "blue", "dashArray": "5, 10", "dashOffset": null, "fill": false, "fillColor": "blue", "fillOpacity": 0.2, "fillRule": "evenodd", "lineCap": "round", "lineJoin": "round", "noClip": false, "opacity": 1.0, "smoothFactor": 1.0, "stroke": true, "weight": 3}
+            ).addTo(map_756d00aed9a3375ed0e7d5a3db7186e0);
+        
+    
+            var marker_ba1d299d38969ebedff7ece5ece93867 = L.marker(
+                [36.63298759, 127.4246305],
+                {
+}
+            ).addTo(map_756d00aed9a3375ed0e7d5a3db7186e0);
+        
+    
+            var icon_813752261d5fa11d9457a30b6cee4b2b = L.AwesomeMarkers.icon(
+                {
+  "markerColor": "blue",
+  "iconColor": "white",
+  "icon": "hospital-o",
+  "prefix": "fa",
+  "extraClasses": "fa-rotate-0",
+}
+            );
+        
+    
+        var popup_37cbe9f4aa0c05af2b80375aaa12bddb = L.popup({
+  "maxWidth": 300,
+});
+
+        
+            
+                var html_fbea8c1df52aceab5fbfba225e48b012 = $(`<div id="html_fbea8c1df52aceab5fbfba225e48b012" style="width: 100.0%; height: 100.0%;">             <div style="font-family: Arial, sans-serif; width: 250px;">                 <h4>청주현대병원</h4>                 <p><b>거리:</b> 3.0km</p>                 <p><b>종별:</b> 병원</p>                 <p><b>병상수:</b> 185개</p>                 <p><b>진료과수:</b> 4개</p>                 <p><b>주소:</b> 흥덕구 비하로 65 (비하동, 현대병원)</p>                 <p><b>전화:</b> 043-237-2114</p>             </div>             </div>`)[0];
+                popup_37cbe9f4aa0c05af2b80375aaa12bddb.setContent(html_fbea8c1df52aceab5fbfba225e48b012);
+            
+        
+
+        marker_ba1d299d38969ebedff7ece5ece93867.bindPopup(popup_37cbe9f4aa0c05af2b80375aaa12bddb)
+        ;
+
+        
+    
+    
+            marker_ba1d299d38969ebedff7ece5ece93867.bindTooltip(
+                `<div>
+                     3. 청주현대병원 (3.0km)
+                 </div>`,
+                {
+  "sticky": true,
+}
+            );
+        
+    
+                marker_ba1d299d38969ebedff7ece5ece93867.setIcon(icon_813752261d5fa11d9457a30b6cee4b2b);
+            
+    
+            var poly_line_ba7b7da4b2c9e29ff0e673a06afefaf3 = L.polyline(
+                [[36.6284, 127.4573], [36.63298759, 127.4246305]],
+                {"bubblingMouseEvents": true, "color": "blue", "dashArray": "5, 10", "dashOffset": null, "fill": false, "fillColor": "blue", "fillOpacity": 0.2, "fillRule": "evenodd", "lineCap": "round", "lineJoin": "round", "noClip": false, "opacity": 1.0, "smoothFactor": 1.0, "stroke": true, "weight": 3}
+            ).addTo(map_756d00aed9a3375ed0e7d5a3db7186e0);
+        
+    
+            var marker_951bc763972caef451427a303cd9aca9 = L.marker(
+                [36.63500925, 127.4233743],
+                {
+}
+            ).addTo(map_756d00aed9a3375ed0e7d5a3db7186e0);
+        
+    
+            var icon_4b4da8f9c4d57e98f9461194f40c4093 = L.AwesomeMarkers.icon(
+                {
+  "markerColor": "green",
+  "iconColor": "white",
+  "icon": "hospital-o",
+  "prefix": "fa",
+  "extraClasses": "fa-rotate-0",
+}
+            );
+        
+    
+        var popup_539addd30846ae1e4f101323debeda4a = L.popup({
+  "maxWidth": 300,
+});
+
+        
+            
+                var html_88492f26486d82d1d3d463004ea2fbda = $(`<div id="html_88492f26486d82d1d3d463004ea2fbda" style="width: 100.0%; height: 100.0%;">             <div style="font-family: Arial, sans-serif; width: 250px;">                 <h4>청주웰치과의원</h4>                 <p><b>거리:</b> 3.1km</p>                 <p><b>종별:</b> 의원</p>                 <p><b>병상수:</b> 0개</p>                 <p><b>진료과수:</b> 7개</p>                 <p><b>주소:</b> 흥덕구 2순환로 1120, 3-5층</p>                 <p><b>전화:</b> 043-238-9201</p>             </div>             </div>`)[0];
+                popup_539addd30846ae1e4f101323debeda4a.setContent(html_88492f26486d82d1d3d463004ea2fbda);
+            
+        
+
+        marker_951bc763972caef451427a303cd9aca9.bindPopup(popup_539addd30846ae1e4f101323debeda4a)
+        ;
+
+        
+    
+    
+            marker_951bc763972caef451427a303cd9aca9.bindTooltip(
+                `<div>
+                     4. 청주웰치과의원 (3.1km)
+                 </div>`,
+                {
+  "sticky": true,
+}
+            );
+        
+    
+                marker_951bc763972caef451427a303cd9aca9.setIcon(icon_4b4da8f9c4d57e98f9461194f40c4093);
+            
+    
+            var poly_line_20ae9f943b22dda7083b8f407cfbcb98 = L.polyline(
+                [[36.6284, 127.4573], [36.63500925, 127.4233743]],
+                {"bubblingMouseEvents": true, "color": "blue", "dashArray": "5, 10", "dashOffset": null, "fill": false, "fillColor": "blue", "fillOpacity": 0.2, "fillRule": "evenodd", "lineCap": "round", "lineJoin": "round", "noClip": false, "opacity": 1.0, "smoothFactor": 1.0, "stroke": true, "weight": 3}
+            ).addTo(map_756d00aed9a3375ed0e7d5a3db7186e0);
+        
+    
+            var marker_9000db971e638b15c380d68b38a1bd56 = L.marker(
+                [36.62648419, 127.4930054],
+                {
+}
+            ).addTo(map_756d00aed9a3375ed0e7d5a3db7186e0);
+        
+    
+            var icon_bd831d25803beabdc311090d7bfc7882 = L.AwesomeMarkers.icon(
+                {
+  "markerColor": "green",
+  "iconColor": "white",
+  "icon": "hospital-o",
+  "prefix": "fa",
+  "extraClasses": "fa-rotate-0",
+}
+            );
+        
+    
+        var popup_156961cb170f21bfa9306390c4c75306 = L.popup({
+  "maxWidth": 300,
+});
+
+        
+            
+                var html_ad4e2a190666f15204a57443ca82cc0d = $(`<div id="html_ad4e2a190666f15204a57443ca82cc0d" style="width: 100.0%; height: 100.0%;">             <div style="font-family: Arial, sans-serif; width: 250px;">                 <h4>김영태신경외과의원</h4>                 <p><b>거리:</b> 3.2km</p>                 <p><b>종별:</b> 의원</p>                 <p><b>병상수:</b> 29개</p>                 <p><b>진료과수:</b> 7개</p>                 <p><b>주소:</b> 상당구 단재로 21-1 (석교동)</p>                 <p><b>전화:</b> 043-258-0173~4</p>             </div>             </div>`)[0];
+                popup_156961cb170f21bfa9306390c4c75306.setContent(html_ad4e2a190666f15204a57443ca82cc0d);
+            
+        
+
+        marker_9000db971e638b15c380d68b38a1bd56.bindPopup(popup_156961cb170f21bfa9306390c4c75306)
+        ;
+
+        
+    
+    
+            marker_9000db971e638b15c380d68b38a1bd56.bindTooltip(
+                `<div>
+                     5. 김영태신경외과의원 (3.2km)
+                 </div>`,
+                {
+  "sticky": true,
+}
+            );
+        
+    
+                marker_9000db971e638b15c380d68b38a1bd56.setIcon(icon_bd831d25803beabdc311090d7bfc7882);
+            
+    
+            var poly_line_a84dd285512df987cceb4f872eda67d6 = L.polyline(
+                [[36.6284, 127.4573], [36.62648419, 127.4930054]],
+                {"bubblingMouseEvents": true, "color": "blue", "dashArray": "5, 10", "dashOffset": null, "fill": false, "fillColor": "blue", "fillOpacity": 0.2, "fillRule": "evenodd", "lineCap": "round", "lineJoin": "round", "noClip": false, "opacity": 1.0, "smoothFactor": 1.0, "stroke": true, "weight": 3}
+            ).addTo(map_756d00aed9a3375ed0e7d5a3db7186e0);
+        
+    
+            var marker_5b6b9f6f6ebc071ddc3a74d1c74c26da = L.marker(
+                [36.62430556, 127.4956806],
+                {
+}
+            ).addTo(map_756d00aed9a3375ed0e7d5a3db7186e0);
+        
+    
+            var icon_855a12c743e454eeb2c9755f63d021ba = L.AwesomeMarkers.icon(
+                {
+  "markerColor": "red",
+  "iconColor": "white",
+  "icon": "hospital-o",
+  "prefix": "fa",
+  "extraClasses": "fa-rotate-0",
+}
+            );
+        
+    
+        var popup_76e9d95ecec6bc2b2ecb83c837539b4b = L.popup({
+  "maxWidth": 300,
+});
+
+        
+            
+                var html_0ae33ab4d4ba556f6063f986036ed51a = $(`<div id="html_0ae33ab4d4ba556f6063f986036ed51a" style="width: 100.0%; height: 100.0%;">             <div style="font-family: Arial, sans-serif; width: 250px;">                 <h4>효성병원</h4>                 <p><b>거리:</b> 3.5km</p>                 <p><b>종별:</b> 종합병원</p>                 <p><b>병상수:</b> 360개</p>                 <p><b>진료과수:</b> 31개</p>                 <p><b>주소:</b> 상당구 쇠내로 16</p>                 <p><b>전화:</b> 043-221-5000</p>             </div>             </div>`)[0];
+                popup_76e9d95ecec6bc2b2ecb83c837539b4b.setContent(html_0ae33ab4d4ba556f6063f986036ed51a);
+            
+        
+
+        marker_5b6b9f6f6ebc071ddc3a74d1c74c26da.bindPopup(popup_76e9d95ecec6bc2b2ecb83c837539b4b)
+        ;
+
+        
+    
+    
+            marker_5b6b9f6f6ebc071ddc3a74d1c74c26da.bindTooltip(
+                `<div>
+                     6. 효성병원 (3.5km)
+                 </div>`,
+                {
+  "sticky": true,
+}
+            );
+        
+    
+                marker_5b6b9f6f6ebc071ddc3a74d1c74c26da.setIcon(icon_855a12c743e454eeb2c9755f63d021ba);
+            
+    
+            var marker_bd61b774c2edb001e6be4a1bc7786161 = L.marker(
+                [36.60079141, 127.4785421],
+                {
+}
+            ).addTo(map_756d00aed9a3375ed0e7d5a3db7186e0);
+        
+    
+            var icon_b77ea28158e6dab08b31ffc4b4685ebb = L.AwesomeMarkers.icon(
+                {
+  "markerColor": "darkred",
+  "iconColor": "white",
+  "icon": "hospital-o",
+  "prefix": "fa",
+  "extraClasses": "fa-rotate-0",
+}
+            );
+        
+    
+        var popup_47ef48b8ca317eb50d6360daa8e6e009 = L.popup({
+  "maxWidth": 300,
+});
+
+        
+            
+                var html_3f0a9a54567a066b8964367983aeca09 = $(`<div id="html_3f0a9a54567a066b8964367983aeca09" style="width: 100.0%; height: 100.0%;">             <div style="font-family: Arial, sans-serif; width: 250px;">                 <h4>의료법인 하람의료재단 청주탑요양병원</h4>                 <p><b>거리:</b> 3.6km</p>                 <p><b>종별:</b> 요양병원</p>                 <p><b>병상수:</b> 295개</p>                 <p><b>진료과수:</b> 5개</p>                 <p><b>주소:</b> 서원구 궁뜰로 16 (미평동) 청주탑요양병원</p>                 <p><b>전화:</b> 043-296-5000</p>             </div>             </div>`)[0];
+                popup_47ef48b8ca317eb50d6360daa8e6e009.setContent(html_3f0a9a54567a066b8964367983aeca09);
+            
+        
+
+        marker_bd61b774c2edb001e6be4a1bc7786161.bindPopup(popup_47ef48b8ca317eb50d6360daa8e6e009)
+        ;
+
+        
+    
+    
+            marker_bd61b774c2edb001e6be4a1bc7786161.bindTooltip(
+                `<div>
+                     7. 의료법인 하람의료재단 청주탑요양병원 (3.6km)
+                 </div>`,
+                {
+  "sticky": true,
+}
+            );
+        
+    
+                marker_bd61b774c2edb001e6be4a1bc7786161.setIcon(icon_b77ea28158e6dab08b31ffc4b4685ebb);
+            
+    
+            var marker_a1081d30f4153884df02a2d8eb24d891 = L.marker(
+                [36.6208185, 127.5154362],
+                {
+}
+            ).addTo(map_756d00aed9a3375ed0e7d5a3db7186e0);
+        
+    
+            var icon_fb4a24d81432089b150fd5ea9ae59b40 = L.AwesomeMarkers.icon(
+                {
+  "markerColor": "green",
+  "iconColor": "white",
+  "icon": "hospital-o",
+  "prefix": "fa",
+  "extraClasses": "fa-rotate-0",
+}
+            );
+        
+    
+        var popup_81f068501a9e6074641ce9417bac9d3d = L.popup({
+  "maxWidth": 300,
+});
+
+        
+            
+                var html_4577c559cf3fa480ad90074d0de292c8 = $(`<div id="html_4577c559cf3fa480ad90074d0de292c8" style="width: 100.0%; height: 100.0%;">             <div style="font-family: Arial, sans-serif; width: 250px;">                 <h4>서울아산비뇨의학과의원</h4>                 <p><b>거리:</b> 5.3km</p>                 <p><b>종별:</b> 의원</p>                 <p><b>병상수:</b> 1개</p>                 <p><b>진료과수:</b> 2개</p>                 <p><b>주소:</b> 상당구 중고개로 180-5, 3층</p>                 <p><b>전화:</b> 043-286-8253</p>             </div>             </div>`)[0];
+                popup_81f068501a9e6074641ce9417bac9d3d.setContent(html_4577c559cf3fa480ad90074d0de292c8);
+            
+        
+
+        marker_a1081d30f4153884df02a2d8eb24d891.bindPopup(popup_81f068501a9e6074641ce9417bac9d3d)
+        ;
+
+        
+    
+    
+            marker_a1081d30f4153884df02a2d8eb24d891.bindTooltip(
+                `<div>
+                     8. 서울아산비뇨의학과의원 (5.3km)
+                 </div>`,
+                {
+  "sticky": true,
+}
+            );
+        
+    
+                marker_a1081d30f4153884df02a2d8eb24d891.setIcon(icon_fb4a24d81432089b150fd5ea9ae59b40);
+            
+    
+            var marker_26044d3c5ee5348b126e0e027e9b4043 = L.marker(
+                [36.71476849, 127.4277055],
+                {
+}
+            ).addTo(map_756d00aed9a3375ed0e7d5a3db7186e0);
+        
+    
+            var icon_748bf8b88b727a95d25cf2a78eb3ba8a = L.AwesomeMarkers.icon(
+                {
+  "markerColor": "blue",
+  "iconColor": "white",
+  "icon": "hospital-o",
+  "prefix": "fa",
+  "extraClasses": "fa-rotate-0",
+}
+            );
+        
+    
+        var popup_f14c21e3cd7c4d5772e760060b421c56 = L.popup({
+  "maxWidth": 300,
+});
+
+        
+            
+                var html_e5daf2bc5fe44f0084a2eaf4fae1de29 = $(`<div id="html_e5daf2bc5fe44f0084a2eaf4fae1de29" style="width: 100.0%; height: 100.0%;">             <div style="font-family: Arial, sans-serif; width: 250px;">                 <h4>의)라온의료재단오창호수병원</h4>                 <p><b>거리:</b> 9.9km</p>                 <p><b>종별:</b> 병원</p>                 <p><b>병상수:</b> 124개</p>                 <p><b>진료과수:</b> 3개</p>                 <p><b>주소:</b> 청원구 오창읍 중심상업1로 54</p>                 <p><b>전화:</b> 043-214-1004</p>             </div>             </div>`)[0];
+                popup_f14c21e3cd7c4d5772e760060b421c56.setContent(html_e5daf2bc5fe44f0084a2eaf4fae1de29);
+            
+        
+
+        marker_26044d3c5ee5348b126e0e027e9b4043.bindPopup(popup_f14c21e3cd7c4d5772e760060b421c56)
+        ;
+
+        
+    
+    
+            marker_26044d3c5ee5348b126e0e027e9b4043.bindTooltip(
+                `<div>
+                     9. 의)라온의료재단오창호수병원 (9.9km)
+                 </div>`,
+                {
+  "sticky": true,
+}
+            );
+        
+    
+                marker_26044d3c5ee5348b126e0e027e9b4043.setIcon(icon_748bf8b88b727a95d25cf2a78eb3ba8a);
+            
+    
+            var marker_c5b6a286189b9ab7cb824e4ce60e4c9c = L.marker(
+                [36.6023235, 127.3035272],
+                {
+}
+            ).addTo(map_756d00aed9a3375ed0e7d5a3db7186e0);
+        
+    
+            var icon_e39ea231baef9a116d1c5ec7601297d3 = L.AwesomeMarkers.icon(
+                {
+  "markerColor": "green",
+  "iconColor": "white",
+  "icon": "hospital-o",
+  "prefix": "fa",
+  "extraClasses": "fa-rotate-0",
+}
+            );
+        
+    
+        var popup_5f87d6d94b12e7f4e542757bd74a9c1f = L.popup({
+  "maxWidth": 300,
+});
+
+        
+            
+                var html_9653f31c31de2231fa99c9802d8ece04 = $(`<div id="html_9653f31c31de2231fa99c9802d8ece04" style="width: 100.0%; height: 100.0%;">             <div style="font-family: Arial, sans-serif; width: 250px;">                 <h4>장현진정형외과의원</h4>                 <p><b>거리:</b> 14.1km</p>                 <p><b>종별:</b> 의원</p>                 <p><b>병상수:</b> 0개</p>                 <p><b>진료과수:</b> 8개</p>                 <p><b>주소:</b> 조치원로 62-1</p>                 <p><b>전화:</b> 044-863-1150</p>             </div>             </div>`)[0];
+                popup_5f87d6d94b12e7f4e542757bd74a9c1f.setContent(html_9653f31c31de2231fa99c9802d8ece04);
+            
+        
+
+        marker_c5b6a286189b9ab7cb824e4ce60e4c9c.bindPopup(popup_5f87d6d94b12e7f4e542757bd74a9c1f)
+        ;
+
+        
+    
+    
+            marker_c5b6a286189b9ab7cb824e4ce60e4c9c.bindTooltip(
+                `<div>
+                     10. 장현진정형외과의원 (14.1km)
+                 </div>`,
+                {
+  "sticky": true,
+}
+            );
+        
+    
+                marker_c5b6a286189b9ab7cb824e4ce60e4c9c.setIcon(icon_e39ea231baef9a116d1c5ec7601297d3);
+            
+    
+            var marker_5b087a692331be14ebf6213088c7e852 = L.marker(
+                [36.60169078, 127.3001238],
+                {
+}
+            ).addTo(map_756d00aed9a3375ed0e7d5a3db7186e0);
+        
+    
+            var icon_0894d9c2022659ab9f21530dcc5af01c = L.AwesomeMarkers.icon(
+                {
+  "markerColor": "green",
+  "iconColor": "white",
+  "icon": "hospital-o",
+  "prefix": "fa",
+  "extraClasses": "fa-rotate-0",
+}
+            );
+        
+    
+        var popup_b846e1d73abd1b4c3b65d81efc274e23 = L.popup({
+  "maxWidth": 300,
+});
+
+        
+            
+                var html_0097a0edc0fe9ee4925e44450639c49a = $(`<div id="html_0097a0edc0fe9ee4925e44450639c49a" style="width: 100.0%; height: 100.0%;">             <div style="font-family: Arial, sans-serif; width: 250px;">                 <h4>이내과의원</h4>                 <p><b>거리:</b> 14.4km</p>                 <p><b>종별:</b> 의원</p>                 <p><b>병상수:</b> 0개</p>                 <p><b>진료과수:</b> 1개</p>                 <p><b>주소:</b> 조치원읍 조치원로 31</p>                 <p><b>전화:</b> 044-865-3571</p>             </div>             </div>`)[0];
+                popup_b846e1d73abd1b4c3b65d81efc274e23.setContent(html_0097a0edc0fe9ee4925e44450639c49a);
+            
+        
+
+        marker_5b087a692331be14ebf6213088c7e852.bindPopup(popup_b846e1d73abd1b4c3b65d81efc274e23)
+        ;
+
+        
+    
+    
+            marker_5b087a692331be14ebf6213088c7e852.bindTooltip(
+                `<div>
+                     11. 이내과의원 (14.4km)
+                 </div>`,
+                {
+  "sticky": true,
+}
+            );
+        
+    
+                marker_5b087a692331be14ebf6213088c7e852.setIcon(icon_0894d9c2022659ab9f21530dcc5af01c);
+            
+    
+            var marker_1b54ef89f2910017c491163c866d21e1 = L.marker(
+                [36.60039887, 127.2980454],
+                {
+}
+            ).addTo(map_756d00aed9a3375ed0e7d5a3db7186e0);
+        
+    
+            var icon_df06ec9df7860c920242985c431b71f2 = L.AwesomeMarkers.icon(
+                {
+  "markerColor": "green",
+  "iconColor": "white",
+  "icon": "hospital-o",
+  "prefix": "fa",
+  "extraClasses": "fa-rotate-0",
+}
+            );
+        
+    
+        var popup_6d68c9ba6e4db04dddfe18bf5822e91c = L.popup({
+  "maxWidth": 300,
+});
+
+        
+            
+                var html_3135f14f06bcbe3dc489444b33da563c = $(`<div id="html_3135f14f06bcbe3dc489444b33da563c" style="width: 100.0%; height: 100.0%;">             <div style="font-family: Arial, sans-serif; width: 250px;">                 <h4>서울아산내과의원</h4>                 <p><b>거리:</b> 14.6km</p>                 <p><b>종별:</b> 의원</p>                 <p><b>병상수:</b> 4개</p>                 <p><b>진료과수:</b> 15개</p>                 <p><b>주소:</b> 조치원읍 새내로 97 청춘메디컬 2층</p>                 <p><b>전화:</b> 044-862-7559</p>             </div>             </div>`)[0];
+                popup_6d68c9ba6e4db04dddfe18bf5822e91c.setContent(html_3135f14f06bcbe3dc489444b33da563c);
+            
+        
+
+        marker_1b54ef89f2910017c491163c866d21e1.bindPopup(popup_6d68c9ba6e4db04dddfe18bf5822e91c)
+        ;
+
+        
+    
+    
+            marker_1b54ef89f2910017c491163c866d21e1.bindTooltip(
+                `<div>
+                     12. 서울아산내과의원 (14.6km)
+                 </div>`,
+                {
+  "sticky": true,
+}
+            );
+        
+    
+                marker_1b54ef89f2910017c491163c866d21e1.setIcon(icon_df06ec9df7860c920242985c431b71f2);
+            
+    
+            var marker_63f102d37681e55abd2ab1660fbbad21 = L.marker(
+                [36.6014508, 127.2976223],
+                {
+}
+            ).addTo(map_756d00aed9a3375ed0e7d5a3db7186e0);
+        
+    
+            var icon_9e3f2a05c422ed53d37dc62d8ed02a04 = L.AwesomeMarkers.icon(
+                {
+  "markerColor": "green",
+  "iconColor": "white",
+  "icon": "hospital-o",
+  "prefix": "fa",
+  "extraClasses": "fa-rotate-0",
+}
+            );
+        
+    
+        var popup_a8baa50a0eb5b9141964a0655a98b4a0 = L.popup({
+  "maxWidth": 300,
+});
+
+        
+            
+                var html_c117fb37a4de59ace6e678cefc1b0bef = $(`<div id="html_c117fb37a4de59ace6e678cefc1b0bef" style="width: 100.0%; height: 100.0%;">             <div style="font-family: Arial, sans-serif; width: 250px;">                 <h4>이병진치과의원</h4>                 <p><b>거리:</b> 14.6km</p>                 <p><b>종별:</b> 의원</p>                 <p><b>병상수:</b> 0개</p>                 <p><b>진료과수:</b> 2개</p>                 <p><b>주소:</b> 조치원읍 조치원로 7</p>                 <p><b>전화:</b> 044-862-2812</p>             </div>             </div>`)[0];
+                popup_a8baa50a0eb5b9141964a0655a98b4a0.setContent(html_c117fb37a4de59ace6e678cefc1b0bef);
+            
+        
+
+        marker_63f102d37681e55abd2ab1660fbbad21.bindPopup(popup_a8baa50a0eb5b9141964a0655a98b4a0)
+        ;
+
+        
+    
+    
+            marker_63f102d37681e55abd2ab1660fbbad21.bindTooltip(
+                `<div>
+                     13. 이병진치과의원 (14.6km)
+                 </div>`,
+                {
+  "sticky": true,
+}
+            );
+        
+    
+                marker_63f102d37681e55abd2ab1660fbbad21.setIcon(icon_9e3f2a05c422ed53d37dc62d8ed02a04);
+            
+    
+            var marker_737d01f92133841016920836d2e4de46 = L.marker(
+                [36.45034698, 127.4267486],
+                {
+}
+            ).addTo(map_756d00aed9a3375ed0e7d5a3db7186e0);
+        
+    
+            var icon_0c555f13143494a7d6674d7377401f46 = L.AwesomeMarkers.icon(
+                {
+  "markerColor": "green",
+  "iconColor": "white",
+  "icon": "hospital-o",
+  "prefix": "fa",
+  "extraClasses": "fa-rotate-0",
+}
+            );
+        
+    
+        var popup_67f964977d006b13d547c099d5450e9e = L.popup({
+  "maxWidth": 300,
+});
+
+        
+            
+                var html_9e8f29713756a34dd912e448003dc8f4 = $(`<div id="html_9e8f29713756a34dd912e448003dc8f4" style="width: 100.0%; height: 100.0%;">             <div style="font-family: Arial, sans-serif; width: 250px;">                 <h4>제일신경외과의원</h4>                 <p><b>거리:</b> 19.9km</p>                 <p><b>종별:</b> 의원</p>                 <p><b>병상수:</b> 2개</p>                 <p><b>진료과수:</b> 7개</p>                 <p><b>주소:</b> 대덕대로 1610</p>                 <p><b>전화:</b> 042-934-8118</p>             </div>             </div>`)[0];
+                popup_67f964977d006b13d547c099d5450e9e.setContent(html_9e8f29713756a34dd912e448003dc8f4);
+            
+        
+
+        marker_737d01f92133841016920836d2e4de46.bindPopup(popup_67f964977d006b13d547c099d5450e9e)
+        ;
+
+        
+    
+    
+            marker_737d01f92133841016920836d2e4de46.bindTooltip(
+                `<div>
+                     14. 제일신경외과의원 (19.9km)
+                 </div>`,
+                {
+  "sticky": true,
+}
+            );
+        
+    
+                marker_737d01f92133841016920836d2e4de46.setIcon(icon_0c555f13143494a7d6674d7377401f46);
+            
+    
+            var marker_d9f33e7624a2d7a17d9c4c46a521bd17 = L.marker(
+                [36.52881887, 127.2656043],
+                {
+}
+            ).addTo(map_756d00aed9a3375ed0e7d5a3db7186e0);
+        
+    
+            var icon_cdb61a1c93a66c9b738ccc6595f22327 = L.AwesomeMarkers.icon(
+                {
+  "markerColor": "green",
+  "iconColor": "white",
+  "icon": "hospital-o",
+  "prefix": "fa",
+  "extraClasses": "fa-rotate-0",
+}
+            );
+        
+    
+        var popup_d55a11921f890fadaab4edaea3607feb = L.popup({
+  "maxWidth": 300,
+});
+
+        
+            
+                var html_e57ca163dbc5a51729868d9ee63ae22d = $(`<div id="html_e57ca163dbc5a51729868d9ee63ae22d" style="width: 100.0%; height: 100.0%;">             <div style="font-family: Arial, sans-serif; width: 250px;">                 <h4>허브연합내과의원</h4>                 <p><b>거리:</b> 20.4km</p>                 <p><b>종별:</b> 의원</p>                 <p><b>병상수:</b> 0개</p>                 <p><b>진료과수:</b> 10개</p>                 <p><b>주소:</b> 해밀3로 51 허브빌딩 3층</p>                 <p><b>전화:</b> 044-715-7588</p>             </div>             </div>`)[0];
+                popup_d55a11921f890fadaab4edaea3607feb.setContent(html_e57ca163dbc5a51729868d9ee63ae22d);
+            
+        
+
+        marker_d9f33e7624a2d7a17d9c4c46a521bd17.bindPopup(popup_d55a11921f890fadaab4edaea3607feb)
+        ;
+
+        
+    
+    
+            marker_d9f33e7624a2d7a17d9c4c46a521bd17.bindTooltip(
+                `<div>
+                     15. 허브연합내과의원 (20.4km)
+                 </div>`,
+                {
+  "sticky": true,
+}
+            );
+        
+    
+                marker_d9f33e7624a2d7a17d9c4c46a521bd17.setIcon(icon_cdb61a1c93a66c9b738ccc6595f22327);
+            
+    
+            var marker_751264b0fb07f24ed8724e88ebf22714 = L.marker(
+                [36.78592239, 127.5832285],
+                {
+}
+            ).addTo(map_756d00aed9a3375ed0e7d5a3db7186e0);
+        
+    
+            var icon_8f7914092b7d7f736bbaff49d515c632 = L.AwesomeMarkers.icon(
+                {
+  "markerColor": "green",
+  "iconColor": "white",
+  "icon": "hospital-o",
+  "prefix": "fa",
+  "extraClasses": "fa-rotate-0",
+}
+            );
+        
+    
+        var popup_add3c786d2fd5c88e4b48c741c263cda = L.popup({
+  "maxWidth": 300,
+});
+
+        
+            
+                var html_c5e9ece15ee5b2f9e6376e6d5ec093d8 = $(`<div id="html_c5e9ece15ee5b2f9e6376e6d5ec093d8" style="width: 100.0%; height: 100.0%;">             <div style="font-family: Arial, sans-serif; width: 250px;">                 <h4>고려정형외과의원(증평)</h4>                 <p><b>거리:</b> 20.8km</p>                 <p><b>종별:</b> 의원</p>                 <p><b>병상수:</b> 0개</p>                 <p><b>진료과수:</b> 5개</p>                 <p><b>주소:</b> 증평읍 중앙로 231 고려정형외과</p>                 <p><b>전화:</b> 043-838-7501</p>             </div>             </div>`)[0];
+                popup_add3c786d2fd5c88e4b48c741c263cda.setContent(html_c5e9ece15ee5b2f9e6376e6d5ec093d8);
+            
+        
+
+        marker_751264b0fb07f24ed8724e88ebf22714.bindPopup(popup_add3c786d2fd5c88e4b48c741c263cda)
+        ;
+
+        
+    
+    
+            marker_751264b0fb07f24ed8724e88ebf22714.bindTooltip(
+                `<div>
+                     16. 고려정형외과의원(증평) (20.8km)
+                 </div>`,
+                {
+  "sticky": true,
+}
+            );
+        
+    
+                marker_751264b0fb07f24ed8724e88ebf22714.setIcon(icon_8f7914092b7d7f736bbaff49d515c632);
+            
+    
+            var marker_24f33b5fe5e741d40bec413818a93640 = L.marker(
+                [36.48852308, 127.2564862],
+                {
+}
+            ).addTo(map_756d00aed9a3375ed0e7d5a3db7186e0);
+        
+    
+            var icon_cfa4dde350f73f8694f16d775de522e6 = L.AwesomeMarkers.icon(
+                {
+  "markerColor": "green",
+  "iconColor": "white",
+  "icon": "hospital-o",
+  "prefix": "fa",
+  "extraClasses": "fa-rotate-0",
+}
+            );
+        
+    
+        var popup_6ca1abed3d26ae19fe94bfef14ab0497 = L.popup({
+  "maxWidth": 300,
+});
+
+        
+            
+                var html_cd253338b6a37bc7f49298a3515180f4 = $(`<div id="html_cd253338b6a37bc7f49298a3515180f4" style="width: 100.0%; height: 100.0%;">             <div style="font-family: Arial, sans-serif; width: 250px;">                 <h4>세종연합비뇨기과의원</h4>                 <p><b>거리:</b> 23.8km</p>                 <p><b>종별:</b> 의원</p>                 <p><b>병상수:</b> 3개</p>                 <p><b>진료과수:</b> 2개</p>                 <p><b>주소:</b> 한누리대로 273</p>                 <p><b>전화:</b> 044-867-2800</p>             </div>             </div>`)[0];
+                popup_6ca1abed3d26ae19fe94bfef14ab0497.setContent(html_cd253338b6a37bc7f49298a3515180f4);
+            
+        
+
+        marker_24f33b5fe5e741d40bec413818a93640.bindPopup(popup_6ca1abed3d26ae19fe94bfef14ab0497)
+        ;
+
+        
+    
+    
+            marker_24f33b5fe5e741d40bec413818a93640.bindTooltip(
+                `<div>
+                     17. 세종연합비뇨기과의원 (23.8km)
+                 </div>`,
+                {
+  "sticky": true,
+}
+            );
+        
+    
+                marker_24f33b5fe5e741d40bec413818a93640.setIcon(icon_cfa4dde350f73f8694f16d775de522e6);
+            
+    
+            var marker_e19855dc03165dde035ddaba374e3812 = L.marker(
+                [36.47127572, 127.2759102],
+                {
+}
+            ).addTo(map_756d00aed9a3375ed0e7d5a3db7186e0);
+        
+    
+            var icon_9b1c0daab95fe5ca35b729a7abe8cd9a = L.AwesomeMarkers.icon(
+                {
+  "markerColor": "green",
+  "iconColor": "white",
+  "icon": "hospital-o",
+  "prefix": "fa",
+  "extraClasses": "fa-rotate-0",
+}
+            );
+        
+    
+        var popup_aa45b0d4ce33887aa12a876bc905a59a = L.popup({
+  "maxWidth": 300,
+});
+
+        
+            
+                var html_2b3114d48957bf91f7b1995f57726aa5 = $(`<div id="html_2b3114d48957bf91f7b1995f57726aa5" style="width: 100.0%; height: 100.0%;">             <div style="font-family: Arial, sans-serif; width: 250px;">                 <h4>서문365정형외과의원</h4>                 <p><b>거리:</b> 23.8km</p>                 <p><b>종별:</b> 의원</p>                 <p><b>병상수:</b> 25개</p>                 <p><b>진료과수:</b> 10개</p>                 <p><b>주소:</b> 한누리대로 2281 (대평동) SM메디컬센터 3층서문365정형외과</p>                 <p><b>전화:</b> 044-868-1039</p>             </div>             </div>`)[0];
+                popup_aa45b0d4ce33887aa12a876bc905a59a.setContent(html_2b3114d48957bf91f7b1995f57726aa5);
+            
+        
+
+        marker_e19855dc03165dde035ddaba374e3812.bindPopup(popup_aa45b0d4ce33887aa12a876bc905a59a)
+        ;
+
+        
+    
+    
+            marker_e19855dc03165dde035ddaba374e3812.bindTooltip(
+                `<div>
+                     18. 서문365정형외과의원 (23.8km)
+                 </div>`,
+                {
+  "sticky": true,
+}
+            );
+        
+    
+                marker_e19855dc03165dde035ddaba374e3812.setIcon(icon_9b1c0daab95fe5ca35b729a7abe8cd9a);
+            
+    
+            var marker_39842f222a4fe70f928e2a633fcd4cde = L.marker(
+                [36.85844231, 127.4405224],
+                {
+}
+            ).addTo(map_756d00aed9a3375ed0e7d5a3db7186e0);
+        
+    
+            var icon_e784c3e7c4ecf7bd864eed8bb808c6e2 = L.AwesomeMarkers.icon(
+                {
+  "markerColor": "red",
+  "iconColor": "white",
+  "icon": "hospital-o",
+  "prefix": "fa",
+  "extraClasses": "fa-rotate-0",
+}
+            );
+        
+    
+        var popup_86cca80f6f078d0b5e0150a8b041c251 = L.popup({
+  "maxWidth": 300,
+});
+
+        
+            
+                var html_a6bfc1b49b451edfcdf70cb1c4c1cb55 = $(`<div id="html_a6bfc1b49b451edfcdf70cb1c4c1cb55" style="width: 100.0%; height: 100.0%;">             <div style="font-family: Arial, sans-serif; width: 250px;">                 <h4>(의)건명의료재단 중앙제일병원</h4>                 <p><b>거리:</b> 25.6km</p>                 <p><b>종별:</b> 종합병원</p>                 <p><b>병상수:</b> 241개</p>                 <p><b>진료과수:</b> 14개</p>                 <p><b>주소:</b> 진천읍 중앙북로 36</p>                 <p><b>전화:</b> 043-533-1711</p>             </div>             </div>`)[0];
+                popup_86cca80f6f078d0b5e0150a8b041c251.setContent(html_a6bfc1b49b451edfcdf70cb1c4c1cb55);
+            
+        
+
+        marker_39842f222a4fe70f928e2a633fcd4cde.bindPopup(popup_86cca80f6f078d0b5e0150a8b041c251)
+        ;
+
+        
+    
+    
+            marker_39842f222a4fe70f928e2a633fcd4cde.bindTooltip(
+                `<div>
+                     19. (의)건명의료재단 중앙제일병원 (25.6km)
+                 </div>`,
+                {
+  "sticky": true,
+}
+            );
+        
+    
+                marker_39842f222a4fe70f928e2a633fcd4cde.setIcon(icon_e784c3e7c4ecf7bd864eed8bb808c6e2);
+            
+    
+            var marker_3a4b98f4f02a4a472a8a8f24e2a5b7d5 = L.marker(
+                [36.86026836, 127.4398138],
+                {
+}
+            ).addTo(map_756d00aed9a3375ed0e7d5a3db7186e0);
+        
+    
+            var icon_a0fde5ab0a6a0e0b9d9b43a192e98d7b = L.AwesomeMarkers.icon(
+                {
+  "markerColor": "green",
+  "iconColor": "white",
+  "icon": "hospital-o",
+  "prefix": "fa",
+  "extraClasses": "fa-rotate-0",
+}
+            );
+        
+    
+        var popup_315927df848502456f97748bbe29dc21 = L.popup({
+  "maxWidth": 300,
+});
+
+        
+            
+                var html_650eea0ae3e7750136fa75f15047987f = $(`<div id="html_650eea0ae3e7750136fa75f15047987f" style="width: 100.0%; height: 100.0%;">             <div style="font-family: Arial, sans-serif; width: 250px;">                 <h4>바른정형외과의원</h4>                 <p><b>거리:</b> 25.8km</p>                 <p><b>종별:</b> 의원</p>                 <p><b>병상수:</b> 24개</p>                 <p><b>진료과수:</b> 4개</p>                 <p><b>주소:</b> 진천읍 중앙북1길 11-4 바른정형외과</p>                 <p><b>전화:</b> 043-533-7588</p>             </div>             </div>`)[0];
+                popup_315927df848502456f97748bbe29dc21.setContent(html_650eea0ae3e7750136fa75f15047987f);
+            
+        
+
+        marker_3a4b98f4f02a4a472a8a8f24e2a5b7d5.bindPopup(popup_315927df848502456f97748bbe29dc21)
+        ;
+
+        
+    
+    
+            marker_3a4b98f4f02a4a472a8a8f24e2a5b7d5.bindTooltip(
+                `<div>
+                     20. 바른정형외과의원 (25.8km)
+                 </div>`,
+                {
+  "sticky": true,
+}
+            );
+        
+    
+                marker_3a4b98f4f02a4a472a8a8f24e2a5b7d5.setIcon(icon_a0fde5ab0a6a0e0b9d9b43a192e98d7b);
+            
+    
+            var marker_6e2d951327e43a4972c4f54de3173d9c = L.marker(
+                [36.48326434, 127.7182054],
+                {
+}
+            ).addTo(map_756d00aed9a3375ed0e7d5a3db7186e0);
+        
+    
+            var icon_0cf003f107d53c0fcf407dfeb8462aab = L.AwesomeMarkers.icon(
+                {
+  "markerColor": "blue",
+  "iconColor": "white",
+  "icon": "hospital-o",
+  "prefix": "fa",
+  "extraClasses": "fa-rotate-0",
+}
+            );
+        
+    
+        var popup_9ca2441b9dabc472c236a0621d872123 = L.popup({
+  "maxWidth": 300,
+});
+
+        
+            
+                var html_d51c74e6a09871de74d29bc9e77525f0 = $(`<div id="html_d51c74e6a09871de74d29bc9e77525f0" style="width: 100.0%; height: 100.0%;">             <div style="font-family: Arial, sans-serif; width: 250px;">                 <h4>정민의료재단 보은한양병원</h4>                 <p><b>거리:</b> 28.4km</p>                 <p><b>종별:</b> 병원</p>                 <p><b>병상수:</b> 79개</p>                 <p><b>진료과수:</b> 3개</p>                 <p><b>주소:</b> 보은읍 보은로 102</p>                 <p><b>전화:</b> 043-544-1500</p>             </div>             </div>`)[0];
+                popup_9ca2441b9dabc472c236a0621d872123.setContent(html_d51c74e6a09871de74d29bc9e77525f0);
+            
+        
+
+        marker_6e2d951327e43a4972c4f54de3173d9c.bindPopup(popup_9ca2441b9dabc472c236a0621d872123)
+        ;
+
+        
+    
+    
+            marker_6e2d951327e43a4972c4f54de3173d9c.bindTooltip(
+                `<div>
+                     21. 정민의료재단 보은한양병원 (28.4km)
+                 </div>`,
+                {
+  "sticky": true,
+}
+            );
+        
+    
+                marker_6e2d951327e43a4972c4f54de3173d9c.setIcon(icon_0cf003f107d53c0fcf407dfeb8462aab);
+            
+    
+            var marker_a083abe24ebcab651d60ce46db874b58 = L.marker(
+                [36.48276744, 127.7215441],
+                {
+}
+            ).addTo(map_756d00aed9a3375ed0e7d5a3db7186e0);
+        
+    
+            var icon_e8f48ed19b27a4c9fe79388806b74926 = L.AwesomeMarkers.icon(
+                {
+  "markerColor": "green",
+  "iconColor": "white",
+  "icon": "hospital-o",
+  "prefix": "fa",
+  "extraClasses": "fa-rotate-0",
+}
+            );
+        
+    
+        var popup_594a47d87e1cfb4398e9be6bc3b66611 = L.popup({
+  "maxWidth": 300,
+});
+
+        
+            
+                var html_b99c114e6d7124023797c2c56e947927 = $(`<div id="html_b99c114e6d7124023797c2c56e947927" style="width: 100.0%; height: 100.0%;">             <div style="font-family: Arial, sans-serif; width: 250px;">                 <h4>민들레안과의원</h4>                 <p><b>거리:</b> 28.6km</p>                 <p><b>종별:</b> 의원</p>                 <p><b>병상수:</b> 1개</p>                 <p><b>진료과수:</b> 1개</p>                 <p><b>주소:</b> 보은읍 삼산남로 9 민들레안과</p>                 <p><b>전화:</b> 043-542-7588</p>             </div>             </div>`)[0];
+                popup_594a47d87e1cfb4398e9be6bc3b66611.setContent(html_b99c114e6d7124023797c2c56e947927);
+            
+        
+
+        marker_a083abe24ebcab651d60ce46db874b58.bindPopup(popup_594a47d87e1cfb4398e9be6bc3b66611)
+        ;
+
+        
+    
+    
+            marker_a083abe24ebcab651d60ce46db874b58.bindTooltip(
+                `<div>
+                     22. 민들레안과의원 (28.6km)
+                 </div>`,
+                {
+  "sticky": true,
+}
+            );
+        
+    
+                marker_a083abe24ebcab651d60ce46db874b58.setIcon(icon_e8f48ed19b27a4c9fe79388806b74926);
+            
+    
+            var marker_a686aad2615fc939f126dfe972240a27 = L.marker(
+                [36.36736571, 127.4316133],
+                {
+}
+            ).addTo(map_756d00aed9a3375ed0e7d5a3db7186e0);
+        
+    
+            var icon_d4c77e082043514e900d2b367606bb0b = L.AwesomeMarkers.icon(
+                {
+  "markerColor": "green",
+  "iconColor": "white",
+  "icon": "hospital-o",
+  "prefix": "fa",
+  "extraClasses": "fa-rotate-0",
+}
+            );
+        
+    
+        var popup_72754b4db2e551d60f669497256e7c01 = L.popup({
+  "maxWidth": 300,
+});
+
+        
+            
+                var html_41eba8cd348fc44ad4093726f32d3788 = $(`<div id="html_41eba8cd348fc44ad4093726f32d3788" style="width: 100.0%; height: 100.0%;">             <div style="font-family: Arial, sans-serif; width: 250px;">                 <h4>청담내과의원</h4>                 <p><b>거리:</b> 29.1km</p>                 <p><b>종별:</b> 의원</p>                 <p><b>병상수:</b> 0개</p>                 <p><b>진료과수:</b> 6개</p>                 <p><b>주소:</b> 동춘당로 179 (법동) 201</p>                 <p><b>전화:</b> 042-635-7576</p>             </div>             </div>`)[0];
+                popup_72754b4db2e551d60f669497256e7c01.setContent(html_41eba8cd348fc44ad4093726f32d3788);
+            
+        
+
+        marker_a686aad2615fc939f126dfe972240a27.bindPopup(popup_72754b4db2e551d60f669497256e7c01)
+        ;
+
+        
+    
+    
+            marker_a686aad2615fc939f126dfe972240a27.bindTooltip(
+                `<div>
+                     23. 청담내과의원 (29.1km)
+                 </div>`,
+                {
+  "sticky": true,
+}
+            );
+        
+    
+                marker_a686aad2615fc939f126dfe972240a27.setIcon(icon_d4c77e082043514e900d2b367606bb0b);
+            
+    
+            var marker_074a2a6b93b0f55a97148bd57e844285 = L.marker(
+                [36.35945598, 127.3778632],
+                {
+}
+            ).addTo(map_756d00aed9a3375ed0e7d5a3db7186e0);
+        
+    
+            var icon_d1757c9af5b5f5f419134345170bf90a = L.AwesomeMarkers.icon(
+                {
+  "markerColor": "blue",
+  "iconColor": "white",
+  "icon": "hospital-o",
+  "prefix": "fa",
+  "extraClasses": "fa-rotate-0",
+}
+            );
+        
+    
+        var popup_b65eb2c672a53583f0ca2d4420443a09 = L.popup({
+  "maxWidth": 300,
+});
+
+        
+            
+                var html_9c5812e5dab5cb8aa4631685e18fb292 = $(`<div id="html_9c5812e5dab5cb8aa4631685e18fb292" style="width: 100.0%; height: 100.0%;">             <div style="font-family: Arial, sans-serif; width: 250px;">                 <h4>바른생각병원</h4>                 <p><b>거리:</b> 30.7km</p>                 <p><b>종별:</b> 병원</p>                 <p><b>병상수:</b> 89개</p>                 <p><b>진료과수:</b> 10개</p>                 <p><b>주소:</b> 청사로 128</p>                 <p><b>전화:</b> 042-337-0001</p>             </div>             </div>`)[0];
+                popup_b65eb2c672a53583f0ca2d4420443a09.setContent(html_9c5812e5dab5cb8aa4631685e18fb292);
+            
+        
+
+        marker_074a2a6b93b0f55a97148bd57e844285.bindPopup(popup_b65eb2c672a53583f0ca2d4420443a09)
+        ;
+
+        
+    
+    
+            marker_074a2a6b93b0f55a97148bd57e844285.bindTooltip(
+                `<div>
+                     24. 바른생각병원 (30.7km)
+                 </div>`,
+                {
+  "sticky": true,
+}
+            );
+        
+    
+                marker_074a2a6b93b0f55a97148bd57e844285.setIcon(icon_d1757c9af5b5f5f419134345170bf90a);
+            
+    
+            var marker_39e698fc2ee1e507137b3c5fd6f9d3be = L.marker(
+                [36.37481409, 127.3184289],
+                {
+}
+            ).addTo(map_756d00aed9a3375ed0e7d5a3db7186e0);
+        
+    
+            var icon_935b1a711538e5b386fcb5d92fa822f2 = L.AwesomeMarkers.icon(
+                {
+  "markerColor": "green",
+  "iconColor": "white",
+  "icon": "hospital-o",
+  "prefix": "fa",
+  "extraClasses": "fa-rotate-0",
+}
+            );
+        
+    
+        var popup_83a7c95ace39a85530e4b3fd03942e38 = L.popup({
+  "maxWidth": 300,
+});
+
+        
+            
+                var html_2cbe3d041b441f20caaa71a7bf15b731 = $(`<div id="html_2cbe3d041b441f20caaa71a7bf15b731" style="width: 100.0%; height: 100.0%;">             <div style="font-family: Arial, sans-serif; width: 250px;">                 <h4>메디안내과의원</h4>                 <p><b>거리:</b> 30.8km</p>                 <p><b>종별:</b> 의원</p>                 <p><b>병상수:</b> 0개</p>                 <p><b>진료과수:</b> 1개</p>                 <p><b>주소:</b> 노은로 170 (지족동) 스타시티 3층</p>                 <p><b>전화:</b> 042-867-8275</p>             </div>             </div>`)[0];
+                popup_83a7c95ace39a85530e4b3fd03942e38.setContent(html_2cbe3d041b441f20caaa71a7bf15b731);
+            
+        
+
+        marker_39e698fc2ee1e507137b3c5fd6f9d3be.bindPopup(popup_83a7c95ace39a85530e4b3fd03942e38)
+        ;
+
+        
+    
+    
+            marker_39e698fc2ee1e507137b3c5fd6f9d3be.bindTooltip(
+                `<div>
+                     25. 메디안내과의원 (30.8km)
+                 </div>`,
+                {
+  "sticky": true,
+}
+            );
+        
+    
+                marker_39e698fc2ee1e507137b3c5fd6f9d3be.setIcon(icon_935b1a711538e5b386fcb5d92fa822f2);
+            
+    
+            var marker_018d913405837a512519f4e289a2154c = L.marker(
+                [36.35473543, 127.3799842],
+                {
+}
+            ).addTo(map_756d00aed9a3375ed0e7d5a3db7186e0);
+        
+    
+            var icon_bbc2b5866e2ccbccbee68e058d96e611 = L.AwesomeMarkers.icon(
+                {
+  "markerColor": "green",
+  "iconColor": "white",
+  "icon": "hospital-o",
+  "prefix": "fa",
+  "extraClasses": "fa-rotate-0",
+}
+            );
+        
+    
+        var popup_af6aff0d01818953a4faf9198758dd5d = L.popup({
+  "maxWidth": 300,
+});
+
+        
+            
+                var html_8ea29982938aeafa6242082577e8f963 = $(`<div id="html_8ea29982938aeafa6242082577e8f963" style="width: 100.0%; height: 100.0%;">             <div style="font-family: Arial, sans-serif; width: 250px;">                 <h4>더봄구강악안면외과치과의원</h4>                 <p><b>거리:</b> 31.1km</p>                 <p><b>종별:</b> 의원</p>                 <p><b>병상수:</b> 0개</p>                 <p><b>진료과수:</b> 10개</p>                 <p><b>주소:</b> 대덕대로 246 LG전자베스트샵 4층</p>                 <p><b>전화:</b> 042-710-2875</p>             </div>             </div>`)[0];
+                popup_af6aff0d01818953a4faf9198758dd5d.setContent(html_8ea29982938aeafa6242082577e8f963);
+            
+        
+
+        marker_018d913405837a512519f4e289a2154c.bindPopup(popup_af6aff0d01818953a4faf9198758dd5d)
+        ;
+
+        
+    
+    
+            marker_018d913405837a512519f4e289a2154c.bindTooltip(
+                `<div>
+                     26. 더봄구강악안면외과치과의원 (31.1km)
+                 </div>`,
+                {
+  "sticky": true,
+}
+            );
+        
+    
+                marker_018d913405837a512519f4e289a2154c.setIcon(icon_bbc2b5866e2ccbccbee68e058d96e611);
+            
+    
+            var marker_74279598c123b7dd6a3a72af54d299c7 = L.marker(
+                [36.36096311, 127.3362776],
+                {
+}
+            ).addTo(map_756d00aed9a3375ed0e7d5a3db7186e0);
+        
+    
+            var icon_f390d4e6028498aab18bdef69f6961cb = L.AwesomeMarkers.icon(
+                {
+  "markerColor": "green",
+  "iconColor": "white",
+  "icon": "hospital-o",
+  "prefix": "fa",
+  "extraClasses": "fa-rotate-0",
+}
+            );
+        
+    
+        var popup_dde0ac2175f2dce284652c53042894b6 = L.popup({
+  "maxWidth": 300,
+});
+
+        
+            
+                var html_3691c237c6e857b0b368db1b233e4282 = $(`<div id="html_3691c237c6e857b0b368db1b233e4282" style="width: 100.0%; height: 100.0%;">             <div style="font-family: Arial, sans-serif; width: 250px;">                 <h4>한샘내과의원</h4>                 <p><b>거리:</b> 31.6km</p>                 <p><b>종별:</b> 의원</p>                 <p><b>병상수:</b> 0개</p>                 <p><b>진료과수:</b> 4개</p>                 <p><b>주소:</b> 유성대로 772, 501호</p>                 <p><b>전화:</b> 042-822-7598</p>             </div>             </div>`)[0];
+                popup_dde0ac2175f2dce284652c53042894b6.setContent(html_3691c237c6e857b0b368db1b233e4282);
+            
+        
+
+        marker_74279598c123b7dd6a3a72af54d299c7.bindPopup(popup_dde0ac2175f2dce284652c53042894b6)
+        ;
+
+        
+    
+    
+            marker_74279598c123b7dd6a3a72af54d299c7.bindTooltip(
+                `<div>
+                     27. 한샘내과의원 (31.6km)
+                 </div>`,
+                {
+  "sticky": true,
+}
+            );
+        
+    
+                marker_74279598c123b7dd6a3a72af54d299c7.setIcon(icon_f390d4e6028498aab18bdef69f6961cb);
+            
+    
+            var marker_72c3c1f1bbd24394cc17eabf718801cf = L.marker(
+                [36.34869401, 127.377659],
+                {
+}
+            ).addTo(map_756d00aed9a3375ed0e7d5a3db7186e0);
+        
+    
+            var icon_2aa99b22c21ebcc38b4b1f9f2962ca0b = L.AwesomeMarkers.icon(
+                {
+  "markerColor": "green",
+  "iconColor": "white",
+  "icon": "hospital-o",
+  "prefix": "fa",
+  "extraClasses": "fa-rotate-0",
+}
+            );
+        
+    
+        var popup_07816bbc89db5cba934faf12d3cf0d8a = L.popup({
+  "maxWidth": 300,
+});
+
+        
+            
+                var html_9406871631ea36ae5f9a896a27228f89 = $(`<div id="html_9406871631ea36ae5f9a896a27228f89" style="width: 100.0%; height: 100.0%;">             <div style="font-family: Arial, sans-serif; width: 250px;">                 <h4>삼성외과의원</h4>                 <p><b>거리:</b> 31.8km</p>                 <p><b>종별:</b> 의원</p>                 <p><b>병상수:</b> 22개</p>                 <p><b>진료과수:</b> 1개</p>                 <p><b>주소:</b> 대덕대로176번길 9, 6~7층(둔산동)</p>                 <p><b>전화:</b> 042-361-5500</p>             </div>             </div>`)[0];
+                popup_07816bbc89db5cba934faf12d3cf0d8a.setContent(html_9406871631ea36ae5f9a896a27228f89);
+            
+        
+
+        marker_72c3c1f1bbd24394cc17eabf718801cf.bindPopup(popup_07816bbc89db5cba934faf12d3cf0d8a)
+        ;
+
+        
+    
+    
+            marker_72c3c1f1bbd24394cc17eabf718801cf.bindTooltip(
+                `<div>
+                     28. 삼성외과의원 (31.8km)
+                 </div>`,
+                {
+  "sticky": true,
+}
+            );
+        
+    
+                marker_72c3c1f1bbd24394cc17eabf718801cf.setIcon(icon_2aa99b22c21ebcc38b4b1f9f2962ca0b);
+            
+    
+            var marker_8356ad849dbe0b9d2a88ccf2eed6134b = L.marker(
+                [36.3455441, 127.3802574],
+                {
+}
+            ).addTo(map_756d00aed9a3375ed0e7d5a3db7186e0);
+        
+    
+            var icon_ea0b3172787cad4778ad23ca93ca4725 = L.AwesomeMarkers.icon(
+                {
+  "markerColor": "green",
+  "iconColor": "white",
+  "icon": "hospital-o",
+  "prefix": "fa",
+  "extraClasses": "fa-rotate-0",
+}
+            );
+        
+    
+        var popup_9e411edac270ee2d8fe39a76e1159290 = L.popup({
+  "maxWidth": 300,
+});
+
+        
+            
+                var html_682c3f0bb5c076567c0173a6588b9ac7 = $(`<div id="html_682c3f0bb5c076567c0173a6588b9ac7" style="width: 100.0%; height: 100.0%;">             <div style="font-family: Arial, sans-serif; width: 250px;">                 <h4>대전참사랑요양병원</h4>                 <p><b>거리:</b> 32.1km</p>                 <p><b>종별:</b> 의원</p>                 <p><b>병상수:</b> 132개</p>                 <p><b>진료과수:</b> 5개</p>                 <p><b>주소:</b> 계룡로491번길 8-0, 갤러리빌4차</p>                 <p><b>전화:</b> 070-4292-6554</p>             </div>             </div>`)[0];
+                popup_9e411edac270ee2d8fe39a76e1159290.setContent(html_682c3f0bb5c076567c0173a6588b9ac7);
+            
+        
+
+        marker_8356ad849dbe0b9d2a88ccf2eed6134b.bindPopup(popup_9e411edac270ee2d8fe39a76e1159290)
+        ;
+
+        
+    
+    
+            marker_8356ad849dbe0b9d2a88ccf2eed6134b.bindTooltip(
+                `<div>
+                     29. 대전참사랑요양병원 (32.1km)
+                 </div>`,
+                {
+  "sticky": true,
+}
+            );
+        
+    
+                marker_8356ad849dbe0b9d2a88ccf2eed6134b.setIcon(icon_ea0b3172787cad4778ad23ca93ca4725);
+            
+    
+            var marker_9daa6ea49d7890d517e72d755307bdbc = L.marker(
+                [36.35266353, 127.3429771],
+                {
+}
+            ).addTo(map_756d00aed9a3375ed0e7d5a3db7186e0);
+        
+    
+            var icon_513bd937dd5a930eda4773233a276dce = L.AwesomeMarkers.icon(
+                {
+  "markerColor": "green",
+  "iconColor": "white",
+  "icon": "hospital-o",
+  "prefix": "fa",
+  "extraClasses": "fa-rotate-0",
+}
+            );
+        
+    
+        var popup_617827a43fa936b9a8bb573994bd44b1 = L.popup({
+  "maxWidth": 300,
+});
+
+        
+            
+                var html_4a1bcfa0908d4bbdd82173dc63515653 = $(`<div id="html_4a1bcfa0908d4bbdd82173dc63515653" style="width: 100.0%; height: 100.0%;">             <div style="font-family: Arial, sans-serif; width: 250px;">                 <h4>새봄안과의원</h4>                 <p><b>거리:</b> 32.3km</p>                 <p><b>종별:</b> 의원</p>                 <p><b>병상수:</b> 3개</p>                 <p><b>진료과수:</b> 1개</p>                 <p><b>주소:</b> 계룡로 114, BYC빌딩 7층(봉명동)</p>                 <p><b>전화:</b> 044-826-2475</p>             </div>             </div>`)[0];
+                popup_617827a43fa936b9a8bb573994bd44b1.setContent(html_4a1bcfa0908d4bbdd82173dc63515653);
+            
+        
+
+        marker_9daa6ea49d7890d517e72d755307bdbc.bindPopup(popup_617827a43fa936b9a8bb573994bd44b1)
+        ;
+
+        
+    
+    
+            marker_9daa6ea49d7890d517e72d755307bdbc.bindTooltip(
+                `<div>
+                     30. 새봄안과의원 (32.3km)
+                 </div>`,
+                {
+  "sticky": true,
+}
+            );
+        
+    
+                marker_9daa6ea49d7890d517e72d755307bdbc.setIcon(icon_513bd937dd5a930eda4773233a276dce);
+            
+    
+            var marker_3a33ceb5bf16047cd87f9e7baedf6a3f = L.marker(
+                [36.35155841, 127.3386858],
+                {
+}
+            ).addTo(map_756d00aed9a3375ed0e7d5a3db7186e0);
+        
+    
+            var icon_60a5330ddf33b5508912354fd83ed8d0 = L.AwesomeMarkers.icon(
+                {
+  "markerColor": "darkred",
+  "iconColor": "white",
+  "icon": "hospital-o",
+  "prefix": "fa",
+  "extraClasses": "fa-rotate-0",
+}
+            );
+        
+    
+        var popup_f03e3e169e2163e28705547de1d82110 = L.popup({
+  "maxWidth": 300,
+});
+
+        
+            
+                var html_be3132c9c223de6690eaddb103123af8 = $(`<div id="html_be3132c9c223de6690eaddb103123af8" style="width: 100.0%; height: 100.0%;">             <div style="font-family: Arial, sans-serif; width: 250px;">                 <h4>브레인요양병원</h4>                 <p><b>거리:</b> 32.5km</p>                 <p><b>종별:</b> 요양병원</p>                 <p><b>병상수:</b> 238개</p>                 <p><b>진료과수:</b> 8개</p>                 <p><b>주소:</b> 도안대로 567번길 26</p>                 <p><b>전화:</b> 042-365-0101</p>             </div>             </div>`)[0];
+                popup_f03e3e169e2163e28705547de1d82110.setContent(html_be3132c9c223de6690eaddb103123af8);
+            
+        
+
+        marker_3a33ceb5bf16047cd87f9e7baedf6a3f.bindPopup(popup_f03e3e169e2163e28705547de1d82110)
+        ;
+
+        
+    
+    
+            marker_3a33ceb5bf16047cd87f9e7baedf6a3f.bindTooltip(
+                `<div>
+                     31. 브레인요양병원 (32.5km)
+                 </div>`,
+                {
+  "sticky": true,
+}
+            );
+        
+    
+                marker_3a33ceb5bf16047cd87f9e7baedf6a3f.setIcon(icon_60a5330ddf33b5508912354fd83ed8d0);
+            
+    
+            var marker_92d2cefc66f4af0b9814fd924535bcd1 = L.marker(
+                [36.3378965, 127.4096036],
+                {
+}
+            ).addTo(map_756d00aed9a3375ed0e7d5a3db7186e0);
+        
+    
+            var icon_6c4774c6b666213291a53db38c202223 = L.AwesomeMarkers.icon(
+                {
+  "markerColor": "green",
+  "iconColor": "white",
+  "icon": "hospital-o",
+  "prefix": "fa",
+  "extraClasses": "fa-rotate-0",
+}
+            );
+        
+    
+        var popup_3f1db7d8ab6c8e175368a545f1c8feb7 = L.popup({
+  "maxWidth": 300,
+});
+
+        
+            
+                var html_31b06525726f0cc7ac5aca0ecfff7b51 = $(`<div id="html_31b06525726f0cc7ac5aca0ecfff7b51" style="width: 100.0%; height: 100.0%;">             <div style="font-family: Arial, sans-serif; width: 250px;">                 <h4>햇살이비인후과의원</h4>                 <p><b>거리:</b> 32.5km</p>                 <p><b>종별:</b> 의원</p>                 <p><b>병상수:</b> 3개</p>                 <p><b>진료과수:</b> 2개</p>                 <p><b>주소:</b> 목중로 50, 406호 중촌제일프라자 3층</p>                 <p><b>전화:</b> 042-721-2795</p>             </div>             </div>`)[0];
+                popup_3f1db7d8ab6c8e175368a545f1c8feb7.setContent(html_31b06525726f0cc7ac5aca0ecfff7b51);
+            
+        
+
+        marker_92d2cefc66f4af0b9814fd924535bcd1.bindPopup(popup_3f1db7d8ab6c8e175368a545f1c8feb7)
+        ;
+
+        
+    
+    
+            marker_92d2cefc66f4af0b9814fd924535bcd1.bindTooltip(
+                `<div>
+                     32. 햇살이비인후과의원 (32.5km)
+                 </div>`,
+                {
+  "sticky": true,
+}
+            );
+        
+    
+                marker_92d2cefc66f4af0b9814fd924535bcd1.setIcon(icon_6c4774c6b666213291a53db38c202223);
+            
+    
+            var marker_205f1070e668afdc70145e737b003483 = L.marker(
+                [36.32954236, 127.4339815],
+                {
+}
+            ).addTo(map_756d00aed9a3375ed0e7d5a3db7186e0);
+        
+    
+            var icon_5d5a62655085ad31abc59397b67d99cb = L.AwesomeMarkers.icon(
+                {
+  "markerColor": "green",
+  "iconColor": "white",
+  "icon": "hospital-o",
+  "prefix": "fa",
+  "extraClasses": "fa-rotate-0",
+}
+            );
+        
+    
+        var popup_89ef762c44543e08a33e437b9cfbc0c8 = L.popup({
+  "maxWidth": 300,
+});
+
+        
+            
+                var html_03f82f01bcb0d81c9a747af08e315996 = $(`<div id="html_03f82f01bcb0d81c9a747af08e315996" style="width: 100.0%; height: 100.0%;">             <div style="font-family: Arial, sans-serif; width: 250px;">                 <h4>덕인의원</h4>                 <p><b>거리:</b> 33.2km</p>                 <p><b>종별:</b> 의원</p>                 <p><b>병상수:</b> 0개</p>                 <p><b>진료과수:</b> 5개</p>                 <p><b>주소:</b> 대전로 782 (원동)</p>                 <p><b>전화:</b> 042-272-4551</p>             </div>             </div>`)[0];
+                popup_89ef762c44543e08a33e437b9cfbc0c8.setContent(html_03f82f01bcb0d81c9a747af08e315996);
+            
+        
+
+        marker_205f1070e668afdc70145e737b003483.bindPopup(popup_89ef762c44543e08a33e437b9cfbc0c8)
+        ;
+
+        
+    
+    
+            marker_205f1070e668afdc70145e737b003483.bindTooltip(
+                `<div>
+                     33. 덕인의원 (33.2km)
+                 </div>`,
+                {
+  "sticky": true,
+}
+            );
+        
+    
+                marker_205f1070e668afdc70145e737b003483.setIcon(icon_5d5a62655085ad31abc59397b67d99cb);
+            
+    
+            var marker_ab629c8a543ac0674a5cb01338cfdbd2 = L.marker(
+                [36.32904472, 127.4412472],
+                {
+}
+            ).addTo(map_756d00aed9a3375ed0e7d5a3db7186e0);
+        
+    
+            var icon_028efc9ae1fd4fef2868371f4630cda4 = L.AwesomeMarkers.icon(
+                {
+  "markerColor": "green",
+  "iconColor": "white",
+  "icon": "hospital-o",
+  "prefix": "fa",
+  "extraClasses": "fa-rotate-0",
+}
+            );
+        
+    
+        var popup_d07b85ec8ef593d2924ca384b6ce9051 = L.popup({
+  "maxWidth": 300,
+});
+
+        
+            
+                var html_245b303fe113fd986d57e1a924981332 = $(`<div id="html_245b303fe113fd986d57e1a924981332" style="width: 100.0%; height: 100.0%;">             <div style="font-family: Arial, sans-serif; width: 250px;">                 <h4>나상연정형외과의원</h4>                 <p><b>거리:</b> 33.2km</p>                 <p><b>종별:</b> 의원</p>                 <p><b>병상수:</b> 29개</p>                 <p><b>진료과수:</b> 5개</p>                 <p><b>주소:</b> 동대전로 59-1(대동)</p>                 <p><b>전화:</b> 042-628-3600</p>             </div>             </div>`)[0];
+                popup_d07b85ec8ef593d2924ca384b6ce9051.setContent(html_245b303fe113fd986d57e1a924981332);
+            
+        
+
+        marker_ab629c8a543ac0674a5cb01338cfdbd2.bindPopup(popup_d07b85ec8ef593d2924ca384b6ce9051)
+        ;
+
+        
+    
+    
+            marker_ab629c8a543ac0674a5cb01338cfdbd2.bindTooltip(
+                `<div>
+                     34. 나상연정형외과의원 (33.2km)
+                 </div>`,
+                {
+  "sticky": true,
+}
+            );
+        
+    
+                marker_ab629c8a543ac0674a5cb01338cfdbd2.setIcon(icon_028efc9ae1fd4fef2868371f4630cda4);
+            
+    
+            var marker_d8a02b3785054eb96422d3d6bb15edb9 = L.marker(
+                [36.33199872, 127.3855885],
+                {
+}
+            ).addTo(map_756d00aed9a3375ed0e7d5a3db7186e0);
+        
+    
+            var icon_9274345664b365487d822ae190287996 = L.AwesomeMarkers.icon(
+                {
+  "markerColor": "green",
+  "iconColor": "white",
+  "icon": "hospital-o",
+  "prefix": "fa",
+  "extraClasses": "fa-rotate-0",
+}
+            );
+        
+    
+        var popup_b130cd23801e15caec217174efa402b5 = L.popup({
+  "maxWidth": 300,
+});
+
+        
+            
+                var html_1bf89705d9206b5d65710d7ef180ac7f = $(`<div id="html_1bf89705d9206b5d65710d7ef180ac7f" style="width: 100.0%; height: 100.0%;">             <div style="font-family: Arial, sans-serif; width: 250px;">                 <h4>백세성모정형외과의원</h4>                 <p><b>거리:</b> 33.5km</p>                 <p><b>종별:</b> 의원</p>                 <p><b>병상수:</b> 29개</p>                 <p><b>진료과수:</b> 5개</p>                 <p><b>주소:</b> 도산로 286(가장동)</p>                 <p><b>전화:</b> 042-716-0119</p>             </div>             </div>`)[0];
+                popup_b130cd23801e15caec217174efa402b5.setContent(html_1bf89705d9206b5d65710d7ef180ac7f);
+            
+        
+
+        marker_d8a02b3785054eb96422d3d6bb15edb9.bindPopup(popup_b130cd23801e15caec217174efa402b5)
+        ;
+
+        
+    
+    
+            marker_d8a02b3785054eb96422d3d6bb15edb9.bindTooltip(
+                `<div>
+                     35. 백세성모정형외과의원 (33.5km)
+                 </div>`,
+                {
+  "sticky": true,
+}
+            );
+        
+    
+                marker_d8a02b3785054eb96422d3d6bb15edb9.setIcon(icon_9274345664b365487d822ae190287996);
+            
+    
+            var marker_dd2bad0b3819e173b630a4dca0bd958e = L.marker(
+                [36.46884668, 127.1329866],
+                {
+}
+            ).addTo(map_756d00aed9a3375ed0e7d5a3db7186e0);
+        
+    
+            var icon_2545de6ab2e03eef78279d0499feac0b = L.AwesomeMarkers.icon(
+                {
+  "markerColor": "darkred",
+  "iconColor": "white",
+  "icon": "hospital-o",
+  "prefix": "fa",
+  "extraClasses": "fa-rotate-0",
+}
+            );
+        
+    
+        var popup_0cb05822a39b28d023a05fe6d0191721 = L.popup({
+  "maxWidth": 300,
+});
+
+        
+            
+                var html_45e7b6acd104e58d4e4ee79f63132964 = $(`<div id="html_45e7b6acd104e58d4e4ee79f63132964" style="width: 100.0%; height: 100.0%;">             <div style="font-family: Arial, sans-serif; width: 250px;">                 <h4>현대요양병원</h4>                 <p><b>거리:</b> 34.0km</p>                 <p><b>종별:</b> 요양병원</p>                 <p><b>병상수:</b> 236개</p>                 <p><b>진료과수:</b> 5개</p>                 <p><b>주소:</b> 번영2로 18-10(신관동)</p>                 <p><b>전화:</b> 041-850-7500</p>             </div>             </div>`)[0];
+                popup_0cb05822a39b28d023a05fe6d0191721.setContent(html_45e7b6acd104e58d4e4ee79f63132964);
+            
+        
+
+        marker_dd2bad0b3819e173b630a4dca0bd958e.bindPopup(popup_0cb05822a39b28d023a05fe6d0191721)
+        ;
+
+        
+    
+    
+            marker_dd2bad0b3819e173b630a4dca0bd958e.bindTooltip(
+                `<div>
+                     36. 현대요양병원 (34.0km)
+                 </div>`,
+                {
+  "sticky": true,
+}
+            );
+        
+    
+                marker_dd2bad0b3819e173b630a4dca0bd958e.setIcon(icon_2545de6ab2e03eef78279d0499feac0b);
+            
+    
+            var marker_2344313a499972082cfa5b42bbf59cec = L.marker(
+                [36.32242334, 127.4135513],
+                {
+}
+            ).addTo(map_756d00aed9a3375ed0e7d5a3db7186e0);
+        
+    
+            var icon_ab8d226ddffcaa8715500e0a6f2abc62 = L.AwesomeMarkers.icon(
+                {
+  "markerColor": "green",
+  "iconColor": "white",
+  "icon": "hospital-o",
+  "prefix": "fa",
+  "extraClasses": "fa-rotate-0",
+}
+            );
+        
+    
+        var popup_def9a361f33379ad39b94e758ab476a3 = L.popup({
+  "maxWidth": 300,
+});
+
+        
+            
+                var html_60ee8e06dff117bafd27956da99783e1 = $(`<div id="html_60ee8e06dff117bafd27956da99783e1" style="width: 100.0%; height: 100.0%;">             <div style="font-family: Arial, sans-serif; width: 250px;">                 <h4>지정신건강의학과의원</h4>                 <p><b>거리:</b> 34.2km</p>                 <p><b>종별:</b> 의원</p>                 <p><b>병상수:</b> 0개</p>                 <p><b>진료과수:</b> 1개</p>                 <p><b>주소:</b> 중앙로 10(문화동, 태양빌딩 2층)</p>                 <p><b>전화:</b> 042-256-5551</p>             </div>             </div>`)[0];
+                popup_def9a361f33379ad39b94e758ab476a3.setContent(html_60ee8e06dff117bafd27956da99783e1);
+            
+        
+
+        marker_2344313a499972082cfa5b42bbf59cec.bindPopup(popup_def9a361f33379ad39b94e758ab476a3)
+        ;
+
+        
+    
+    
+            marker_2344313a499972082cfa5b42bbf59cec.bindTooltip(
+                `<div>
+                     37. 지정신건강의학과의원 (34.2km)
+                 </div>`,
+                {
+  "sticky": true,
+}
+            );
+        
+    
+                marker_2344313a499972082cfa5b42bbf59cec.setIcon(icon_ab8d226ddffcaa8715500e0a6f2abc62);
+            
+    
+            var marker_66a5e760039ab09b5d8c381e7a5e6735 = L.marker(
+                [36.31909649, 127.4169952],
+                {
+}
+            ).addTo(map_756d00aed9a3375ed0e7d5a3db7186e0);
+        
+    
+            var icon_cab624c14ac3a6eab01c5de2a9b0ee38 = L.AwesomeMarkers.icon(
+                {
+  "markerColor": "green",
+  "iconColor": "white",
+  "icon": "hospital-o",
+  "prefix": "fa",
+  "extraClasses": "fa-rotate-0",
+}
+            );
+        
+    
+        var popup_13c797a3a6d40df31b5b4a9745399af8 = L.popup({
+  "maxWidth": 300,
+});
+
+        
+            
+                var html_d0264b19060afc69ba3203eeb8411ef3 = $(`<div id="html_d0264b19060afc69ba3203eeb8411ef3" style="width: 100.0%; height: 100.0%;">             <div style="font-family: Arial, sans-serif; width: 250px;">                 <h4>김학영정형외과의원</h4>                 <p><b>거리:</b> 34.5km</p>                 <p><b>종별:</b> 의원</p>                 <p><b>병상수:</b> 0개</p>                 <p><b>진료과수:</b> 3개</p>                 <p><b>주소:</b> 계룡로 945 (대사동)</p>                 <p><b>전화:</b> 042-254-7966</p>             </div>             </div>`)[0];
+                popup_13c797a3a6d40df31b5b4a9745399af8.setContent(html_d0264b19060afc69ba3203eeb8411ef3);
+            
+        
+
+        marker_66a5e760039ab09b5d8c381e7a5e6735.bindPopup(popup_13c797a3a6d40df31b5b4a9745399af8)
+        ;
+
+        
+    
+    
+            marker_66a5e760039ab09b5d8c381e7a5e6735.bindTooltip(
+                `<div>
+                     38. 김학영정형외과의원 (34.5km)
+                 </div>`,
+                {
+  "sticky": true,
+}
+            );
+        
+    
+                marker_66a5e760039ab09b5d8c381e7a5e6735.setIcon(icon_cab624c14ac3a6eab01c5de2a9b0ee38);
+            
+    
+            var marker_99233df9dbc402c2bd9fd0b383beb8be = L.marker(
+                [36.79741936, 127.1314887],
+                {
+}
+            ).addTo(map_756d00aed9a3375ed0e7d5a3db7186e0);
+        
+    
+            var icon_576df5b106fc18f5ea058a34a9e9a36b = L.AwesomeMarkers.icon(
+                {
+  "markerColor": "red",
+  "iconColor": "white",
+  "icon": "hospital-o",
+  "prefix": "fa",
+  "extraClasses": "fa-rotate-0",
+}
+            );
+        
+    
+        var popup_9ddb857667738b272b9d1fa78d310194 = L.popup({
+  "maxWidth": 300,
+});
+
+        
+            
+                var html_d4b8e13eda891a92d45a851dd598dce8 = $(`<div id="html_d4b8e13eda891a92d45a851dd598dce8" style="width: 100.0%; height: 100.0%;">             <div style="font-family: Arial, sans-serif; width: 250px;">                 <h4>천안충무병원</h4>                 <p><b>거리:</b> 34.6km</p>                 <p><b>종별:</b> 종합병원</p>                 <p><b>병상수:</b> 365개</p>                 <p><b>진료과수:</b> 30개</p>                 <p><b>주소:</b> 서북구 다가말3길 8</p>                 <p><b>전화:</b> 041-570-7644</p>             </div>             </div>`)[0];
+                popup_9ddb857667738b272b9d1fa78d310194.setContent(html_d4b8e13eda891a92d45a851dd598dce8);
+            
+        
+
+        marker_99233df9dbc402c2bd9fd0b383beb8be.bindPopup(popup_9ddb857667738b272b9d1fa78d310194)
+        ;
+
+        
+    
+    
+            marker_99233df9dbc402c2bd9fd0b383beb8be.bindTooltip(
+                `<div>
+                     39. 천안충무병원 (34.6km)
+                 </div>`,
+                {
+  "sticky": true,
+}
+            );
+        
+    
+                marker_99233df9dbc402c2bd9fd0b383beb8be.setIcon(icon_576df5b106fc18f5ea058a34a9e9a36b);
+            
+    
+            var marker_79a82b02c1dcebde67396fff8d60de31 = L.marker(
+                [36.79430445, 127.1269858],
+                {
+}
+            ).addTo(map_756d00aed9a3375ed0e7d5a3db7186e0);
+        
+    
+            var icon_d942dfd0e928b75088d517f6d1518e27 = L.AwesomeMarkers.icon(
+                {
+  "markerColor": "green",
+  "iconColor": "white",
+  "icon": "hospital-o",
+  "prefix": "fa",
+  "extraClasses": "fa-rotate-0",
+}
+            );
+        
+    
+        var popup_271e8e5d3462f2bf0b1482029148b4bf = L.popup({
+  "maxWidth": 300,
+});
+
+        
+            
+                var html_762037037a528b0a4bf42aa16c661eb9 = $(`<div id="html_762037037a528b0a4bf42aa16c661eb9" style="width: 100.0%; height: 100.0%;">             <div style="font-family: Arial, sans-serif; width: 250px;">                 <h4>삼성비뇨기과의원</h4>                 <p><b>거리:</b> 34.8km</p>                 <p><b>종별:</b> 의원</p>                 <p><b>병상수:</b> 1개</p>                 <p><b>진료과수:</b> 2개</p>                 <p><b>주소:</b> 서북구 충무로 178</p>                 <p><b>전화:</b> 041-578-0875</p>             </div>             </div>`)[0];
+                popup_271e8e5d3462f2bf0b1482029148b4bf.setContent(html_762037037a528b0a4bf42aa16c661eb9);
+            
+        
+
+        marker_79a82b02c1dcebde67396fff8d60de31.bindPopup(popup_271e8e5d3462f2bf0b1482029148b4bf)
+        ;
+
+        
+    
+    
+            marker_79a82b02c1dcebde67396fff8d60de31.bindTooltip(
+                `<div>
+                     40. 삼성비뇨기과의원 (34.8km)
+                 </div>`,
+                {
+  "sticky": true,
+}
+            );
+        
+    
+                marker_79a82b02c1dcebde67396fff8d60de31.setIcon(icon_d942dfd0e928b75088d517f6d1518e27);
+            
+    
+            var marker_1de8ce653cca7a3db76d6c9874821bc2 = L.marker(
+                [36.79480537, 127.1264759],
+                {
+}
+            ).addTo(map_756d00aed9a3375ed0e7d5a3db7186e0);
+        
+    
+            var icon_978a1bce38852649bc425df68c204c98 = L.AwesomeMarkers.icon(
+                {
+  "markerColor": "green",
+  "iconColor": "white",
+  "icon": "hospital-o",
+  "prefix": "fa",
+  "extraClasses": "fa-rotate-0",
+}
+            );
+        
+    
+        var popup_6764b472e9d7ee47d3a0dc8fd15c71d3 = L.popup({
+  "maxWidth": 300,
+});
+
+        
+            
+                var html_79506c5b7086fc4a410b6d9d072db44f = $(`<div id="html_79506c5b7086fc4a410b6d9d072db44f" style="width: 100.0%; height: 100.0%;">             <div style="font-family: Arial, sans-serif; width: 250px;">                 <h4>쌍용우리이비인후과의원</h4>                 <p><b>거리:</b> 34.9km</p>                 <p><b>종별:</b> 의원</p>                 <p><b>병상수:</b> 3개</p>                 <p><b>진료과수:</b> 3개</p>                 <p><b>주소:</b> 서북구 충무로 175 금정빌딩 4층</p>                 <p><b>전화:</b> 041-575-7533</p>             </div>             </div>`)[0];
+                popup_6764b472e9d7ee47d3a0dc8fd15c71d3.setContent(html_79506c5b7086fc4a410b6d9d072db44f);
+            
+        
+
+        marker_1de8ce653cca7a3db76d6c9874821bc2.bindPopup(popup_6764b472e9d7ee47d3a0dc8fd15c71d3)
+        ;
+
+        
+    
+    
+            marker_1de8ce653cca7a3db76d6c9874821bc2.bindTooltip(
+                `<div>
+                     41. 쌍용우리이비인후과의원 (34.9km)
+                 </div>`,
+                {
+  "sticky": true,
+}
+            );
+        
+    
+                marker_1de8ce653cca7a3db76d6c9874821bc2.setIcon(icon_978a1bce38852649bc425df68c204c98);
+            
+    
+            var marker_5b2c4395560c8eea4993798a23587587 = L.marker(
+                [36.79305845, 127.121756],
+                {
+}
+            ).addTo(map_756d00aed9a3375ed0e7d5a3db7186e0);
+        
+    
+            var icon_5e784c62355621a9e6c33e0432cc98b1 = L.AwesomeMarkers.icon(
+                {
+  "markerColor": "blue",
+  "iconColor": "white",
+  "icon": "hospital-o",
+  "prefix": "fa",
+  "extraClasses": "fa-rotate-0",
+}
+            );
+        
+    
+        var popup_ae5dae78b10316b8749b8f415d9c0ac5 = L.popup({
+  "maxWidth": 300,
+});
+
+        
+            
+                var html_bbb6e30b3e39dc819432763109fd367e = $(`<div id="html_bbb6e30b3e39dc819432763109fd367e" style="width: 100.0%; height: 100.0%;">             <div style="font-family: Arial, sans-serif; width: 250px;">                 <h4>예일병원</h4>                 <p><b>거리:</b> 35.1km</p>                 <p><b>종별:</b> 병원</p>                 <p><b>병상수:</b> 50개</p>                 <p><b>진료과수:</b> 3개</p>                 <p><b>주소:</b> 서북구 충무로 129</p>                 <p><b>전화:</b> 041-571-7000</p>             </div>             </div>`)[0];
+                popup_ae5dae78b10316b8749b8f415d9c0ac5.setContent(html_bbb6e30b3e39dc819432763109fd367e);
+            
+        
+
+        marker_5b2c4395560c8eea4993798a23587587.bindPopup(popup_ae5dae78b10316b8749b8f415d9c0ac5)
+        ;
+
+        
+    
+    
+            marker_5b2c4395560c8eea4993798a23587587.bindTooltip(
+                `<div>
+                     42. 예일병원 (35.1km)
+                 </div>`,
+                {
+  "sticky": true,
+}
+            );
+        
+    
+                marker_5b2c4395560c8eea4993798a23587587.setIcon(icon_5e784c62355621a9e6c33e0432cc98b1);
+            
+    
+            var marker_d74ca664d3d547cb20530d704fcf1d17 = L.marker(
+                [36.45692059, 127.1251535],
+                {
+}
+            ).addTo(map_756d00aed9a3375ed0e7d5a3db7186e0);
+        
+    
+            var icon_c48308e0aadfee96658af595b18c69c0 = L.AwesomeMarkers.icon(
+                {
+  "markerColor": "green",
+  "iconColor": "white",
+  "icon": "hospital-o",
+  "prefix": "fa",
+  "extraClasses": "fa-rotate-0",
+}
+            );
+        
+    
+        var popup_a3f87e33ef18bd1eb9b06e41f70a2306 = L.popup({
+  "maxWidth": 300,
+});
+
+        
+            
+                var html_c8d30272aa96858ea66a7d4499eae206 = $(`<div id="html_c8d30272aa96858ea66a7d4499eae206" style="width: 100.0%; height: 100.0%;">             <div style="font-family: Arial, sans-serif; width: 250px;">                 <h4>공주서울내과의원</h4>                 <p><b>거리:</b> 35.3km</p>                 <p><b>종별:</b> 의원</p>                 <p><b>병상수:</b> 0개</p>                 <p><b>진료과수:</b> 4개</p>                 <p><b>주소:</b> 웅진로 186 (산성동) 2층 공주서울내과의원</p>                 <p><b>전화:</b> 041-853-7582</p>             </div>             </div>`)[0];
+                popup_a3f87e33ef18bd1eb9b06e41f70a2306.setContent(html_c8d30272aa96858ea66a7d4499eae206);
+            
+        
+
+        marker_d74ca664d3d547cb20530d704fcf1d17.bindPopup(popup_a3f87e33ef18bd1eb9b06e41f70a2306)
+        ;
+
+        
+    
+    
+            marker_d74ca664d3d547cb20530d704fcf1d17.bindTooltip(
+                `<div>
+                     43. 공주서울내과의원 (35.3km)
+                 </div>`,
+                {
+  "sticky": true,
+}
+            );
+        
+    
+                marker_d74ca664d3d547cb20530d704fcf1d17.setIcon(icon_c48308e0aadfee96658af595b18c69c0);
+            
+    
+            var marker_84d18f1bbf82f45aa3e77a1b981f5039 = L.marker(
+                [36.815626, 127.7841816],
+                {
+}
+            ).addTo(map_756d00aed9a3375ed0e7d5a3db7186e0);
+        
+    
+            var icon_0a6306bf7d745fbedee941b030db8d2f = L.AwesomeMarkers.icon(
+                {
+  "markerColor": "blue",
+  "iconColor": "white",
+  "icon": "hospital-o",
+  "prefix": "fa",
+  "extraClasses": "fa-rotate-0",
+}
+            );
+        
+    
+        var popup_b5b0a3ed8a5767f05cc718e8a3ae32b2 = L.popup({
+  "maxWidth": 300,
+});
+
+        
+            
+                var html_8f14bd3fb71d12d1dba395f22fc6ec22 = $(`<div id="html_8f14bd3fb71d12d1dba395f22fc6ec22" style="width: 100.0%; height: 100.0%;">             <div style="font-family: Arial, sans-serif; width: 250px;">                 <h4>괴산성모병원</h4>                 <p><b>거리:</b> 35.8km</p>                 <p><b>종별:</b> 병원</p>                 <p><b>병상수:</b> 40개</p>                 <p><b>진료과수:</b> 11개</p>                 <p><b>주소:</b> 괴산읍 임꺽정로 116</p>                 <p><b>전화:</b> 043-830-5405</p>             </div>             </div>`)[0];
+                popup_b5b0a3ed8a5767f05cc718e8a3ae32b2.setContent(html_8f14bd3fb71d12d1dba395f22fc6ec22);
+            
+        
+
+        marker_84d18f1bbf82f45aa3e77a1b981f5039.bindPopup(popup_b5b0a3ed8a5767f05cc718e8a3ae32b2)
+        ;
+
+        
+    
+    
+            marker_84d18f1bbf82f45aa3e77a1b981f5039.bindTooltip(
+                `<div>
+                     44. 괴산성모병원 (35.8km)
+                 </div>`,
+                {
+  "sticky": true,
+}
+            );
+        
+    
+                marker_84d18f1bbf82f45aa3e77a1b981f5039.setIcon(icon_0a6306bf7d745fbedee941b030db8d2f);
+            
+    
+            var marker_cf4a3b4ce7a4377871f468ed73eeacca = L.marker(
+                [36.80979352, 127.7933994],
+                {
+}
+            ).addTo(map_756d00aed9a3375ed0e7d5a3db7186e0);
+        
+    
+            var icon_17693fbf17aed2fca247b76f0b0c9244 = L.AwesomeMarkers.icon(
+                {
+  "markerColor": "green",
+  "iconColor": "white",
+  "icon": "hospital-o",
+  "prefix": "fa",
+  "extraClasses": "fa-rotate-0",
+}
+            );
+        
+    
+        var popup_ee170921584210e186ae6ec5801ff1c0 = L.popup({
+  "maxWidth": 300,
+});
+
+        
+            
+                var html_2bab20bd4eb26c7853fe3b3a57796426 = $(`<div id="html_2bab20bd4eb26c7853fe3b3a57796426" style="width: 100.0%; height: 100.0%;">             <div style="font-family: Arial, sans-serif; width: 250px;">                 <h4>중앙외과의원</h4>                 <p><b>거리:</b> 36.1km</p>                 <p><b>종별:</b> 의원</p>                 <p><b>병상수:</b> 0개</p>                 <p><b>진료과수:</b> 1개</p>                 <p><b>주소:</b> 괴산읍 읍내로 11길 14</p>                 <p><b>전화:</b> 043-832-2448</p>             </div>             </div>`)[0];
+                popup_ee170921584210e186ae6ec5801ff1c0.setContent(html_2bab20bd4eb26c7853fe3b3a57796426);
+            
+        
+
+        marker_cf4a3b4ce7a4377871f468ed73eeacca.bindPopup(popup_ee170921584210e186ae6ec5801ff1c0)
+        ;
+
+        
+    
+    
+            marker_cf4a3b4ce7a4377871f468ed73eeacca.bindTooltip(
+                `<div>
+                     45. 중앙외과의원 (36.1km)
+                 </div>`,
+                {
+  "sticky": true,
+}
+            );
+        
+    
+                marker_cf4a3b4ce7a4377871f468ed73eeacca.setIcon(icon_17693fbf17aed2fca247b76f0b0c9244);
+            
+    
+            var marker_f47ca15a22b6f5338adfb5a4dc4427aa = L.marker(
+                [36.45887782, 127.1095012],
+                {
+}
+            ).addTo(map_756d00aed9a3375ed0e7d5a3db7186e0);
+        
+    
+            var icon_0010d099dc9a7e88048fe6e6e9f4a64c = L.AwesomeMarkers.icon(
+                {
+  "markerColor": "red",
+  "iconColor": "white",
+  "icon": "hospital-o",
+  "prefix": "fa",
+  "extraClasses": "fa-rotate-0",
+}
+            );
+        
+    
+        var popup_9a6919e636d5f4ef3c0ef2d21e335ae5 = L.popup({
+  "maxWidth": 300,
+});
+
+        
+            
+                var html_0e93facc3980ac2a7962ee24425d39bb = $(`<div id="html_0e93facc3980ac2a7962ee24425d39bb" style="width: 100.0%; height: 100.0%;">             <div style="font-family: Arial, sans-serif; width: 250px;">                 <h4>공주의료원</h4>                 <p><b>거리:</b> 36.4km</p>                 <p><b>종별:</b> 종합병원</p>                 <p><b>병상수:</b> 297개</p>                 <p><b>진료과수:</b> 24개</p>                 <p><b>주소:</b> 무령로 77</p>                 <p><b>전화:</b> 041-962-1111</p>             </div>             </div>`)[0];
+                popup_9a6919e636d5f4ef3c0ef2d21e335ae5.setContent(html_0e93facc3980ac2a7962ee24425d39bb);
+            
+        
+
+        marker_f47ca15a22b6f5338adfb5a4dc4427aa.bindPopup(popup_9a6919e636d5f4ef3c0ef2d21e335ae5)
+        ;
+
+        
+    
+    
+            marker_f47ca15a22b6f5338adfb5a4dc4427aa.bindTooltip(
+                `<div>
+                     46. 공주의료원 (36.4km)
+                 </div>`,
+                {
+  "sticky": true,
+}
+            );
+        
+    
+                marker_f47ca15a22b6f5338adfb5a4dc4427aa.setIcon(icon_0010d099dc9a7e88048fe6e6e9f4a64c);
+            
+    
+            var marker_943a35f05c016ce4952442d81278acdd = L.marker(
+                [36.31332413, 127.5720075],
+                {
+}
+            ).addTo(map_756d00aed9a3375ed0e7d5a3db7186e0);
+        
+    
+            var icon_961a17e600346de4db868d5b44b15b43 = L.AwesomeMarkers.icon(
+                {
+  "markerColor": "red",
+  "iconColor": "white",
+  "icon": "hospital-o",
+  "prefix": "fa",
+  "extraClasses": "fa-rotate-0",
+}
+            );
+        
+    
+        var popup_2aaeae1d8517055d674ca855072fb350 = L.popup({
+  "maxWidth": 300,
+});
+
+        
+            
+                var html_2b281f768b5033b7102022c43b85aac9 = $(`<div id="html_2b281f768b5033b7102022c43b85aac9" style="width: 100.0%; height: 100.0%;">             <div style="font-family: Arial, sans-serif; width: 250px;">                 <h4>(의)힐링의료재단 옥천성모병원</h4>                 <p><b>거리:</b> 36.4km</p>                 <p><b>종별:</b> 종합병원</p>                 <p><b>병상수:</b> 164개</p>                 <p><b>진료과수:</b> 12개</p>                 <p><b>주소:</b> 옥천읍 성왕로 1195</p>                 <p><b>전화:</b> 043-730-7000</p>             </div>             </div>`)[0];
+                popup_2aaeae1d8517055d674ca855072fb350.setContent(html_2b281f768b5033b7102022c43b85aac9);
+            
+        
+
+        marker_943a35f05c016ce4952442d81278acdd.bindPopup(popup_2aaeae1d8517055d674ca855072fb350)
+        ;
+
+        
+    
+    
+            marker_943a35f05c016ce4952442d81278acdd.bindTooltip(
+                `<div>
+                     47. (의)힐링의료재단 옥천성모병원 (36.4km)
+                 </div>`,
+                {
+  "sticky": true,
+}
+            );
+        
+    
+                marker_943a35f05c016ce4952442d81278acdd.setIcon(icon_961a17e600346de4db868d5b44b15b43);
+            
+    
+            var marker_9d3030b1fa06059257b5a4566b006cb7 = L.marker(
+                [36.30385805, 127.3490756],
+                {
+}
+            ).addTo(map_756d00aed9a3375ed0e7d5a3db7186e0);
+        
+    
+            var icon_465be1fa4ab5642ad7dfed9ff3e930c4 = L.AwesomeMarkers.icon(
+                {
+  "markerColor": "green",
+  "iconColor": "white",
+  "icon": "hospital-o",
+  "prefix": "fa",
+  "extraClasses": "fa-rotate-0",
+}
+            );
+        
+    
+        var popup_e1fe72b92e15178444b82656dbe7faf6 = L.popup({
+  "maxWidth": 300,
+});
+
+        
+            
+                var html_3573cd5ee759071157bd6ba162042668 = $(`<div id="html_3573cd5ee759071157bd6ba162042668" style="width: 100.0%; height: 100.0%;">             <div style="font-family: Arial, sans-serif; width: 250px;">                 <h4>김봉천정형외과의원</h4>                 <p><b>거리:</b> 37.3km</p>                 <p><b>종별:</b> 의원</p>                 <p><b>병상수:</b> 27개</p>                 <p><b>진료과수:</b> 6개</p>                 <p><b>주소:</b> 계백로 1130 (가수원동)</p>                 <p><b>전화:</b> 042-541-4330</p>             </div>             </div>`)[0];
+                popup_e1fe72b92e15178444b82656dbe7faf6.setContent(html_3573cd5ee759071157bd6ba162042668);
+            
+        
+
+        marker_9d3030b1fa06059257b5a4566b006cb7.bindPopup(popup_e1fe72b92e15178444b82656dbe7faf6)
+        ;
+
+        
+    
+    
+            marker_9d3030b1fa06059257b5a4566b006cb7.bindTooltip(
+                `<div>
+                     48. 김봉천정형외과의원 (37.3km)
+                 </div>`,
+                {
+  "sticky": true,
+}
+            );
+        
+    
+                marker_9d3030b1fa06059257b5a4566b006cb7.setIcon(icon_465be1fa4ab5642ad7dfed9ff3e930c4);
+            
+    
+            var marker_207ea734ab945ba65984afb5e23f533b = L.marker(
+                [36.96648076, 127.4943597],
+                {
+}
+            ).addTo(map_756d00aed9a3375ed0e7d5a3db7186e0);
+        
+    
+            var icon_9f5778c7b0e448463f282fb9bef02fe0 = L.AwesomeMarkers.icon(
+                {
+  "markerColor": "green",
+  "iconColor": "white",
+  "icon": "hospital-o",
+  "prefix": "fa",
+  "extraClasses": "fa-rotate-0",
+}
+            );
+        
+    
+        var popup_ca93637c4c2f7226f2d76ca7cccdfe9f = L.popup({
+  "maxWidth": 300,
+});
+
+        
+            
+                var html_1228dd7179fb1b3fe7f74028a49d6617 = $(`<div id="html_1228dd7179fb1b3fe7f74028a49d6617" style="width: 100.0%; height: 100.0%;">             <div style="font-family: Arial, sans-serif; width: 250px;">                 <h4>서울연합의원</h4>                 <p><b>거리:</b> 37.7km</p>                 <p><b>종별:</b> 의원</p>                 <p><b>병상수:</b> 29개</p>                 <p><b>진료과수:</b> 4개</p>                 <p><b>주소:</b> 대소면 오태로 175(대소면)</p>                 <p><b>전화:</b> 043-883-2700</p>             </div>             </div>`)[0];
+                popup_ca93637c4c2f7226f2d76ca7cccdfe9f.setContent(html_1228dd7179fb1b3fe7f74028a49d6617);
+            
+        
+
+        marker_207ea734ab945ba65984afb5e23f533b.bindPopup(popup_ca93637c4c2f7226f2d76ca7cccdfe9f)
+        ;
+
+        
+    
+    
+            marker_207ea734ab945ba65984afb5e23f533b.bindTooltip(
+                `<div>
+                     49. 서울연합의원 (37.7km)
+                 </div>`,
+                {
+  "sticky": true,
+}
+            );
+        
+    
+                marker_207ea734ab945ba65984afb5e23f533b.setIcon(icon_9f5778c7b0e448463f282fb9bef02fe0);
+            
+    
+            var marker_2c9a7edd51bbd25ad713d4e10ec02f7a = L.marker(
+                [36.96752572, 127.4858513],
+                {
+}
+            ).addTo(map_756d00aed9a3375ed0e7d5a3db7186e0);
+        
+    
+            var icon_88b1e6659e573577c6139a5f8d486268 = L.AwesomeMarkers.icon(
+                {
+  "markerColor": "green",
+  "iconColor": "white",
+  "icon": "hospital-o",
+  "prefix": "fa",
+  "extraClasses": "fa-rotate-0",
+}
+            );
+        
+    
+        var popup_1bdd4ec1b581ba10489d0e6935f694f8 = L.popup({
+  "maxWidth": 300,
+});
+
+        
+            
+                var html_254c31b0ec6dfc0cfea333e2606988e7 = $(`<div id="html_254c31b0ec6dfc0cfea333e2606988e7" style="width: 100.0%; height: 100.0%;">             <div style="font-family: Arial, sans-serif; width: 250px;">                 <h4>조은내과의원</h4>                 <p><b>거리:</b> 37.7km</p>                 <p><b>종별:</b> 의원</p>                 <p><b>병상수:</b> 0개</p>                 <p><b>진료과수:</b> 3개</p>                 <p><b>주소:</b> 대소면 오태로 98</p>                 <p><b>전화:</b> 043-882-8880</p>             </div>             </div>`)[0];
+                popup_1bdd4ec1b581ba10489d0e6935f694f8.setContent(html_254c31b0ec6dfc0cfea333e2606988e7);
+            
+        
+
+        marker_2c9a7edd51bbd25ad713d4e10ec02f7a.bindPopup(popup_1bdd4ec1b581ba10489d0e6935f694f8)
+        ;
+
+        
+    
+    
+            marker_2c9a7edd51bbd25ad713d4e10ec02f7a.bindTooltip(
+                `<div>
+                     50. 조은내과의원 (37.7km)
+                 </div>`,
+                {
+  "sticky": true,
+}
+            );
+        
+    
+                marker_2c9a7edd51bbd25ad713d4e10ec02f7a.setIcon(icon_88b1e6659e573577c6139a5f8d486268);
+            
+    
+            var marker_fd4b313a8dc725d0c8a032cd17437264 = L.marker(
+                [36.29965851, 127.5663033],
+                {
+}
+            ).addTo(map_756d00aed9a3375ed0e7d5a3db7186e0);
+        
+    
+            var icon_5d731d1cdc65b4ed26cfe58a6958907f = L.AwesomeMarkers.icon(
+                {
+  "markerColor": "green",
+  "iconColor": "white",
+  "icon": "hospital-o",
+  "prefix": "fa",
+  "extraClasses": "fa-rotate-0",
+}
+            );
+        
+    
+        var popup_d65d8b831099a7355ea06df472d85690 = L.popup({
+  "maxWidth": 300,
+});
+
+        
+            
+                var html_3ba6e1485d0bc231f726bd46f1166566 = $(`<div id="html_3ba6e1485d0bc231f726bd46f1166566" style="width: 100.0%; height: 100.0%;">             <div style="font-family: Arial, sans-serif; width: 250px;">                 <h4>드림이비인후과의원</h4>                 <p><b>거리:</b> 37.8km</p>                 <p><b>종별:</b> 의원</p>                 <p><b>병상수:</b> 0개</p>                 <p><b>진료과수:</b> 4개</p>                 <p><b>주소:</b> 옥천읍 삼금로 11 2층, 드림이비인후과의원</p>                 <p><b>전화:</b> 043-733-5800</p>             </div>             </div>`)[0];
+                popup_d65d8b831099a7355ea06df472d85690.setContent(html_3ba6e1485d0bc231f726bd46f1166566);
+            
+        
+
+        marker_fd4b313a8dc725d0c8a032cd17437264.bindPopup(popup_d65d8b831099a7355ea06df472d85690)
+        ;
+
+        
+    
+    
+            marker_fd4b313a8dc725d0c8a032cd17437264.bindTooltip(
+                `<div>
+                     51. 드림이비인후과의원 (37.8km)
+                 </div>`,
+                {
+  "sticky": true,
+}
+            );
+        
+    
+                marker_fd4b313a8dc725d0c8a032cd17437264.setIcon(icon_5d731d1cdc65b4ed26cfe58a6958907f);
+            
+    
+            var marker_a82d21f8ccce37cd942416b6fce00744 = L.marker(
+                [36.29860923, 127.335302],
+                {
+}
+            ).addTo(map_756d00aed9a3375ed0e7d5a3db7186e0);
+        
+    
+            var icon_a1321aca8f33b731535de7fdd06d4503 = L.AwesomeMarkers.icon(
+                {
+  "markerColor": "green",
+  "iconColor": "white",
+  "icon": "hospital-o",
+  "prefix": "fa",
+  "extraClasses": "fa-rotate-0",
+}
+            );
+        
+    
+        var popup_bdeb1303bde68487dedb5e72f14706d1 = L.popup({
+  "maxWidth": 300,
+});
+
+        
+            
+                var html_41d0470f0d2b13bb39c8ccb15ad62566 = $(`<div id="html_41d0470f0d2b13bb39c8ccb15ad62566" style="width: 100.0%; height: 100.0%;">             <div style="font-family: Arial, sans-serif; width: 250px;">                 <h4>신선정형외과의원</h4>                 <p><b>거리:</b> 38.2km</p>                 <p><b>종별:</b> 의원</p>                 <p><b>병상수:</b> 0개</p>                 <p><b>진료과수:</b> 6개</p>                 <p><b>주소:</b> 관저중로 72 (관저동) 4층 신선정형외과</p>                 <p><b>전화:</b> 042-636-3003</p>             </div>             </div>`)[0];
+                popup_bdeb1303bde68487dedb5e72f14706d1.setContent(html_41d0470f0d2b13bb39c8ccb15ad62566);
+            
+        
+
+        marker_a82d21f8ccce37cd942416b6fce00744.bindPopup(popup_bdeb1303bde68487dedb5e72f14706d1)
+        ;
+
+        
+    
+    
+            marker_a82d21f8ccce37cd942416b6fce00744.bindTooltip(
+                `<div>
+                     52. 신선정형외과의원 (38.2km)
+                 </div>`,
+                {
+  "sticky": true,
+}
+            );
+        
+    
+                marker_a82d21f8ccce37cd942416b6fce00744.setIcon(icon_a1321aca8f33b731535de7fdd06d4503);
+            
+    
+            var marker_5f6b44b9120388e65e82e09faefecf5d = L.marker(
+                [36.27989728, 127.4686125],
+                {
+}
+            ).addTo(map_756d00aed9a3375ed0e7d5a3db7186e0);
+        
+    
+            var icon_9015bfba7529a5fb18f90fdfccae73b0 = L.AwesomeMarkers.icon(
+                {
+  "markerColor": "green",
+  "iconColor": "white",
+  "icon": "hospital-o",
+  "prefix": "fa",
+  "extraClasses": "fa-rotate-0",
+}
+            );
+        
+    
+        var popup_6b0451b78cd9e945a7bd086dc0f2455c = L.popup({
+  "maxWidth": 300,
+});
+
+        
+            
+                var html_0729d878e7d12fd3537cdd59329f4371 = $(`<div id="html_0729d878e7d12fd3537cdd59329f4371" style="width: 100.0%; height: 100.0%;">             <div style="font-family: Arial, sans-serif; width: 250px;">                 <h4>마디신경외과의원</h4>                 <p><b>거리:</b> 38.7km</p>                 <p><b>종별:</b> 의원</p>                 <p><b>병상수:</b> 1개</p>                 <p><b>진료과수:</b> 6개</p>                 <p><b>주소:</b> 곤룡로 6</p>                 <p><b>전화:</b> 042-271-7008</p>             </div>             </div>`)[0];
+                popup_6b0451b78cd9e945a7bd086dc0f2455c.setContent(html_0729d878e7d12fd3537cdd59329f4371);
+            
+        
+
+        marker_5f6b44b9120388e65e82e09faefecf5d.bindPopup(popup_6b0451b78cd9e945a7bd086dc0f2455c)
+        ;
+
+        
+    
+    
+            marker_5f6b44b9120388e65e82e09faefecf5d.bindTooltip(
+                `<div>
+                     53. 마디신경외과의원 (38.7km)
+                 </div>`,
+                {
+  "sticky": true,
+}
+            );
+        
+    
+                marker_5f6b44b9120388e65e82e09faefecf5d.setIcon(icon_9015bfba7529a5fb18f90fdfccae73b0);
+            
+    
+            var marker_0916a9840230bcef58b884ae47015cd5 = L.marker(
+                [36.87749291, 127.1522335],
+                {
+}
+            ).addTo(map_756d00aed9a3375ed0e7d5a3db7186e0);
+        
+    
+            var icon_dd9735bdd49e3a7b06992ecdbe8880e4 = L.AwesomeMarkers.icon(
+                {
+  "markerColor": "green",
+  "iconColor": "white",
+  "icon": "hospital-o",
+  "prefix": "fa",
+  "extraClasses": "fa-rotate-0",
+}
+            );
+        
+    
+        var popup_4cd4bc1232acca6b13ef92fd33a9d79c = L.popup({
+  "maxWidth": 300,
+});
+
+        
+            
+                var html_867aa7ca057ff6fc57ca4077aa7808dd = $(`<div id="html_867aa7ca057ff6fc57ca4077aa7808dd" style="width: 100.0%; height: 100.0%;">             <div style="font-family: Arial, sans-serif; width: 250px;">                 <h4>JS메디칼내과외과정형외과의원</h4>                 <p><b>거리:</b> 38.8km</p>                 <p><b>종별:</b> 의원</p>                 <p><b>병상수:</b> 29개</p>                 <p><b>진료과수:</b> 9개</p>                 <p><b>주소:</b> 서북구 직산읍 봉주로 51 JS메디칼의원</p>                 <p><b>전화:</b> 041-589-7575</p>             </div>             </div>`)[0];
+                popup_4cd4bc1232acca6b13ef92fd33a9d79c.setContent(html_867aa7ca057ff6fc57ca4077aa7808dd);
+            
+        
+
+        marker_0916a9840230bcef58b884ae47015cd5.bindPopup(popup_4cd4bc1232acca6b13ef92fd33a9d79c)
+        ;
+
+        
+    
+    
+            marker_0916a9840230bcef58b884ae47015cd5.bindTooltip(
+                `<div>
+                     54. JS메디칼내과외과정형외과의원 (38.8km)
+                 </div>`,
+                {
+  "sticky": true,
+}
+            );
+        
+    
+                marker_0916a9840230bcef58b884ae47015cd5.setIcon(icon_dd9735bdd49e3a7b06992ecdbe8880e4);
+            
+    
+            var marker_261631ec84c080b165412884db125b24 = L.marker(
+                [36.77565836, 127.0628061],
+                {
+}
+            ).addTo(map_756d00aed9a3375ed0e7d5a3db7186e0);
+        
+    
+            var icon_ff7645e555991434e5db613e1acd8269 = L.AwesomeMarkers.icon(
+                {
+  "markerColor": "green",
+  "iconColor": "white",
+  "icon": "hospital-o",
+  "prefix": "fa",
+  "extraClasses": "fa-rotate-0",
+}
+            );
+        
+    
+        var popup_6ee84f6a4f58a661ea8e15e468f82b0f = L.popup({
+  "maxWidth": 300,
+});
+
+        
+            
+                var html_792633b4617e4f9c1dc5696b1c7af99b = $(`<div id="html_792633b4617e4f9c1dc5696b1c7af99b" style="width: 100.0%; height: 100.0%;">             <div style="font-family: Arial, sans-serif; width: 250px;">                 <h4>큰나무정형외과의원</h4>                 <p><b>거리:</b> 38.9km</p>                 <p><b>종별:</b> 의원</p>                 <p><b>병상수:</b> 29개</p>                 <p><b>진료과수:</b> 9개</p>                 <p><b>주소:</b> 배방읍 모산로 181</p>                 <p><b>전화:</b> 041-543-8275</p>             </div>             </div>`)[0];
+                popup_6ee84f6a4f58a661ea8e15e468f82b0f.setContent(html_792633b4617e4f9c1dc5696b1c7af99b);
+            
+        
+
+        marker_261631ec84c080b165412884db125b24.bindPopup(popup_6ee84f6a4f58a661ea8e15e468f82b0f)
+        ;
+
+        
+    
+    
+            marker_261631ec84c080b165412884db125b24.bindTooltip(
+                `<div>
+                     55. 큰나무정형외과의원 (38.9km)
+                 </div>`,
+                {
+  "sticky": true,
+}
+            );
+        
+    
+                marker_261631ec84c080b165412884db125b24.setIcon(icon_ff7645e555991434e5db613e1acd8269);
+            
+    
+            var marker_6b1c411ae9d2c5b1f9ee4d31ee531056 = L.marker(
+                [36.28828668, 127.2435807],
+                {
+}
+            ).addTo(map_756d00aed9a3375ed0e7d5a3db7186e0);
+        
+    
+            var icon_b471b9e1caabdd5159c15f268716f5c4 = L.AwesomeMarkers.icon(
+                {
+  "markerColor": "green",
+  "iconColor": "white",
+  "icon": "hospital-o",
+  "prefix": "fa",
+  "extraClasses": "fa-rotate-0",
+}
+            );
+        
+    
+        var popup_ec2a0dde7bffa988ad4a3827913021dd = L.popup({
+  "maxWidth": 300,
+});
+
+        
+            
+                var html_022f851fbb3f3d63ecc736c45ec52503 = $(`<div id="html_022f851fbb3f3d63ecc736c45ec52503" style="width: 100.0%; height: 100.0%;">             <div style="font-family: Arial, sans-serif; width: 250px;">                 <h4>김광석외과의원</h4>                 <p><b>거리:</b> 42.3km</p>                 <p><b>종별:</b> 의원</p>                 <p><b>병상수:</b> 0개</p>                 <p><b>진료과수:</b> 7개</p>                 <p><b>주소:</b> 엄사면 번영로 14</p>                 <p><b>전화:</b> 042-841-4411</p>             </div>             </div>`)[0];
+                popup_ec2a0dde7bffa988ad4a3827913021dd.setContent(html_022f851fbb3f3d63ecc736c45ec52503);
+            
+        
+
+        marker_6b1c411ae9d2c5b1f9ee4d31ee531056.bindPopup(popup_ec2a0dde7bffa988ad4a3827913021dd)
+        ;
+
+        
+    
+    
+            marker_6b1c411ae9d2c5b1f9ee4d31ee531056.bindTooltip(
+                `<div>
+                     56. 김광석외과의원 (42.3km)
+                 </div>`,
+                {
+  "sticky": true,
+}
+            );
+        
+    
+                marker_6b1c411ae9d2c5b1f9ee4d31ee531056.setIcon(icon_b471b9e1caabdd5159c15f268716f5c4);
+            
+    
+            var marker_a38076e18d9a38ac91840a1f49944f04 = L.marker(
+                [36.77928761, 127.019945],
+                {
+}
+            ).addTo(map_756d00aed9a3375ed0e7d5a3db7186e0);
+        
+    
+            var icon_8c6e3f02948ebdb8aedba30f60da2532 = L.AwesomeMarkers.icon(
+                {
+  "markerColor": "red",
+  "iconColor": "white",
+  "icon": "hospital-o",
+  "prefix": "fa",
+  "extraClasses": "fa-rotate-0",
+}
+            );
+        
+    
+        var popup_fc32b65ded5c9eb8851611db66c7ae1f = L.popup({
+  "maxWidth": 300,
+});
+
+        
+            
+                var html_088af5402afb09332ebb885e95712144 = $(`<div id="html_088af5402afb09332ebb885e95712144" style="width: 100.0%; height: 100.0%;">             <div style="font-family: Arial, sans-serif; width: 250px;">                 <h4>아산충무병원</h4>                 <p><b>거리:</b> 42.5km</p>                 <p><b>종별:</b> 종합병원</p>                 <p><b>병상수:</b> 446개</p>                 <p><b>진료과수:</b> 29개</p>                 <p><b>주소:</b> 문화로 381 (모종동)</p>                 <p><b>전화:</b> 041-536-6666</p>             </div>             </div>`)[0];
+                popup_fc32b65ded5c9eb8851611db66c7ae1f.setContent(html_088af5402afb09332ebb885e95712144);
+            
+        
+
+        marker_a38076e18d9a38ac91840a1f49944f04.bindPopup(popup_fc32b65ded5c9eb8851611db66c7ae1f)
+        ;
+
+        
+    
+    
+            marker_a38076e18d9a38ac91840a1f49944f04.bindTooltip(
+                `<div>
+                     57. 아산충무병원 (42.5km)
+                 </div>`,
+                {
+  "sticky": true,
+}
+            );
+        
+    
+                marker_a38076e18d9a38ac91840a1f49944f04.setIcon(icon_8c6e3f02948ebdb8aedba30f60da2532);
+            
+    
+            var marker_c3e2afc464802c9d132622b1fb0eaf4c = L.marker(
+                [36.99805654, 127.5982],
+                {
+}
+            ).addTo(map_756d00aed9a3375ed0e7d5a3db7186e0);
+        
+    
+            var icon_ead068882a01419b580781600fe7c58d = L.AwesomeMarkers.icon(
+                {
+  "markerColor": "blue",
+  "iconColor": "white",
+  "icon": "hospital-o",
+  "prefix": "fa",
+  "extraClasses": "fa-rotate-0",
+}
+            );
+        
+    
+        var popup_aeabb39799f41cbbec8666ab5c9df9b2 = L.popup({
+  "maxWidth": 300,
+});
+
+        
+            
+                var html_e8129c8e1f1a4bf37ebe5e89350310bb = $(`<div id="html_e8129c8e1f1a4bf37ebe5e89350310bb" style="width: 100.0%; height: 100.0%;">             <div style="font-family: Arial, sans-serif; width: 250px;">                 <h4>(의)태성의료재단 제일조은병원</h4>                 <p><b>거리:</b> 42.9km</p>                 <p><b>종별:</b> 병원</p>                 <p><b>병상수:</b> 142개</p>                 <p><b>진료과수:</b> 7개</p>                 <p><b>주소:</b> 금왕읍 음성로1230번길 10</p>                 <p><b>전화:</b> 043-883-8800</p>             </div>             </div>`)[0];
+                popup_aeabb39799f41cbbec8666ab5c9df9b2.setContent(html_e8129c8e1f1a4bf37ebe5e89350310bb);
+            
+        
+
+        marker_c3e2afc464802c9d132622b1fb0eaf4c.bindPopup(popup_aeabb39799f41cbbec8666ab5c9df9b2)
+        ;
+
+        
+    
+    
+            marker_c3e2afc464802c9d132622b1fb0eaf4c.bindTooltip(
+                `<div>
+                     58. (의)태성의료재단 제일조은병원 (42.9km)
+                 </div>`,
+                {
+  "sticky": true,
+}
+            );
+        
+    
+                marker_c3e2afc464802c9d132622b1fb0eaf4c.setIcon(icon_ead068882a01419b580781600fe7c58d);
+            
+    
+            var marker_d8a7c60fe897a57c44aa35c1136be911 = L.marker(
+                [36.78485391, 127.0152247],
+                {
+}
+            ).addTo(map_756d00aed9a3375ed0e7d5a3db7186e0);
+        
+    
+            var icon_a558fea41360bc9655165f364907667a = L.AwesomeMarkers.icon(
+                {
+  "markerColor": "green",
+  "iconColor": "white",
+  "icon": "hospital-o",
+  "prefix": "fa",
+  "extraClasses": "fa-rotate-0",
+}
+            );
+        
+    
+        var popup_d9800ce6ba2ba347b32cc7ec69e56c06 = L.popup({
+  "maxWidth": 300,
+});
+
+        
+            
+                var html_e0fd05837af79c8ca79d751e4cd0f123 = $(`<div id="html_e0fd05837af79c8ca79d751e4cd0f123" style="width: 100.0%; height: 100.0%;">             <div style="font-family: Arial, sans-serif; width: 250px;">                 <h4>장사랑연합내과의원</h4>                 <p><b>거리:</b> 43.1km</p>                 <p><b>종별:</b> 의원</p>                 <p><b>병상수:</b> 0개</p>                 <p><b>진료과수:</b> 22개</p>                 <p><b>주소:</b> 번영로 223 (모종동) 4층,5층 장사랑연합내과의원</p>                 <p><b>전화:</b> 041-542-7582</p>             </div>             </div>`)[0];
+                popup_d9800ce6ba2ba347b32cc7ec69e56c06.setContent(html_e0fd05837af79c8ca79d751e4cd0f123);
+            
+        
+
+        marker_d8a7c60fe897a57c44aa35c1136be911.bindPopup(popup_d9800ce6ba2ba347b32cc7ec69e56c06)
+        ;
+
+        
+    
+    
+            marker_d8a7c60fe897a57c44aa35c1136be911.bindTooltip(
+                `<div>
+                     59. 장사랑연합내과의원 (43.1km)
+                 </div>`,
+                {
+  "sticky": true,
+}
+            );
+        
+    
+                marker_d8a7c60fe897a57c44aa35c1136be911.setIcon(icon_a558fea41360bc9655165f364907667a);
+            
+    
+            var marker_0440ff60e83c396fe3a18e5f167fb2eb = L.marker(
+                [37.00524422, 127.2667973],
+                {
+}
+            ).addTo(map_756d00aed9a3375ed0e7d5a3db7186e0);
+        
+    
+            var icon_4eea60018c42c624f02014f5920fa166 = L.AwesomeMarkers.icon(
+                {
+  "markerColor": "blue",
+  "iconColor": "white",
+  "icon": "hospital-o",
+  "prefix": "fa",
+  "extraClasses": "fa-rotate-0",
+}
+            );
+        
+    
+        var popup_edecd7062e01bb800e45bfa0dfd03115 = L.popup({
+  "maxWidth": 300,
+});
+
+        
+            
+                var html_bb68fdddb4d4a61a961d2fc0b1b47b33 = $(`<div id="html_bb68fdddb4d4a61a961d2fc0b1b47b33" style="width: 100.0%; height: 100.0%;">             <div style="font-family: Arial, sans-serif; width: 250px;">                 <h4>안성동인병원</h4>                 <p><b>거리:</b> 45.1km</p>                 <p><b>종별:</b> 병원</p>                 <p><b>병상수:</b> 41개</p>                 <p><b>진료과수:</b> 10개</p>                 <p><b>주소:</b> 인지1길 9</p>                 <p><b>전화:</b> 031-677-0300</p>             </div>             </div>`)[0];
+                popup_edecd7062e01bb800e45bfa0dfd03115.setContent(html_bb68fdddb4d4a61a961d2fc0b1b47b33);
+            
+        
+
+        marker_0440ff60e83c396fe3a18e5f167fb2eb.bindPopup(popup_edecd7062e01bb800e45bfa0dfd03115)
+        ;
+
+        
+    
+    
+            marker_0440ff60e83c396fe3a18e5f167fb2eb.bindTooltip(
+                `<div>
+                     60. 안성동인병원 (45.1km)
+                 </div>`,
+                {
+  "sticky": true,
+}
+            );
+        
+    
+                marker_0440ff60e83c396fe3a18e5f167fb2eb.setIcon(icon_4eea60018c42c624f02014f5920fa166);
+            
+    
+            var marker_a452f0c297a9f82a51b5d97984e937ac = L.marker(
+                [37.00620892, 127.2683387],
+                {
+}
+            ).addTo(map_756d00aed9a3375ed0e7d5a3db7186e0);
+        
+    
+            var icon_5bf54c18910ebbeab51f67b36fb7fe2d = L.AwesomeMarkers.icon(
+                {
+  "markerColor": "green",
+  "iconColor": "white",
+  "icon": "hospital-o",
+  "prefix": "fa",
+  "extraClasses": "fa-rotate-0",
+}
+            );
+        
+    
+        var popup_68652241a4dbd243a70aa28f59546699 = L.popup({
+  "maxWidth": 300,
+});
+
+        
+            
+                var html_f585f5547476cd4d8ca40c9dc71fa29b = $(`<div id="html_f585f5547476cd4d8ca40c9dc71fa29b" style="width: 100.0%; height: 100.0%;">             <div style="font-family: Arial, sans-serif; width: 250px;">                 <h4>안성제일정형외과의원</h4>                 <p><b>거리:</b> 45.2km</p>                 <p><b>종별:</b> 의원</p>                 <p><b>병상수:</b> 0개</p>                 <p><b>진료과수:</b> 6개</p>                 <p><b>주소:</b> 중앙로 372번길 37-15 1층 안성제일정형외과의원</p>                 <p><b>전화:</b> 031-673-2119</p>             </div>             </div>`)[0];
+                popup_68652241a4dbd243a70aa28f59546699.setContent(html_f585f5547476cd4d8ca40c9dc71fa29b);
+            
+        
+
+        marker_a452f0c297a9f82a51b5d97984e937ac.bindPopup(popup_68652241a4dbd243a70aa28f59546699)
+        ;
+
+        
+    
+    
+            marker_a452f0c297a9f82a51b5d97984e937ac.bindTooltip(
+                `<div>
+                     61. 안성제일정형외과의원 (45.2km)
+                 </div>`,
+                {
+  "sticky": true,
+}
+            );
+        
+    
+                marker_a452f0c297a9f82a51b5d97984e937ac.setIcon(icon_5bf54c18910ebbeab51f67b36fb7fe2d);
+            
+    
+            var marker_21851aa1d16e4ae5a6832a4b7d12b08b = L.marker(
+                [37.0076222, 127.2593585],
+                {
+}
+            ).addTo(map_756d00aed9a3375ed0e7d5a3db7186e0);
+        
+    
+            var icon_9122beea21cb0369491496c65e587697 = L.AwesomeMarkers.icon(
+                {
+  "markerColor": "green",
+  "iconColor": "white",
+  "icon": "hospital-o",
+  "prefix": "fa",
+  "extraClasses": "fa-rotate-0",
+}
+            );
+        
+    
+        var popup_0e9194fa418f84cf6f1ffdf843e954b9 = L.popup({
+  "maxWidth": 300,
+});
+
+        
+            
+                var html_7456c531eab7c4a99e9d6a56eff67104 = $(`<div id="html_7456c531eab7c4a99e9d6a56eff67104" style="width: 100.0%; height: 100.0%;">             <div style="font-family: Arial, sans-serif; width: 250px;">                 <h4>더편한장내과의원</h4>                 <p><b>거리:</b> 45.6km</p>                 <p><b>종별:</b> 의원</p>                 <p><b>병상수:</b> 0개</p>                 <p><b>진료과수:</b> 1개</p>                 <p><b>주소:</b> 아양1로 61, 폴리프라자1 3층</p>                 <p><b>전화:</b> 031-671-7575</p>             </div>             </div>`)[0];
+                popup_0e9194fa418f84cf6f1ffdf843e954b9.setContent(html_7456c531eab7c4a99e9d6a56eff67104);
+            
+        
+
+        marker_21851aa1d16e4ae5a6832a4b7d12b08b.bindPopup(popup_0e9194fa418f84cf6f1ffdf843e954b9)
+        ;
+
+        
+    
+    
+            marker_21851aa1d16e4ae5a6832a4b7d12b08b.bindTooltip(
+                `<div>
+                     62. 더편한장내과의원 (45.6km)
+                 </div>`,
+                {
+  "sticky": true,
+}
+            );
+        
+    
+                marker_21851aa1d16e4ae5a6832a4b7d12b08b.setIcon(icon_9122beea21cb0369491496c65e587697);
+            
+    
+            var marker_dddf8ed45497dbcc167b8fa909b41ae8 = L.marker(
+                [37.01439815, 127.2578096],
+                {
+}
+            ).addTo(map_756d00aed9a3375ed0e7d5a3db7186e0);
+        
+    
+            var icon_b8ced4c2cd4c146b4a75540f6dec015c = L.AwesomeMarkers.icon(
+                {
+  "markerColor": "red",
+  "iconColor": "white",
+  "icon": "hospital-o",
+  "prefix": "fa",
+  "extraClasses": "fa-rotate-0",
+}
+            );
+        
+    
+        var popup_bd053f4d0910808eb9cc9b0320aacba7 = L.popup({
+  "maxWidth": 300,
+});
+
+        
+            
+                var html_0c1b224f335d49cb2cd2c2108f30c0bc = $(`<div id="html_0c1b224f335d49cb2cd2c2108f30c0bc" style="width: 100.0%; height: 100.0%;">             <div style="font-family: Arial, sans-serif; width: 250px;">                 <h4>경기도의료원 안성병원</h4>                 <p><b>거리:</b> 46.4km</p>                 <p><b>종별:</b> 종합병원</p>                 <p><b>병상수:</b> 249개</p>                 <p><b>진료과수:</b> 15개</p>                 <p><b>주소:</b> 고수2로 17 (당왕동)</p>                 <p><b>전화:</b> 031-8046-5000</p>             </div>             </div>`)[0];
+                popup_bd053f4d0910808eb9cc9b0320aacba7.setContent(html_0c1b224f335d49cb2cd2c2108f30c0bc);
+            
+        
+
+        marker_dddf8ed45497dbcc167b8fa909b41ae8.bindPopup(popup_bd053f4d0910808eb9cc9b0320aacba7)
+        ;
+
+        
+    
+    
+            marker_dddf8ed45497dbcc167b8fa909b41ae8.bindTooltip(
+                `<div>
+                     63. 경기도의료원 안성병원 (46.4km)
+                 </div>`,
+                {
+  "sticky": true,
+}
+            );
+        
+    
+                marker_dddf8ed45497dbcc167b8fa909b41ae8.setIcon(icon_b8ced4c2cd4c146b4a75540f6dec015c);
+            
+    
+            var marker_353e0e74919decf8a469a6aa8257b625 = L.marker(
+                [36.97156578, 127.7941228],
+                {
+}
+            ).addTo(map_756d00aed9a3375ed0e7d5a3db7186e0);
+        
+    
+            var icon_878ba383d2cbe10b97d5d664675757f2 = L.AwesomeMarkers.icon(
+                {
+  "markerColor": "darkred",
+  "iconColor": "white",
+  "icon": "hospital-o",
+  "prefix": "fa",
+  "extraClasses": "fa-rotate-0",
+}
+            );
+        
+    
+        var popup_3a49d8c110d9c52f912eb9e31d28c4a1 = L.popup({
+  "maxWidth": 300,
+});
+
+        
+            
+                var html_719c11b525718070154d4cac5cffb525 = $(`<div id="html_719c11b525718070154d4cac5cffb525" style="width: 100.0%; height: 100.0%;">             <div style="font-family: Arial, sans-serif; width: 250px;">                 <h4>송원요양병원</h4>                 <p><b>거리:</b> 48.5km</p>                 <p><b>종별:</b> 요양병원</p>                 <p><b>병상수:</b> 195개</p>                 <p><b>진료과수:</b> 5개</p>                 <p><b>주소:</b> 주덕읍 신양로 62</p>                 <p><b>전화:</b> 043-856-3501</p>             </div>             </div>`)[0];
+                popup_3a49d8c110d9c52f912eb9e31d28c4a1.setContent(html_719c11b525718070154d4cac5cffb525);
+            
+        
+
+        marker_353e0e74919decf8a469a6aa8257b625.bindPopup(popup_3a49d8c110d9c52f912eb9e31d28c4a1)
+        ;
+
+        
+    
+    
+            marker_353e0e74919decf8a469a6aa8257b625.bindTooltip(
+                `<div>
+                     64. 송원요양병원 (48.5km)
+                 </div>`,
+                {
+  "sticky": true,
+}
+            );
+        
+    
+                marker_353e0e74919decf8a469a6aa8257b625.setIcon(icon_878ba383d2cbe10b97d5d664675757f2);
+            
+    
+            var marker_78df547e2b232bf139387bcfb561e698 = L.marker(
+                [36.19120539, 127.4670648],
+                {
+}
+            ).addTo(map_756d00aed9a3375ed0e7d5a3db7186e0);
+        
+    
+            var icon_51174ccef2e1bc2a851b66836c4dcc00 = L.AwesomeMarkers.icon(
+                {
+  "markerColor": "green",
+  "iconColor": "white",
+  "icon": "hospital-o",
+  "prefix": "fa",
+  "extraClasses": "fa-rotate-0",
+}
+            );
+        
+    
+        var popup_8d72c119734cb06d4210f4f646f6f029 = L.popup({
+  "maxWidth": 300,
+});
+
+        
+            
+                var html_2e598ddc3990f40d417c612bde3ee985 = $(`<div id="html_2e598ddc3990f40d417c612bde3ee985" style="width: 100.0%; height: 100.0%;">             <div style="font-family: Arial, sans-serif; width: 250px;">                 <h4>추부의원</h4>                 <p><b>거리:</b> 48.5km</p>                 <p><b>종별:</b> 의원</p>                 <p><b>병상수:</b> 0개</p>                 <p><b>진료과수:</b> 4개</p>                 <p><b>주소:</b> 추부면 마전로 56 추부의원</p>                 <p><b>전화:</b> 041-752-9950</p>             </div>             </div>`)[0];
+                popup_8d72c119734cb06d4210f4f646f6f029.setContent(html_2e598ddc3990f40d417c612bde3ee985);
+            
+        
+
+        marker_78df547e2b232bf139387bcfb561e698.bindPopup(popup_8d72c119734cb06d4210f4f646f6f029)
+        ;
+
+        
+    
+    
+            marker_78df547e2b232bf139387bcfb561e698.bindTooltip(
+                `<div>
+                     65. 추부의원 (48.5km)
+                 </div>`,
+                {
+  "sticky": true,
+}
+            );
+        
+    
+                marker_78df547e2b232bf139387bcfb561e698.setIcon(icon_51174ccef2e1bc2a851b66836c4dcc00);
+            
+    
+            var circle_a342e1bc4168dbcc19a46219fc0bbe5e = L.circle(
+                [36.6284, 127.4573],
+                {"bubblingMouseEvents": true, "color": "red", "dashArray": "5, 5", "dashOffset": null, "fill": false, "fillColor": "red", "fillOpacity": 0.2, "fillRule": "evenodd", "lineCap": "round", "lineJoin": "round", "opacity": 0.5, "radius": 10000, "stroke": true, "weight": 1}
+            ).addTo(map_756d00aed9a3375ed0e7d5a3db7186e0);
+        
+    
+        var popup_a781f4a4d5a47cd9d63fd397b3a39968 = L.popup({
+  "maxWidth": "100%",
+});
+
+        
+            
+                var html_d032bc70af2ffa2b0bd3603383b63c79 = $(`<div id="html_d032bc70af2ffa2b0bd3603383b63c79" style="width: 100.0%; height: 100.0%;">10km 반경</div>`)[0];
+                popup_a781f4a4d5a47cd9d63fd397b3a39968.setContent(html_d032bc70af2ffa2b0bd3603383b63c79);
+            
+        
+
+        circle_a342e1bc4168dbcc19a46219fc0bbe5e.bindPopup(popup_a781f4a4d5a47cd9d63fd397b3a39968)
+        ;
+
+        
+    
+    
+            var circle_5a11963d9d0c35dc9f5f23cfaf8c936a = L.circle(
+                [36.6284, 127.4573],
+                {"bubblingMouseEvents": true, "color": "red", "dashArray": "5, 5", "dashOffset": null, "fill": false, "fillColor": "red", "fillOpacity": 0.2, "fillRule": "evenodd", "lineCap": "round", "lineJoin": "round", "opacity": 0.5, "radius": 30000, "stroke": true, "weight": 1}
+            ).addTo(map_756d00aed9a3375ed0e7d5a3db7186e0);
+        
+    
+        var popup_50a78b94b370f3f04f47c1973bd164f6 = L.popup({
+  "maxWidth": "100%",
+});
+
+        
+            
+                var html_f06fe06bb5687a9119e08f52568bf452 = $(`<div id="html_f06fe06bb5687a9119e08f52568bf452" style="width: 100.0%; height: 100.0%;">30km 반경</div>`)[0];
+                popup_50a78b94b370f3f04f47c1973bd164f6.setContent(html_f06fe06bb5687a9119e08f52568bf452);
+            
+        
+
+        circle_5a11963d9d0c35dc9f5f23cfaf8c936a.bindPopup(popup_50a78b94b370f3f04f47c1973bd164f6)
+        ;
+
+        
+    
+    
+            var circle_c96c5b34ddc179c38bbb062228fe80ee = L.circle(
+                [36.6284, 127.4573],
+                {"bubblingMouseEvents": true, "color": "red", "dashArray": "5, 5", "dashOffset": null, "fill": false, "fillColor": "red", "fillOpacity": 0.2, "fillRule": "evenodd", "lineCap": "round", "lineJoin": "round", "opacity": 0.5, "radius": 50000, "stroke": true, "weight": 1}
+            ).addTo(map_756d00aed9a3375ed0e7d5a3db7186e0);
+        
+    
+        var popup_1d9a45dba36548063fe61d4cdb3cff92 = L.popup({
+  "maxWidth": "100%",
+});
+
+        
+            
+                var html_454aa0429d2b44f403af7c3b54918b32 = $(`<div id="html_454aa0429d2b44f403af7c3b54918b32" style="width: 100.0%; height: 100.0%;">50km 반경</div>`)[0];
+                popup_1d9a45dba36548063fe61d4cdb3cff92.setContent(html_454aa0429d2b44f403af7c3b54918b32);
+            
+        
+
+        circle_c96c5b34ddc179c38bbb062228fe80ee.bindPopup(popup_1d9a45dba36548063fe61d4cdb3cff92)
+        ;
+
+        
+    
+</script>
+</html>

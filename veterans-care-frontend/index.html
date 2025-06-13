@@ -1,0 +1,325 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>보훈케어 내비게이터 - 보훈대상자 맞춤 의료서비스 통합 플랫폼</title>
+    <link rel="stylesheet" href="css/style.css">
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;500;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+</head>
+<body>
+    <!-- 헤더 -->
+    <header class="header">
+        <div class="container">
+            <div class="header-content">
+                <div class="logo">
+                    <h1><i class="fas fa-hospital"></i> 보훈케어 내비게이터</h1>
+                </div>
+                <nav class="nav">
+                    <ul>
+                        <li><a href="#" class="nav-link">병원찾기</a></li>
+                        <li><a href="#" class="nav-link">의료혜택</a></li>
+                        <li><a href="#" class="nav-link">예약관리</a></li>
+                        <li><a href="#" class="nav-link">고객센터</a></li>
+                    </ul>
+                </nav>
+                <div class="auth-buttons">
+                    <button class="btn-login">로그인</button>
+                    <button class="btn-signup">회원가입</button>
+                </div>
+            </div>
+        </div>
+    </header>
+
+    <!-- 메인 섹션 -->
+    <main class="main">
+        <!-- 히어로 섹션 -->
+        <section class="hero">
+            <div class="container">
+                <div class="hero-content">
+                    <h2 class="hero-title">
+                        보훈대상자를 위한<br>
+                        <span class="highlight">AI 맞춤 의료서비스</span> 플랫폼
+                    </h2>
+                    <p class="hero-subtitle">
+                        전국 <strong>데이터 로딩 중...</strong> 의료기관과 연결된<br>
+                        보훈대상자 맞춤 의료서비스를 제공합니다.
+                    </p>
+                    <button class="cta-button" id="startMatching">
+                        <i class="fas fa-search"></i>
+                        지금 병원 찾기
+                    </button>
+                </div>
+                <div class="hero-image">
+                    <div class="hero-card">
+                        <i class="fas fa-user-md"></i>
+                        <h3>전문의료진</h3>
+                        <p>보훈병원 전문의</p>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- 정보 입력 섹션 -->
+        <section class="matching-form" id="matchingForm" style="display: none;">
+            <div class="container">
+                <div class="form-header">
+                    <h3>맞춤 병원 추천을 위한 정보 입력</h3>
+                    <p>정확한 추천을 위해 아래 정보를 입력해 주세요.</p>
+                </div>
+                
+                <form class="medical-form" id="hospitalForm">
+                    <!-- 단계 표시기 -->
+                    <div class="step-indicator">
+                        <div class="step active" data-step="1">
+                            <span class="step-number">1</span>
+                            <span class="step-label">보훈정보</span>
+                        </div>
+                        <div class="step" data-step="2">
+                            <span class="step-number">2</span>
+                            <span class="step-label">거주지역</span>
+                        </div>
+                        <div class="step" data-step="3">
+                            <span class="step-number">3</span>
+                            <span class="step-label">증상정보</span>
+                        </div>
+                        <div class="step" data-step="4">
+                            <span class="step-number">4</span>
+                            <span class="step-label">추천결과</span>
+                        </div>
+                    </div>
+
+                    <!-- 1단계: 보훈 정보 -->
+                    <div class="form-step active" data-step="1">
+                        <h4><i class="fas fa-medal"></i> 보훈 대상자 정보</h4>
+                        
+                        <div class="form-group">
+                            <label for="veteranType">보훈대상 종류</label>
+                            <select id="veteranType" name="veteranType" required>
+                                <option value="">선택해주세요</option>
+                                <option value="veteran">국가유공자</option>
+                                <option value="disabled">상이군경</option>
+                                <option value="bereaved">유족</option>
+                                <option value="5-18">5·18민주유공자</option>
+                                <option value="special">특수임무유공자</option>
+                                <option value="independence">독립유공자</option>
+                            </select>
+                        </div>
+
+                        <div class="form-group">
+                            <label for="disabilityGrade">상이등급 (해당시)</label>
+                            <select id="disabilityGrade" name="disabilityGrade">
+                                <option value="">해당없음</option>
+                                <option value="1">1급</option>
+                                <option value="2">2급</option>
+                                <option value="3">3급</option>
+                                <option value="4">4급</option>
+                                <option value="5">5급</option>
+                                <option value="6">6급</option>
+                                <option value="7">7급</option>
+                            </select>
+                        </div>
+
+                        <button type="button" class="btn-next" onclick="nextStep(2)">다음 단계</button>
+                    </div>
+
+                    <!-- 2단계: 거주지역 -->
+                    <div class="form-step" data-step="2">
+                        <h4><i class="fas fa-map-marker-alt"></i> 거주지역 정보</h4>
+                        
+                        <div class="form-group">
+                            <label for="region">시/도</label>
+                            <select id="region" name="region" required>
+                                <option value="">선택해주세요</option>
+                                <option value="seoul">서울특별시</option>
+                                <option value="busan">부산광역시</option>
+                                <option value="daegu">대구광역시</option>
+                                <option value="incheon">인천광역시</option>
+                                <option value="gwangju">광주광역시</option>
+                                <option value="daejeon">대전광역시</option>
+                                <option value="ulsan">울산광역시</option>
+                                <option value="sejong">세종특별자치시</option>
+                                <option value="gyeonggi">경기도</option>
+                                <option value="gangwon">강원도</option>
+                                <option value="chungbuk">충청북도</option>
+                                <option value="chungnam">충청남도</option>
+                                <option value="jeonbuk">전라북도</option>
+                                <option value="jeonnam">전라남도</option>
+                                <option value="gyeongbuk">경상북도</option>
+                                <option value="gyeongnam">경상남도</option>
+                                <option value="jeju">제주특별자치도</option>
+                            </select>
+                        </div>
+
+                        <div class="form-group">
+                            <label for="district">시/군/구</label>
+                            <select id="district" name="district" required>
+                                <option value="">시/도를 먼저 선택해주세요</option>
+                            </select>
+                        </div>
+
+                        <div class="form-buttons">
+                            <button type="button" class="btn-prev" onclick="prevStep(1)">이전</button>
+                            <button type="button" class="btn-next" onclick="nextStep(3)">다음 단계</button>
+                        </div>
+                    </div>
+
+                    <!-- 3단계: 증상정보 -->
+                    <div class="form-step" data-step="3">
+                        <h4><i class="fas fa-stethoscope"></i> 증상 및 진료과목</h4>
+                        
+                        <div class="form-group">
+                            <label for="symptoms">아픈 부위 / 증상</label>
+                            <div class="symptom-grid">
+                                <div class="symptom-card" data-value="head">
+                                    <i class="fas fa-head-side-cough"></i>
+                                    <span>두통/뇌신경</span>
+                                </div>
+                                <div class="symptom-card" data-value="heart">
+                                    <i class="fas fa-heartbeat"></i>
+                                    <span>심혈관</span>
+                                </div>
+                                <div class="symptom-card" data-value="stomach">
+                                    <i class="fas fa-procedures"></i>
+                                    <span>소화기</span>
+                                </div>
+                                <div class="symptom-card" data-value="bone">
+                                    <i class="fas fa-bone"></i>
+                                    <span>정형외과</span>
+                                </div>
+                                <div class="symptom-card" data-value="eye">
+                                    <i class="fas fa-eye"></i>
+                                    <span>안과</span>
+                                </div>
+                                <div class="symptom-card" data-value="ear">
+                                    <i class="fas fa-deaf"></i>
+                                    <span>이비인후과</span>
+                                </div>
+                                <div class="symptom-card" data-value="skin">
+                                    <i class="fas fa-hand-paper"></i>
+                                    <span>피부과</span>
+                                </div>
+                                <div class="symptom-card" data-value="mental">
+                                    <i class="fas fa-brain"></i>
+                                    <span>정신건강의학과</span>
+                                </div>
+                            </div>
+                            <input type="hidden" id="selectedSymptoms" name="symptoms">
+                        </div>
+
+                        <div class="form-group">
+                            <label for="urgency">응급도</label>
+                            <div class="urgency-options">
+                                <label class="radio-option">
+                                    <input type="radio" name="urgency" value="high">
+                                    <span class="radio-custom high"></span>
+                                    <span class="radio-label">응급 (즉시 진료 필요)</span>
+                                </label>
+                                <label class="radio-option">
+                                    <input type="radio" name="urgency" value="medium">
+                                    <span class="radio-custom medium"></span>
+                                    <span class="radio-label">보통 (1주일 내 진료)</span>
+                                </label>
+                                <label class="radio-option">
+                                    <input type="radio" name="urgency" value="low">
+                                    <span class="radio-custom low"></span>
+                                    <span class="radio-label">낮음 (정기 검진)</span>
+                                </label>
+                            </div>
+                        </div>
+
+                        <div class="form-buttons">
+                            <button type="button" class="btn-prev" onclick="prevStep(2)">이전</button>
+                            <button type="button" class="btn-recommend" onclick="showRecommendation()">
+                                <i class="fas fa-search"></i>
+                                병원 추천받기
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- 4단계: 추천결과 -->
+                    <div class="form-step" data-step="4">
+                        <h4><i class="fas fa-hospital-alt"></i> 추천 병원</h4>
+                        <div id="recommendationResults">
+                            <!-- 추천 결과가 여기에 표시됩니다 -->
+                        </div>
+                    </div>
+                </form>
+            </div>
+        </section>
+
+        <!-- 서비스 소개 -->
+        <section class="features">
+            <div class="container">
+                <h3 class="section-title">왜 보훈병원매칭을 선택해야 할까요?</h3>
+                <div class="features-grid">
+                    <div class="feature-card">
+                        <div class="feature-icon">
+                            <i class="fas fa-user-shield"></i>
+                        </div>
+                        <h4>보훈대상자 전용</h4>
+                        <p>보훈대상자만을 위한 특화된 의료 서비스 매칭</p>
+                    </div>
+                    <div class="feature-card">
+                        <div class="feature-icon">
+                            <i class="fas fa-map-marked-alt"></i>
+                        </div>
+                        <h4>지역별 맞춤 추천</h4>
+                        <p>거주지역 기반 가까운 병원 우선 추천</p>
+                    </div>
+                    <div class="feature-card">
+                        <div class="feature-icon">
+                            <i class="fas fa-notes-medical"></i>
+                        </div>
+                        <h4>증상별 전문의 매칭</h4>
+                        <p>증상에 따른 최적의 전문의료진 연결</p>
+                    </div>
+                    <div class="feature-card">
+                        <div class="feature-icon">
+                            <i class="fas fa-won-sign"></i>
+                        </div>
+                        <h4>의료비 혜택 안내</h4>
+                        <p>보훈 등급별 의료비 지원 혜택 상세 안내</p>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- 음성 안내 버튼 -->
+        <button class="voice-guide-btn" id="voiceGuide">
+            <i class="fas fa-volume-up"></i>
+            <span>음성안내</span>
+        </button>
+    </main>
+
+    <!-- 푸터 -->
+    <footer class="footer">
+        <div class="container">
+            <div class="footer-content">
+                <div class="footer-section">
+                    <h5>보훈케어 내비게이터</h5>
+                    <p>보훈대상자를 위한 AI 맞춤 의료서비스</p>
+                </div>
+                <div class="footer-section">
+                    <h5>고객센터</h5>
+                    <p>전화: 1588-0000</p>
+                    <p>이메일: help@bohun-hospital.kr</p>
+                </div>
+                <div class="footer-section">
+                    <h5>운영시간</h5>
+                    <p>평일: 09:00 - 18:00</p>
+                    <p>주말/공휴일: 휴무</p>
+                </div>
+            </div>
+            <div class="footer-bottom">
+                <p>&copy; 2025 보훈케어 내비게이터. All rights reserved.</p>
+            </div>
+        </div>
+    </footer>
+
+    <script src="js/api.js"></script>
+    <script src="js/hospital-functions-enhanced.js"></script>
+    <script src="js/script.js"></script>
+</body>
+</html>

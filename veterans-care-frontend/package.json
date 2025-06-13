@@ -1,0 +1,43 @@
+{
+  "name": "veterans-care-frontend",
+  "version": "1.0.0",
+  "description": "보훈케어 내비게이터 - 보훈대상자 맞춤형 의료서비스 통합 플랫폼 프론트엔드",
+  "main": "index.html",
+  "scripts": {
+    "start": "python3 -m http.server 3000",
+    "dev": "python3 -m http.server 3000",
+    "serve": "python3 -m http.server 3000",
+    "test": "echo \"테스트 준비 중\" && exit 0"
+  },
+  "keywords": [
+    "veterans",
+    "healthcare",
+    "hospital",
+    "recommendation",
+    "보훈",
+    "의료",
+    "병원추천"
+  ],
+  "author": "보훈케어 내비게이터 팀",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/veterans-care/frontend.git"
+  },
+  "engines": {
+    "node": ">=14.0.0"
+  },
+  "browserslist": [
+    "> 1%",
+    "last 2 versions",
+    "not dead",
+    "ie >= 11"
+  ],
+  "bugs": {
+    "url": "https://github.com/veterans-care/frontend/issues"
+  },
+  "homepage": "https://github.com/veterans-care/frontend#readme",
+  "dependencies": {
+    "express": "^5.1.0"
+  }
+}

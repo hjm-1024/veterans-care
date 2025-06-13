@@ -1,0 +1,5 @@
+# 대용량 지도 데이터 폴더 제외
+지도 및 접근성 데이터/
+.DS_Store
+*.log
+node_modules/

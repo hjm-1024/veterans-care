@@ -1,0 +1,854 @@
+/* 기본 스타일 초기화 */
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+body {
+    font-family: 'Noto Sans KR', sans-serif;
+    font-size: 16px;
+    line-height: 1.6;
+    color: #333;
+    background-color: #f8f9fa;
+}
+
+.container {
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 0 20px;
+}
+
+/* 헤더 스타일 */
+.header {
+    background: #fff;
+    box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+    position: sticky;
+    top: 0;
+    z-index: 1000;
+}
+
+.header-content {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 15px 0;
+}
+
+.logo h1 {
+    color: #2c5aa0;
+    font-size: 24px;
+    font-weight: 700;
+}
+
+.logo i {
+    margin-right: 8px;
+    color: #e74c3c;
+}
+
+.nav ul {
+    display: flex;
+    list-style: none;
+    gap: 30px;
+}
+
+.nav-link {
+    text-decoration: none;
+    color: #333;
+    font-weight: 500;
+    font-size: 18px;
+    padding: 8px 16px;
+    border-radius: 8px;
+    transition: all 0.3s ease;
+    min-height: 44px;
+    min-width: 44px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.nav-link:hover {
+    background-color: #e8f0fe;
+    color: #2c5aa0;
+}
+
+.auth-buttons {
+    display: flex;
+    gap: 12px;
+}
+
+.btn-login, .btn-signup {
+    padding: 12px 24px;
+    border-radius: 8px;
+    font-size: 16px;
+    font-weight: 500;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    min-height: 44px;
+    min-width: 44px;
+    border: 2px solid #2c5aa0;
+}
+
+.btn-login {
+    background: transparent;
+    color: #2c5aa0;
+}
+
+.btn-login:hover {
+    background: #2c5aa0;
+    color: white;
+}
+
+.btn-signup {
+    background: #2c5aa0;
+    color: white;
+}
+
+.btn-signup:hover {
+    background: #1e3f73;
+}
+
+/* 히어로 섹션 */
+.hero {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    color: white;
+    padding: 80px 0;
+    position: relative;
+    overflow: hidden;
+}
+
+.hero-content {
+    max-width: 600px;
+}
+
+.hero-title {
+    font-size: 48px;
+    font-weight: 700;
+    margin-bottom: 20px;
+    line-height: 1.2;
+}
+
+.highlight {
+    color: #ffd700;
+}
+
+.hero-subtitle {
+    font-size: 20px;
+    margin-bottom: 40px;
+    opacity: 0.9;
+}
+
+.cta-button {
+    background: #e74c3c;
+    color: white;
+    padding: 20px 40px;
+    border: none;
+    border-radius: 12px;
+    font-size: 20px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    min-height: 60px;
+    box-shadow: 0 4px 15px rgba(231, 76, 60, 0.3);
+}
+
+.cta-button:hover {
+    background: #c0392b;
+    transform: translateY(-2px);
+    box-shadow: 0 6px 20px rgba(231, 76, 60, 0.4);
+}
+
+.cta-button i {
+    margin-right: 12px;
+}
+
+.hero-image {
+    position: absolute;
+    right: 10%;
+    top: 50%;
+    transform: translateY(-50%);
+}
+
+.hero-card {
+    background: rgba(255,255,255,0.1);
+    backdrop-filter: blur(10px);
+    padding: 30px;
+    border-radius: 16px;
+    text-align: center;
+    border: 1px solid rgba(255,255,255,0.2);
+}
+
+.hero-card i {
+    font-size: 48px;
+    margin-bottom: 16px;
+    color: #ffd700;
+}
+
+.hero-card h3 {
+    font-size: 20px;
+    margin-bottom: 8px;
+}
+
+/* 매칭 폼 섹션 */
+.matching-form {
+    padding: 60px 0;
+    background: white;
+}
+
+.form-header {
+    text-align: center;
+    margin-bottom: 50px;
+}
+
+.form-header h3 {
+    font-size: 32px;
+    color: #2c5aa0;
+    margin-bottom: 12px;
+}
+
+.form-header p {
+    font-size: 18px;
+    color: #666;
+}
+
+/* 단계 표시기 */
+.step-indicator {
+    display: flex;
+    justify-content: center;
+    margin-bottom: 50px;
+    gap: 20px;
+}
+
+.step {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    padding: 20px;
+    border-radius: 12px;
+    background: #f8f9fa;
+    min-width: 120px;
+    transition: all 0.3s ease;
+}
+
+.step.active {
+    background: #e8f0fe;
+    color: #2c5aa0;
+}
+
+.step-number {
+    width: 44px;
+    height: 44px;
+    border-radius: 50%;
+    background: #dee2e6;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: 700;
+    font-size: 18px;
+    margin-bottom: 8px;
+}
+
+.step.active .step-number {
+    background: #2c5aa0;
+    color: white;
+}
+
+.step-label {
+    font-size: 16px;
+    font-weight: 500;
+}
+
+/* 폼 스타일 */
+.medical-form {
+    max-width: 800px;
+    margin: 0 auto;
+}
+
+.form-step {
+    display: none;
+    animation: fadeIn 0.5s ease;
+}
+
+.form-step.active {
+    display: block;
+}
+
+.form-step h4 {
+    font-size: 24px;
+    color: #2c5aa0;
+    margin-bottom: 30px;
+    padding-bottom: 15px;
+    border-bottom: 2px solid #e9ecef;
+}
+
+.form-step h4 i {
+    margin-right: 12px;
+}
+
+.form-group {
+    margin-bottom: 30px;
+}
+
+.form-group label {
+    display: block;
+    font-size: 18px;
+    font-weight: 500;
+    margin-bottom: 12px;
+    color: #333;
+}
+
+.form-group select {
+    width: 100%;
+    padding: 16px;
+    border: 2px solid #dee2e6;
+    border-radius: 8px;
+    font-size: 16px;
+    background: white;
+    cursor: pointer;
+    min-height: 52px;
+}
+
+.form-group select:focus {
+    outline: none;
+    border-color: #2c5aa0;
+    box-shadow: 0 0 0 3px rgba(44, 90, 160, 0.1);
+}
+
+/* 증상 그리드 */
+.symptom-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: 16px;
+    margin-top: 16px;
+}
+
+.symptom-card {
+    padding: 24px;
+    border: 2px solid #dee2e6;
+    border-radius: 12px;
+    text-align: center;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    background: white;
+    min-height: 120px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+}
+
+.symptom-card:hover {
+    border-color: #2c5aa0;
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(44, 90, 160, 0.1);
+}
+
+.symptom-card.selected {
+    border-color: #2c5aa0;
+    background: #e8f0fe;
+    color: #2c5aa0;
+}
+
+.symptom-card i {
+    font-size: 32px;
+    margin-bottom: 12px;
+    color: #2c5aa0;
+}
+
+.symptom-card span {
+    font-size: 16px;
+    font-weight: 500;
+}
+
+/* 응급도 옵션 */
+.urgency-options {
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+    margin-top: 16px;
+}
+
+.radio-option {
+    display: flex;
+    align-items: center;
+    padding: 16px;
+    border: 2px solid #dee2e6;
+    border-radius: 8px;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    min-height: 60px;
+}
+
+.radio-option:hover {
+    border-color: #2c5aa0;
+    background: #f8f9fa;
+}
+
+.radio-option input[type="radio"] {
+    display: none;
+}
+
+.radio-custom {
+    width: 24px;
+    height: 24px;
+    border-radius: 50%;
+    border: 2px solid #dee2e6;
+    margin-right: 16px;
+    position: relative;
+    transition: all 0.3s ease;
+}
+
+.radio-custom.high {
+    border-color: #e74c3c;
+}
+
+.radio-custom.medium {
+    border-color: #f39c12;
+}
+
+.radio-custom.low {
+    border-color: #27ae60;
+}
+
+.radio-option input[type="radio"]:checked + .radio-custom {
+    border-width: 6px;
+}
+
+.radio-label {
+    font-size: 18px;
+    font-weight: 500;
+}
+
+/* 버튼 스타일 */
+.form-buttons {
+    display: flex;
+    justify-content: space-between;
+    margin-top: 40px;
+}
+
+.btn-prev, .btn-next, .btn-recommend {
+    padding: 16px 32px;
+    border: none;
+    border-radius: 8px;
+    font-size: 18px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    min-height: 52px;
+    min-width: 120px;
+}
+
+.btn-prev {
+    background: #6c757d;
+    color: white;
+}
+
+.btn-prev:hover {
+    background: #5a6268;
+}
+
+.btn-next, .btn-recommend {
+    background: #2c5aa0;
+    color: white;
+}
+
+.btn-next:hover, .btn-recommend:hover {
+    background: #1e3f73;
+}
+
+.btn-recommend {
+    background: #e74c3c;
+}
+
+.btn-recommend:hover {
+    background: #c0392b;
+}
+
+.btn-recommend i {
+    margin-right: 8px;
+}
+
+/* 추천 결과 스타일 */
+.hospital-result {
+    background: white;
+    border-radius: 12px;
+    padding: 24px;
+    margin-bottom: 20px;
+    border: 1px solid #dee2e6;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+}
+
+.hospital-name {
+    font-size: 20px;
+    font-weight: 700;
+    color: #2c5aa0;
+    margin-bottom: 12px;
+}
+
+.hospital-info {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: 16px;
+    margin-bottom: 16px;
+}
+
+.info-item {
+    display: flex;
+    align-items: center;
+    font-size: 16px;
+}
+
+.info-item i {
+    margin-right: 8px;
+    color: #2c5aa0;
+    width: 20px;
+}
+
+.hospital-benefits {
+    background: #e8f5e8;
+    padding: 16px;
+    border-radius: 8px;
+    margin-top: 16px;
+}
+
+.hospital-benefits h5 {
+    color: #27ae60;
+    margin-bottom: 8px;
+    font-size: 16px;
+}
+
+.hospital-benefits p {
+    color: #2d5016;
+    font-size: 14px;
+}
+
+/* 서비스 소개 섹션 */
+.features {
+    padding: 80px 0;
+    background: #f8f9fa;
+}
+
+.section-title {
+    text-align: center;
+    font-size: 32px;
+    color: #2c5aa0;
+    margin-bottom: 50px;
+}
+
+.features-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+    gap: 30px;
+}
+
+.feature-card {
+    background: white;
+    padding: 40px 30px;
+    border-radius: 16px;
+    text-align: center;
+    box-shadow: 0 4px 20px rgba(0,0,0,0.1);
+    transition: all 0.3s ease;
+}
+
+.feature-card:hover {
+    transform: translateY(-8px);
+    box-shadow: 0 8px 30px rgba(0,0,0,0.15);
+}
+
+.feature-icon {
+    width: 80px;
+    height: 80px;
+    border-radius: 50%;
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin: 0 auto 24px;
+}
+
+.feature-icon i {
+    font-size: 32px;
+    color: white;
+}
+
+.feature-card h4 {
+    font-size: 20px;
+    color: #2c5aa0;
+    margin-bottom: 16px;
+}
+
+.feature-card p {
+    font-size: 16px;
+    color: #666;
+    line-height: 1.6;
+}
+
+/* 음성 안내 버튼 */
+.voice-guide-btn {
+    position: fixed;
+    bottom: 30px;
+    right: 30px;
+    background: #e74c3c;
+    color: white;
+    border: none;
+    border-radius: 50px;
+    padding: 16px 24px;
+    font-size: 16px;
+    font-weight: 600;
+    cursor: pointer;
+    box-shadow: 0 4px 20px rgba(231, 76, 60, 0.3);
+    transition: all 0.3s ease;
+    z-index: 1000;
+    min-height: 60px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.voice-guide-btn:hover {
+    background: #c0392b;
+    transform: scale(1.05);
+}
+
+.voice-guide-btn i {
+    font-size: 20px;
+}
+
+/* 푸터 */
+.footer {
+    background: #2c3e50;
+    color: white;
+    padding: 50px 0 20px;
+}
+
+.footer-content {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+    gap: 30px;
+    margin-bottom: 30px;
+}
+
+.footer-section h5 {
+    font-size: 18px;
+    margin-bottom: 16px;
+    color: #ecf0f1;
+}
+
+.footer-section p {
+    font-size: 16px;
+    color: #bdc3c7;
+    margin-bottom: 8px;
+}
+
+.footer-bottom {
+    border-top: 1px solid #34495e;
+    padding-top: 20px;
+    text-align: center;
+}
+
+.footer-bottom p {
+    color: #95a5a6;
+    font-size: 14px;
+}
+
+/* 애니메이션 */
+@keyframes fadeIn {
+    from {
+        opacity: 0;
+        transform: translateY(20px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+@keyframes slideInFromRight {
+    from {
+        opacity: 0;
+        transform: translateX(50px);
+    }
+    to {
+        opacity: 1;
+        transform: translateX(0);
+    }
+}
+
+/* 반응형 디자인 */
+@media (max-width: 768px) {
+    .container {
+        padding: 0 15px;
+    }
+    
+    .header-content {
+        flex-direction: column;
+        gap: 20px;
+    }
+    
+    .nav ul {
+        flex-direction: column;
+        gap: 10px;
+        width: 100%;
+    }
+    
+    .nav-link {
+        width: 100%;
+        text-align: center;
+        padding: 12px;
+    }
+    
+    .hero-title {
+        font-size: 32px;
+    }
+    
+    .hero-subtitle {
+        font-size: 18px;
+    }
+    
+    .hero-image {
+        position: relative;
+        right: auto;
+        top: auto;
+        transform: none;
+        margin-top: 40px;
+    }
+    
+    .step-indicator {
+        flex-direction: column;
+        gap: 12px;
+    }
+    
+    .step {
+        flex-direction: row;
+        min-width: auto;
+        padding: 16px;
+    }
+    
+    .step-number {
+        margin-bottom: 0;
+        margin-right: 12px;
+    }
+    
+    .symptom-grid {
+        grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+    }
+    
+    .symptom-card {
+        padding: 16px;
+        min-height: 100px;
+    }
+    
+    .symptom-card i {
+        font-size: 24px;
+    }
+    
+    .symptom-card span {
+        font-size: 14px;
+    }
+    
+    .form-buttons {
+        flex-direction: column;
+        gap: 16px;
+    }
+    
+    .btn-prev, .btn-next, .btn-recommend {
+        width: 100%;
+    }
+    
+    .features-grid {
+        grid-template-columns: 1fr;
+    }
+    
+    .voice-guide-btn {
+        bottom: 20px;
+        right: 20px;
+        padding: 12px 20px;
+        font-size: 14px;
+    }
+    
+    .footer-content {
+        grid-template-columns: 1fr;
+        text-align: center;
+    }
+}
+
+@media (max-width: 480px) {
+    .hero {
+        padding: 40px 0;
+    }
+    
+    .hero-title {
+        font-size: 24px;
+    }
+    
+    .hero-subtitle {
+        font-size: 16px;
+    }
+    
+    .cta-button {
+        padding: 16px 24px;
+        font-size: 16px;
+    }
+    
+    .form-header h3 {
+        font-size: 24px;
+    }
+    
+    .form-step h4 {
+        font-size: 20px;
+    }
+    
+    .symptom-grid {
+        grid-template-columns: 1fr 1fr;
+    }
+    
+    .radio-label {
+        font-size: 16px;
+    }
+}
+
+/* 접근성 개선 */
+.visually-hidden {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    padding: 0;
+    margin: -1px;
+    overflow: hidden;
+    clip: rect(0, 0, 0, 0);
+    white-space: nowrap;
+    border: 0;
+}
+
+/* 포커스 스타일 */
+button:focus,
+select:focus,
+input:focus {
+    outline: 3px solid #2c5aa0;
+    outline-offset: 2px;
+}
+
+/* 고대비 모드 지원 */
+@media (prefers-contrast: high) {
+    .hero {
+        background: #000;
+        color: #fff;
+    }
+    
+    .feature-card {
+        border: 2px solid #000;
+    }
+    
+    .symptom-card {
+        border-width: 3px;
+    }
+}
+
+/* 저속 연결 사용자를 위한 애니메이션 비활성화 */
+@media (prefers-reduced-motion: reduce) {
+    * {
+        animation-duration: 0.01ms !important;
+        animation-iteration-count: 1 !important;
+        transition-duration: 0.01ms !important;
+    }
+}
