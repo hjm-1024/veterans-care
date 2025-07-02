@@ -22,8 +22,8 @@ st.markdown("---")
 # 데이터 로드 함수
 @st.cache_data
 def load_data():
-    base_path = r"C:\Users\JongMin\Desktop\충북대학교\충대 4학년 1학기\5. 기타\국가보훈부\지도 및 접근성 데이터"
-    hospitals_df = pd.read_csv(base_path + r"\국가보훈부_보훈의료 위탁병원 현황_20250101.csv", encoding='cp949')
+    base_path = "/Users/jm/Desktop/충북대학교/충대 4학년 1학기/5. 기타/국가보훈부/전처리된 보훈병원"
+    hospitals_df = pd.read_csv("/Users/jm/Desktop/충북대학교/충대 4학년 1학기/5. 기타/국가보훈부/전처리된 보훈병원/국가보훈부_보훈의료 위탁병원 현황_20250101.csv", encoding='cp949')
     
     # 데이터 전처리
     hospitals_df['병상수'] = pd.to_numeric(hospitals_df['병상수'], errors='coerce')

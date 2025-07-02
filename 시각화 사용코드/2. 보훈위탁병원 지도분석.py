@@ -422,12 +422,12 @@ class VeteransHospitalAnalyzer:
 # 사용 예시
 if __name__ == "__main__":
     # 파일 경로 설정 (실제 경로에 맞게 수정)
-    base_path = r"C:\Users\JongMin\Desktop\충북대학교\충대 4학년 1학기\5. 기타\국가보훈부\지도 및 접근성 데이터"
+    base_path = "/Users/jm/Desktop/충북대학교/충대 4학년 1학기/5. 기타/국가보훈부/지도 및 접근성 데이터"
     
     try:
         # 분석기 초기화 (필수 파일만)
         analyzer = VeteransHospitalAnalyzer(
-            hospital_data_path=os.path.join(base_path, "국가보훈부_보훈의료 위탁병원 현황_20250101.csv"),
+            hospital_data_path=os.path.join("/Users/jm/Desktop/충북대학교/충대 4학년 1학기/5. 기타/국가보훈부/전처리된 보훈병원/국가보훈부_보훈의료 위탁병원 현황_20250101.csv"),
             admin_codes_path=os.path.join(base_path, "admin_codes.csv"),  # 선택사항
             geojson_path=os.path.join(base_path, "admin_dong.geojson")    # 선택사항
         )

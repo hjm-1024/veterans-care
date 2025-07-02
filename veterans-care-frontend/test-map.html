@@ -1,0 +1,69 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8"/>
+    <title>카카오 지도 테스트</title>
+</head>
+<body>
+    <h1>카카오 지도 기본 테스트</h1>
+    <div id="map" style="width:500px;height:400px;"></div>
+    <button onclick="testLocation()">위치 테스트</button>
+    <div id="status" style="margin-top: 20px; padding: 10px; border: 1px solid #ccc;"></div>
+    
+    <script type="text/javascript" src="//dapi.kakao.com/v2/maps/sdk.js?appkey=796a42e6ccbb3a6ae2f7268a24f574ee"></script>
+    <script>
+        function updateStatus(message) {
+            document.getElementById('status').innerHTML = message;
+            console.log(message);
+        }
+        
+        // 카카오맵 기본 테스트
+        if (typeof kakao === 'undefined') {
+            updateStatus('❌ 카카오맵 API가 로드되지 않았습니다.');
+        } else {
+            updateStatus('✅ 카카오맵 API 로드됨');
+            
+            var container = document.getElementById('map');
+            var options = {
+                center: new kakao.maps.LatLng(33.450701, 126.570667),
+                level: 3
+            };
+
+            var map = new kakao.maps.Map(container, options);
+            updateStatus('✅ 카카오맵 초기화 완료');
+        }
+        
+        // 위치 테스트
+        function testLocation() {
+            updateStatus('📍 위치 요청 중...');
+            
+            if (!navigator.geolocation) {
+                updateStatus('❌ 브라우저가 위치 정보를 지원하지 않습니다.');
+                return;
+            }
+            
+            navigator.geolocation.getCurrentPosition(
+                function(position) {
+                    const lat = position.coords.latitude;
+                    const lng = position.coords.longitude;
+                    updateStatus(`✅ 위치 획득: ${lat.toFixed(4)}, ${lng.toFixed(4)}`);
+                    
+                    // 지도에 사용자 위치 표시
+                    if (typeof map !== 'undefined') {
+                        const userPos = new kakao.maps.LatLng(lat, lng);
+                        map.setCenter(userPos);
+                        
+                        const marker = new kakao.maps.Marker({
+                            position: userPos,
+                            map: map
+                        });
+                    }
+                },
+                function(error) {
+                    updateStatus(`❌ 위치 획득 실패: ${error.message}`);
+                }
+            );
+        }
+    </script>
+</body>
+</html>

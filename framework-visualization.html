@@ -1,0 +1,799 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>보훈케어 내비게이터 - 시스템 프레임워크</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            color: #333;
+            overflow-x: auto;
+        }
+
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+
+        .header {
+            text-align: center;
+            margin-bottom: 40px;
+            background: white;
+            padding: 30px;
+            border-radius: 20px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+        }
+
+        .header h1 {
+            font-size: 2.5em;
+            color: #2c5aa0;
+            margin-bottom: 10px;
+        }
+
+        .header .subtitle {
+            font-size: 1.2em;
+            color: #666;
+            margin-bottom: 20px;
+        }
+
+        .stats {
+            display: flex;
+            justify-content: center;
+            gap: 30px;
+            flex-wrap: wrap;
+        }
+
+        .stat-item {
+            text-align: center;
+            padding: 15px;
+            background: #f8f9fa;
+            border-radius: 10px;
+            min-width: 150px;
+        }
+
+        .stat-number {
+            font-size: 2em;
+            font-weight: bold;
+            color: #2c5aa0;
+        }
+
+        .stat-label {
+            font-size: 0.9em;
+            color: #666;
+            margin-top: 5px;
+        }
+
+        .framework-container {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 30px;
+            margin-bottom: 50px;
+        }
+
+        .phase-card {
+            background: white;
+            border-radius: 20px;
+            padding: 30px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+            transition: all 0.3s ease;
+            cursor: pointer;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .phase-card:hover {
+            transform: translateY(-10px);
+            box-shadow: 0 20px 40px rgba(0,0,0,0.15);
+        }
+
+        .phase-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 5px;
+            background: linear-gradient(90deg, #667eea, #764ba2);
+        }
+
+        .phase-header {
+            display: flex;
+            align-items: center;
+            margin-bottom: 20px;
+        }
+
+        .phase-icon {
+            width: 60px;
+            height: 60px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.5em;
+            color: white;
+            margin-right: 15px;
+        }
+
+        .phase-title {
+            font-size: 1.4em;
+            font-weight: bold;
+            color: #2c5aa0;
+        }
+
+        .phase-subtitle {
+            font-size: 0.9em;
+            color: #666;
+            margin-top: 5px;
+        }
+
+        .phase-content {
+            max-height: 200px;
+            overflow: hidden;
+            transition: max-height 0.3s ease;
+        }
+
+        .phase-card.expanded .phase-content {
+            max-height: 1000px;
+        }
+
+        .feature-list {
+            list-style: none;
+            margin: 15px 0;
+        }
+
+        .feature-list li {
+            padding: 8px 0;
+            padding-left: 25px;
+            position: relative;
+            font-size: 0.95em;
+            line-height: 1.4;
+        }
+
+        .feature-list li::before {
+            content: '✓';
+            position: absolute;
+            left: 0;
+            color: #27ae60;
+            font-weight: bold;
+        }
+
+        .expand-btn {
+            background: none;
+            border: none;
+            color: #2c5aa0;
+            cursor: pointer;
+            font-size: 0.9em;
+            margin-top: 10px;
+            padding: 5px;
+            border-radius: 5px;
+            transition: all 0.3s ease;
+        }
+
+        .expand-btn:hover {
+            background: #f0f0f0;
+        }
+
+        .flow-diagram {
+            background: white;
+            border-radius: 20px;
+            padding: 40px;
+            margin: 40px 0;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+        }
+
+        .flow-diagram h2 {
+            text-align: center;
+            margin-bottom: 30px;
+            color: #2c5aa0;
+            font-size: 1.8em;
+        }
+
+        .flow-steps {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 20px;
+        }
+
+        .flow-step {
+            flex: 1;
+            min-width: 200px;
+            text-align: center;
+            position: relative;
+        }
+
+        .step-circle {
+            width: 80px;
+            height: 80px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            color: white;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.5em;
+            margin: 0 auto 15px;
+            animation: pulse 2s infinite;
+        }
+
+        .step-title {
+            font-weight: bold;
+            margin-bottom: 10px;
+            color: #2c5aa0;
+        }
+
+        .step-description {
+            font-size: 0.9em;
+            color: #666;
+            line-height: 1.4;
+        }
+
+        .flow-step:not(:last-child)::after {
+            content: '→';
+            position: absolute;
+            right: -15px;
+            top: 40px;
+            font-size: 2em;
+            color: #ddd;
+            animation: float 3s ease-in-out infinite;
+        }
+
+        @keyframes pulse {
+            0% { transform: scale(1); }
+            50% { transform: scale(1.05); }
+            100% { transform: scale(1); }
+        }
+
+        @keyframes float {
+            0%, 100% { transform: translateX(0); }
+            50% { transform: translateX(5px); }
+        }
+
+        .tech-stack {
+            background: white;
+            border-radius: 20px;
+            padding: 40px;
+            margin: 40px 0;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+        }
+
+        .tech-stack h2 {
+            text-align: center;
+            margin-bottom: 30px;
+            color: #2c5aa0;
+            font-size: 1.8em;
+        }
+
+        .tech-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 20px;
+        }
+
+        .tech-category {
+            background: #f8f9fa;
+            padding: 20px;
+            border-radius: 15px;
+            text-align: center;
+        }
+
+        .tech-category h3 {
+            color: #2c5aa0;
+            margin-bottom: 15px;
+            font-size: 1.2em;
+        }
+
+        .tech-list {
+            list-style: none;
+        }
+
+        .tech-list li {
+            padding: 5px 0;
+            color: #666;
+            font-size: 0.95em;
+        }
+
+        .metrics {
+            background: white;
+            border-radius: 20px;
+            padding: 40px;
+            margin: 40px 0;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+        }
+
+        .metrics h2 {
+            text-align: center;
+            margin-bottom: 30px;
+            color: #2c5aa0;
+            font-size: 1.8em;
+        }
+
+        .metrics-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 30px;
+        }
+
+        .metric-item {
+            text-align: center;
+            padding: 30px;
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            color: white;
+            border-radius: 15px;
+            transition: transform 0.3s ease;
+        }
+
+        .metric-item:hover {
+            transform: scale(1.05);
+        }
+
+        .metric-value {
+            font-size: 2.5em;
+            font-weight: bold;
+            margin-bottom: 10px;
+        }
+
+        .metric-label {
+            font-size: 1.1em;
+            opacity: 0.9;
+        }
+
+        .footer {
+            text-align: center;
+            margin-top: 50px;
+            padding: 30px;
+            background: white;
+            border-radius: 20px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+        }
+
+        .footer h3 {
+            color: #2c5aa0;
+            margin-bottom: 15px;
+        }
+
+        .footer p {
+            color: #666;
+            line-height: 1.6;
+        }
+
+        @media (max-width: 768px) {
+            .container {
+                padding: 10px;
+            }
+            
+            .header h1 {
+                font-size: 2em;
+            }
+            
+            .stats {
+                gap: 15px;
+            }
+            
+            .framework-container {
+                grid-template-columns: 1fr;
+            }
+            
+            .flow-steps {
+                flex-direction: column;
+            }
+            
+            .flow-step:not(:last-child)::after {
+                content: '↓';
+                right: 50%;
+                top: 100px;
+                transform: translateX(50%);
+            }
+        }
+
+        @media print {
+            body {
+                background: white;
+            }
+            
+            .phase-card {
+                break-inside: avoid;
+                box-shadow: none;
+                border: 1px solid #ddd;
+            }
+            
+            .step-circle {
+                animation: none;
+            }
+            
+            .flow-step:not(:last-child)::after {
+                animation: none;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <!-- 헤더 섹션 -->
+        <div class="header">
+            <h1>🏥 보훈케어 내비게이터</h1>
+            <p class="subtitle">보훈대상자 맞춤형 의료기관 추천 및 네비게이션 시스템</p>
+            <div class="stats">
+                <div class="stat-item">
+                    <div class="stat-number">23,252</div>
+                    <div class="stat-label">의료 데이터</div>
+                </div>
+                <div class="stat-item">
+                    <div class="stat-number">6</div>
+                    <div class="stat-label">국립보훈병원</div>
+                </div>
+                <div class="stat-item">
+                    <div class="stat-number">AI</div>
+                    <div class="stat-label">추천 알고리즘</div>
+                </div>
+                <div class="stat-item">
+                    <div class="stat-number">실시간</div>
+                    <div class="stat-label">위치 기반</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- 작업 처리 과정 플로우 -->
+        <div class="flow-diagram">
+            <h2>🔄 작업 처리 과정 프레임워크</h2>
+            <div class="flow-steps">
+                <div class="flow-step">
+                    <div class="step-circle">1</div>
+                    <div class="step-title">사용자 입력</div>
+                    <div class="step-description">보훈대상자 정보<br>증상/진료과 선택<br>위치 정보 수집</div>
+                </div>
+                <div class="flow-step">
+                    <div class="step-circle">2</div>
+                    <div class="step-title">데이터 처리</div>
+                    <div class="step-description">23,252개 데이터 검색<br>조건별 필터링<br>AI 분석 처리</div>
+                </div>
+                <div class="flow-step">
+                    <div class="step-circle">3</div>
+                    <div class="step-title">AI 추천</div>
+                    <div class="step-description">다중 가중치 분석<br>보훈병원 우선<br>점수 기반 순위</div>
+                </div>
+                <div class="flow-step">
+                    <div class="step-circle">4</div>
+                    <div class="step-title">결과 생성</div>
+                    <div class="step-description">상위 5개 병원<br>상세 정보 제공<br>사용자 인터페이스</div>
+                </div>
+                <div class="flow-step">
+                    <div class="step-circle">5</div>
+                    <div class="step-title">네비게이션</div>
+                    <div class="step-description">지도 연동<br>다중 길찾기<br>원클릭 액션</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- 기능 상세 카드 -->
+        <div class="framework-container">
+            <div class="phase-card" onclick="toggleCard(this)">
+                <div class="phase-header">
+                    <div class="phase-icon">📝</div>
+                    <div>
+                        <div class="phase-title">A. 사용자 입력 단계</div>
+                        <div class="phase-subtitle">개인화된 정보 수집</div>
+                    </div>
+                </div>
+                <div class="phase-content">
+                    <h4>1. 개인정보 수집</h4>
+                    <ul class="feature-list">
+                        <li>보훈대상자 유형 선택 (국가유공자, 보훈보상대상자 등)</li>
+                        <li>상이등급 입력 (해당시)</li>
+                        <li>거주지역 선택 (시/도, 시/군/구)</li>
+                    </ul>
+                    <h4>2. 증상/진료과 선택</h4>
+                    <ul class="feature-list">
+                        <li>신체 부위별 증상 선택 (8개 카테고리)</li>
+                        <li>증상별 자동 진료과 매핑</li>
+                        <li>응급도 설정 (일반/응급)</li>
+                    </ul>
+                    <h4>3. 위치 정보 처리</h4>
+                    <ul class="feature-list">
+                        <li>위치 서비스 동의 요청</li>
+                        <li>GPS 기반 실시간 위치 획득</li>
+                        <li>HTTPS/보안 컨텍스트 자동 감지</li>
+                        <li>위치 실패시 폴백 시스템</li>
+                    </ul>
+                </div>
+                <button class="expand-btn">더 보기</button>
+            </div>
+
+            <div class="phase-card" onclick="toggleCard(this)">
+                <div class="phase-header">
+                    <div class="phase-icon">🔍</div>
+                    <div>
+                        <div class="phase-title">B. 데이터 처리 및 분석</div>
+                        <div class="phase-subtitle">23,252개 데이터 활용</div>
+                    </div>
+                </div>
+                <div class="phase-content">
+                    <h4>1. 데이터 검색 및 필터링</h4>
+                    <ul class="feature-list">
+                        <li>23,252개 데이터에서 조건별 병원 추출</li>
+                        <li>지역별 병원 필터링</li>
+                        <li>진료과별 전문성 확인</li>
+                        <li>보훈 지정병원 구분</li>
+                    </ul>
+                    <h4>2. AI 추천 알고리즘</h4>
+                    <ul class="feature-list">
+                        <li>거리 점수 (30%): 사용자 위치 기준</li>
+                        <li>병원 유형 점수 (20%): 상급종합병원 우선</li>
+                        <li>전문성 점수 (25%): 진료과 보유 여부</li>
+                        <li>병원 규모 점수 (15%): 병상 수 기준</li>
+                        <li>평점 점수 (10%): 기존 평가</li>
+                    </ul>
+                    <h4>3. 보훈병원 우선 처리</h4>
+                    <ul class="feature-list">
+                        <li>6개 국립보훈병원 중 최단거리 식별</li>
+                        <li>우선 순위 점수 95점 고정</li>
+                        <li>보훈 혜택 정보 자동 생성</li>
+                    </ul>
+                </div>
+                <button class="expand-btn">더 보기</button>
+            </div>
+
+            <div class="phase-card" onclick="toggleCard(this)">
+                <div class="phase-header">
+                    <div class="phase-icon">📊</div>
+                    <div>
+                        <div class="phase-title">C. 결과 생성 및 표시</div>
+                        <div class="phase-subtitle">개인화된 추천 결과</div>
+                    </div>
+                </div>
+                <div class="phase-content">
+                    <h4>1. 추천 결과 생성</h4>
+                    <ul class="feature-list">
+                        <li>점수 기반 상위 5개 병원 선별</li>
+                        <li>보훈병원 1순위 고정 배치</li>
+                        <li>거리, 예상 소요시간 계산</li>
+                        <li>개인화된 추천 이유 생성</li>
+                        <li>보훈 혜택 정보 매핑</li>
+                    </ul>
+                    <h4>2. 사용자 인터페이스</h4>
+                    <ul class="feature-list">
+                        <li>병원별 카드 형태 결과 표시</li>
+                        <li>실시간 거리 및 예상 시간</li>
+                        <li>연락처, 주소, 전문 진료과</li>
+                        <li>액션 버튼 (예약, 지도, 길찾기, 전화)</li>
+                        <li>반응형 디자인 적용</li>
+                    </ul>
+                </div>
+                <button class="expand-btn">더 보기</button>
+            </div>
+
+            <div class="phase-card" onclick="toggleCard(this)">
+                <div class="phase-header">
+                    <div class="phase-icon">🗺️</div>
+                    <div>
+                        <div class="phase-title">D. 네비게이션 및 액션</div>
+                        <div class="phase-subtitle">다중 지도 서비스 연동</div>
+                    </div>
+                </div>
+                <div class="phase-content">
+                    <h4>1. 지도 서비스 연동</h4>
+                    <ul class="feature-list">
+                        <li>1차: 카카오맵 API 로딩</li>
+                        <li>2차: OpenStreetMap 자동 전환</li>
+                        <li>병원 위치 마커 표시</li>
+                        <li>확대/축소, 드래그 기능</li>
+                    </ul>
+                    <h4>2. 다중 네비게이션 지원</h4>
+                    <ul class="feature-list">
+                        <li>카카오맵: 병원명 기반 검색</li>
+                        <li>네이버지도: 병원명 기반 검색</li>
+                        <li>Google Maps: 위도/경도 기반</li>
+                        <li>티맵: 앱 스키마 연결 (모바일)</li>
+                    </ul>
+                    <h4>3. 추가 액션 기능</h4>
+                    <ul class="feature-list">
+                        <li>원클릭 병원 전화 연결</li>
+                        <li>병원별 예약 방법 안내</li>
+                        <li>의료장비, 전문성 정보</li>
+                        <li>대기시간 예상 정보</li>
+                    </ul>
+                </div>
+                <button class="expand-btn">더 보기</button>
+            </div>
+
+            <div class="phase-card" onclick="toggleCard(this)">
+                <div class="phase-header">
+                    <div class="phase-icon">🛡️</div>
+                    <div>
+                        <div class="phase-title">E. 오류 처리 및 폴백</div>
+                        <div class="phase-subtitle">안정성 및 접근성 보장</div>
+                    </div>
+                </div>
+                <div class="phase-content">
+                    <h4>1. API 연결 실패 대응</h4>
+                    <ul class="feature-list">
+                        <li>백엔드 서버 연결 상태 모니터링</li>
+                        <li>오프라인 모드: 샘플 데이터 기반</li>
+                        <li>사용자 친화적 오류 메시지</li>
+                        <li>자동 재시도 및 복구 옵션</li>
+                    </ul>
+                    <h4>2. 위치 서비스 실패 대응</h4>
+                    <ul class="feature-list">
+                        <li>GPS 실패시 지역 기본 좌표</li>
+                        <li>캐시된 위치 정보 활용 (1시간)</li>
+                        <li>수동 위치 입력 옵션</li>
+                        <li>HTTPS 없이도 기본 기능 작동</li>
+                    </ul>
+                    <h4>3. 지도 서비스 실패 대응</h4>
+                    <ul class="feature-list">
+                        <li>카카오맵 → OpenStreetMap 전환</li>
+                        <li>여러 네비게이션 앱 옵션</li>
+                        <li>API 키 없이도 작동</li>
+                        <li>브라우저별 호환성 확보</li>
+                    </ul>
+                </div>
+                <button class="expand-btn">더 보기</button>
+            </div>
+        </div>
+
+        <!-- 기술 스택 -->
+        <div class="tech-stack">
+            <h2>🛠️ 핵심 기술 스택</h2>
+            <div class="tech-grid">
+                <div class="tech-category">
+                    <h3>Frontend</h3>
+                    <ul class="tech-list">
+                        <li>HTML5 & CSS3</li>
+                        <li>JavaScript (ES6+)</li>
+                        <li>Responsive Design</li>
+                        <li>Progressive Enhancement</li>
+                    </ul>
+                </div>
+                <div class="tech-category">
+                    <h3>지도 & 위치</h3>
+                    <ul class="tech-list">
+                        <li>Kakao Maps API</li>
+                        <li>OpenStreetMap</li>
+                        <li>Geolocation API</li>
+                        <li>Location Caching</li>
+                    </ul>
+                </div>
+                <div class="tech-category">
+                    <h3>데이터 & AI</h3>
+                    <ul class="tech-list">
+                        <li>23,252개 의료 데이터</li>
+                        <li>다중 가중치 알고리즘</li>
+                        <li>Real-time Processing</li>
+                        <li>Score-based Ranking</li>
+                    </ul>
+                </div>
+                <div class="tech-category">
+                    <h3>안정성 & 호환성</h3>
+                    <ul class="tech-list">
+                        <li>Fallback Systems</li>
+                        <li>Error Handling</li>
+                        <li>Cross-browser Support</li>
+                        <li>Offline Capability</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+
+        <!-- 성능 지표 -->
+        <div class="metrics">
+            <h2>📈 성능 및 안정성 지표</h2>
+            <div class="metrics-grid">
+                <div class="metric-item">
+                    <div class="metric-value">2-3초</div>
+                    <div class="metric-label">평균 응답시간</div>
+                </div>
+                <div class="metric-item">
+                    <div class="metric-value">100%</div>
+                    <div class="metric-label">브라우저 호환성</div>
+                </div>
+                <div class="metric-item">
+                    <div class="metric-value">실시간</div>
+                    <div class="metric-label">거리 계산</div>
+                </div>
+                <div class="metric-item">
+                    <div class="metric-value">API 무관</div>
+                    <div class="metric-label">기본 기능 작동</div>
+                </div>
+                <div class="metric-item">
+                    <div class="metric-value">다중</div>
+                    <div class="metric-label">폴백 시스템</div>
+                </div>
+                <div class="metric-item">
+                    <div class="metric-value">모듈화</div>
+                    <div class="metric-label">확장 가능 구조</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- 푸터 -->
+        <div class="footer">
+            <h3>🎯 보훈케어 내비게이터 핵심 가치</h3>
+            <p>
+                보훈대상자의 의료 접근성을 극대화하고, AI 기반 개인화된 추천을 통해 
+                최적의 의료 서비스를 제공하는 통합 플랫폼입니다. 
+                23,252개의 의료 데이터를 활용하여 실시간 위치 기반 맞춤형 추천을 제공하며, 
+                다양한 환경에서도 안정적으로 작동하는 견고한 시스템입니다.
+            </p>
+        </div>
+    </div>
+
+    <script>
+        function toggleCard(card) {
+            const isExpanded = card.classList.contains('expanded');
+            
+            // 모든 카드 닫기
+            document.querySelectorAll('.phase-card').forEach(c => {
+                c.classList.remove('expanded');
+                const btn = c.querySelector('.expand-btn');
+                btn.textContent = '더 보기';
+            });
+            
+            // 클릭된 카드만 토글
+            if (!isExpanded) {
+                card.classList.add('expanded');
+                const btn = card.querySelector('.expand-btn');
+                btn.textContent = '접기';
+            }
+        }
+
+        // 페이지 로드 시 애니메이션
+        document.addEventListener('DOMContentLoaded', function() {
+            const cards = document.querySelectorAll('.phase-card');
+            cards.forEach((card, index) => {
+                setTimeout(() => {
+                    card.style.opacity = '0';
+                    card.style.transform = 'translateY(50px)';
+                    card.style.transition = 'all 0.6s ease';
+                    
+                    setTimeout(() => {
+                        card.style.opacity = '1';
+                        card.style.transform = 'translateY(0)';
+                    }, 100);
+                }, index * 150);
+            });
+        });
+
+        // 스크롤 애니메이션
+        function animateOnScroll() {
+            const elements = document.querySelectorAll('.flow-step, .metric-item');
+            elements.forEach(element => {
+                const elementTop = element.getBoundingClientRect().top;
+                const elementVisible = 150;
+                
+                if (elementTop < window.innerHeight - elementVisible) {
+                    element.style.opacity = '1';
+                    element.style.transform = 'translateY(0)';
+                }
+            });
+        }
+
+        window.addEventListener('scroll', animateOnScroll);
+
+        // 초기 스타일 설정
+        document.querySelectorAll('.flow-step, .metric-item').forEach(element => {
+            element.style.opacity = '0';
+            element.style.transform = 'translateY(30px)';
+            element.style.transition = 'all 0.6s ease';
+        });
+
+        // 인쇄 최적화
+        window.addEventListener('beforeprint', function() {
+            document.querySelectorAll('.phase-card').forEach(card => {
+                card.classList.add('expanded');
+            });
+        });
+    </script>
+</body>
+</html>

@@ -1,682 +1,1335 @@
-// 병원 액션 버튼 함수들
-window.reserveHospital = function(hospitalName) {
-    const message = `${hospitalName} 예약하기\n\n현재 예약 시스템은 준비 중입니다.\n직접 병원으로 연락하여 예약해주세요.`;
-    
-    if (confirm(message)) {
-        // 향후 실제 예약 시스템 연동
-        if (window.speechEnabled) {
-            speakText(`${hospitalName} 예약을 위해 병원으로 직접 연락해주세요.`);
-        }
-    }
+// ==============================================
+// 보훈케어 내비게이터 - 메인 스크립트
+// ==============================================
+
+// 전역 변수 설정
+window.API_BASE_URL = 'http://localhost:5001';
+let currentStep = 1;
+let selectedSymptoms = [];
+let formData = {};
+let regionData = {};
+let userLocation = null;
+let hospitalStats = null;
+
+// 진료과목과 증상 매핑
+const symptomToDepartmentMap = {
+    head: '신경외과',
+    heart: '순환기내과', 
+    stomach: '소화기내과',
+    bone: '정형외과',
+    eye: '안과',
+    ear: '이비인후과', 
+    skin: '피부과',
+    mental: '정신건강의학과'
 };
 
-window.getDirections = function(hospitalName) {
-    const hospital = getCurrentSelectedHospital(hospitalName);
-    
-    if (hospital && hospital.address) {
-        // 카카오맵 길찾기 URL
-        const kakaoMapUrl = `https://map.kakao.com/link/to/${encodeURIComponent(hospitalName)},${hospital.latitude || ''},${hospital.longitude || ''}`;
-        
-        // 네이버 지도 길찾기 URL (백업)
-        const naverMapUrl = `https://map.naver.com/v5/directions/-/-/-/car?c=${hospital.longitude || '127.0'},${hospital.latitude || '37.5'},15,0,0,0,dh`;
-        
-        // 앱이 설치되어 있으면 앱으로, 아니면 웹으로
-        if (confirm(`${hospitalName}으로 길찾기\n\n카카오맵으로 연결하시겠습니까?`)) {
-            window.open(kakaoMapUrl, '_blank');
-        } else {
-            window.open(naverMapUrl, '_blank');
-        }
-        
-        if (window.speechEnabled) {
-            speakText(`${hospitalName}으로 길찾기를 시작합니다.`);
-        }
-    } else {
-        alert('병원 위치 정보를 찾을 수 없습니다.');
+// 샘플 병원 데이터 (오프라인 모드용)
+const sampleHospitals = [
+    {
+        name: "중앙보훈병원",
+        address: "서울특별시 강동구 진황도로 61길 53",
+        phone: "02-2225-1234",
+        distance: "2.3km",
+        waitTime: "30분",
+        specialty: "내과, 외과, 정형외과, 재활의학과",
+        benefits: "보훈병원 - 보훈대상자 의료비 100% 지원"
+    },
+    {
+        name: "서울성모병원",
+        address: "서울특별시 서초구 반포대로 222",
+        phone: "02-2258-5000",
+        distance: "5.7km",
+        waitTime: "45분",
+        specialty: "내과, 순환기내과, 신경외과",
+        benefits: "보훈 위탁병원 - 의료비 90% 지원"
+    },
+    {
+        name: "부산보훈병원",
+        address: "부산광역시 남구 유엔평화로 58",
+        phone: "051-601-6000",
+        distance: "1.8km",
+        waitTime: "20분",
+        specialty: "내과, 외과, 정형외과, 재활의학과",
+        benefits: "보훈병원 - 보훈대상자 의료비 100% 지원"
     }
-};
+];
 
-window.callHospital = function(phoneNumber) {
-    if (phoneNumber) {
-        // 모바일에서는 tel: 링크로 전화 걸기
-        if (/Mobi|Android/i.test(navigator.userAgent)) {
-            window.location.href = `tel:${phoneNumber}`;
-        } else {
-            // 데스크톱에서는 번호를 복사하고 알림
-            navigator.clipboard.writeText(phoneNumber).then(() => {
-                alert(`전화번호가 복사되었습니다: ${phoneNumber}`);
-            }).catch(() => {
-                alert(`전화번호: ${phoneNumber}`);
-            });
-        }
-        
-        if (window.speechEnabled) {
-            speakText(`전화번호 ${phoneNumber}입니다.`);
-        }
-    }
-};
+// ==============================================
+// 데이터 초기화 및 설정
+// ==============================================
 
-// 현재 선택된 병원 정보 찾기 헬퍼 함수
-function getCurrentSelectedHospital(hospitalName) {
-    // 최근 추천 결과에서 병원 찾기
-    if (window.lastRecommendations) {
-        return window.lastRecommendations.find(h => 
-            (h.name === hospitalName) || (h.hospital_name === hospitalName)
-        );
+// 데이터 초기화 함수
+async function initializeData() {
+    try {
+        // 지역 데이터 설정
+        regionData = {
+            'seoul': ['강남구', '강북구', '강서구', '관악구', '광진구', '구로구', '금천구', '노원구', '도봉구', '동대문구', '동작구', '마포구', '서대문구', '서초구', '성동구', '성북구', '송파구', '양천구', '영등포구', '용산구', '은평구', '종로구', '중구', '중랑구'],
+            'busan': ['강서구', '금정구', '기장군', '남구', '동구', '동래구', '부산진구', '북구', '사상구', '사하구', '서구', '수영구', '연제구', '영도구', '중구', '해운대구'],
+            'daegu': ['남구', '달서구', '달성군', '동구', '북구', '서구', '수성구', '중구'],
+            'incheon': ['강화군', '계양구', '남동구', '동구', '미추홀구', '부평구', '서구', '연수구', '옹진군', '중구'],
+            'gwangju': ['광산구', '남구', '동구', '북구', '서구'],
+            'daejeon': ['대덕구', '동구', '서구', '유성구', '중구'],
+            'ulsan': ['남구', '동구', '북구', '울주군', '중구'],
+            'sejong': ['세종특별자치시'],
+            'gyeonggi': ['가평군', '고양시', '과천시', '광명시', '광주시', '구리시', '군포시', '김포시', '남양주시', '동두천시', '부천시', '성남시', '수원시', '시흥시', '안산시', '안성시', '안양시', '양주시', '양평군', '여주시', '연천군', '오산시', '용인시', '의왕시', '의정부시', '이천시', '파주시', '평택시', '포천시', '하남시', '화성시'],
+            'gangwon': ['강릉시', '고성군', '동해시', '삼척시', '속초시', '양구군', '양양군', '영월군', '원주시', '인제군', '정선군', '철원군', '춘천시', '태백시', '평창군', '홍천군', '화천군', '횡성군'],
+            'chungbuk': ['괴산군', '단양군', '보은군', '영동군', '옥천군', '음성군', '제천시', '진천군', '청주시', '충주시', '증평군'],
+            'chungnam': ['계룡시', '공주시', '금산군', '논산시', '당진시', '보령시', '부여군', '서산시', '서천군', '아산시', '예산군', '천안시', '청양군', '태안군', '홍성군'],
+            'jeonbuk': ['고창군', '군산시', '김제시', '남원시', '무주군', '부안군', '순창군', '완주군', '익산시', '임실군', '장수군', '전주시', '정읍시', '진안군'],
+            'jeonnam': ['강진군', '고흥군', '곡성군', '광양시', '구례군', '나주시', '담양군', '목포시', '무안군', '보성군', '순천시', '신안군', '여수시', '영광군', '영암군', '완도군', '장성군', '장흥군', '진도군', '함평군', '해남군', '화순군'],
+            'gyeongbuk': ['경산시', '경주시', '고령군', '구미시', '군위군', '김천시', '문경시', '봉화군', '상주시', '성주군', '안동시', '영덕군', '영양군', '영주시', '영천시', '예천군', '울릉군', '울진군', '의성군', '청도군', '청송군', '칠곡군', '포항시'],
+            'gyeongnam': ['거제시', '거창군', '고성군', '김해시', '남해군', '밀양시', '사천시', '산청군', '양산시', '의령군', '진주시', '창녕군', '창원시', '통영시', '하동군', '함안군', '함양군', '합천군'],
+            'jeju': ['서귀포시', '제주시']
+        };
+        
+        // API 연결 상태 확인
+        await checkAPIConnection();
+        
+        // 병원 통계 데이터 로드
+        await loadHospitalStats();
+        
+        // 사용자 위치 정보 요청 (자동)
+        await getUserLocationWithConsent();
+        
+        console.log('데이터 초기화 완료');
+        
+    } catch (error) {
+        console.error('데이터 초기화 오류:', error);
+        handleError(error, '데이터 로딩 중 오류가 발생했습니다.');
     }
-    return null;
 }
 
-// 향상된 병원 상세 정보 모달
-window.showEnhancedHospitalDetail = async function(hospitalId) {
+// API 연결 상태 확인
+async function checkAPIConnection() {
     try {
-        showLoadingSpinner('병원 상세 정보를 불러오는 중...');
-        
-        // 백엔드에서 상세 정보 가져오기
-        const response = await api.getHospitalDetail(hospitalId);
-        
-        if (response.success && response.data) {
-            const hospital = response.data;
-            
-            const modalHTML = `
-                <div class="enhanced-modal-overlay" onclick="closeEnhancedModal()">
-                    <div class="enhanced-modal-content" onclick="event.stopPropagation()">
-                        <div class="modal-header">
-                            <h3>
-                                <i class="fas fa-hospital"></i>
-                                ${hospital.name || hospital.hospital_name || '병원 정보'}
-                            </h3>
-                            <button class="modal-close-btn" onclick="closeEnhancedModal()">
-                                <i class="fas fa-times"></i>
-                            </button>
-                        </div>
-                        
-                        <div class="modal-body">
-                            <!-- 기본 정보 섹션 -->
-                            <div class="info-section">
-                                <h4><i class="fas fa-info-circle"></i> 기본 정보</h4>
-                                <div class="info-grid">
-                                    <div class="info-item">
-                                        <label>병원 유형</label>
-                                        <span>${hospital.type || hospital.hospital_type || '정보 없음'}</span>
-                                    </div>
-                                    <div class="info-item">
-                                        <label>주소</label>
-                                        <span>${hospital.address || hospital.full_address || '정보 없음'}</span>
-                                    </div>
-                                    ${hospital.phone || hospital.contact_number ? `
-                                    <div class="info-item">
-                                        <label>전화번호</label>
-                                        <span>
-                                            <a href="tel:${hospital.phone || hospital.contact_number}" class="phone-link">
-                                                <i class="fas fa-phone"></i>
-                                                ${hospital.phone || hospital.contact_number}
-                                            </a>
-                                        </span>
-                                    </div>
-                                    ` : ''}
-                                    ${hospital.bed_count ? `
-                                    <div class="info-item">
-                                        <label>병상 수</label>
-                                        <span>${hospital.bed_count}개</span>
-                                    </div>
-                                    ` : ''}
-                                    ${hospital.department_count ? `
-                                    <div class="info-item">
-                                        <label>진료과 수</label>
-                                        <span>${hospital.department_count}개</span>
-                                    </div>
-                                    ` : ''}
-                                </div>
-                            </div>
-                            
-                            <!-- 진료 서비스 섹션 -->
-                            ${hospital.medical_services && hospital.medical_services.length > 0 ? `
-                            <div class="info-section">
-                                <h4><i class="fas fa-user-md"></i> 진료 서비스</h4>
-                                <div class="services-grid">
-                                    ${hospital.medical_services.slice(0, 8).map(service => `
-                                        <div class="service-card">
-                                            <h5>${service.department || '일반 진료'}</h5>
-                                            <p>${service.services || service.sub_department || '상세 정보 없음'}</p>
-                                        </div>
-                                    `).join('')}
-                                </div>
-                                ${hospital.medical_services.length > 8 ? `
-                                <div class="show-more-services">
-                                    <button onclick="showAllServices('${hospitalId}')" class="show-more-btn">
-                                        <i class="fas fa-plus"></i>
-                                        ${hospital.medical_services.length - 8}개 더보기
-                                    </button>
-                                </div>
-                                ` : ''}
-                            </div>
-                            ` : ''}
-                            
-                            <!-- 의료 장비 섹션 -->
-                            ${hospital.equipment && hospital.equipment.length > 0 ? `
-                            <div class="info-section">
-                                <h4><i class="fas fa-stethoscope"></i> 보유 의료장비</h4>
-                                <div class="equipment-grid">
-                                    ${hospital.equipment.map(eq => `
-                                        <div class="equipment-item">
-                                            <div class="equipment-name">${eq.equipment_name || eq.name || eq}</div>
-                                            ${eq.equipment_category ? `<div class="equipment-category">${eq.equipment_category}</div>` : ''}
-                                            ${eq.purpose ? `<div class="equipment-purpose">${eq.purpose}</div>` : ''}
-                                        </div>
-                                    `).join('')}
-                                </div>
-                            </div>
-                            ` : ''}
-                            
-                            <!-- 보훈 혜택 섹션 -->
-                            ${hospital.veteran_benefits ? `
-                            <div class="info-section highlight-section">
-                                <h4><i class="fas fa-medal"></i> 보훈 혜택</h4>
-                                <div class="benefits-content">
-                                    <div class="benefit-highlight">
-                                        ${hospital.veteran_benefits}
-                                    </div>
-                                </div>
-                            </div>
-                            ` : ''}
-                            
-                            <!-- 비급여 가격 정보 섹션 -->
-                            ${hospital.non_covered_services && hospital.non_covered_services.length > 0 ? `
-                            <div class="info-section">
-                                <h4><i class="fas fa-won-sign"></i> 비급여 진료비 정보</h4>
-                                <div class="price-table">
-                                    <div class="price-header">
-                                        <span>서비스명</span>
-                                        <span>가격</span>
-                                        <span>카테고리</span>
-                                    </div>
-                                    ${hospital.non_covered_services.slice(0, 5).map(service => `
-                                        <div class="price-row">
-                                            <span class="service-name">${service.service_name || '서비스명'}</span>
-                                            <span class="service-price">
-                                                ${service.price_min && service.price_max ? 
-                                                    `${service.price_min.toLocaleString()}원 ~ ${service.price_max.toLocaleString()}원` :
-                                                    service.price_min ? `${service.price_min.toLocaleString()}원` :
-                                                    '가격 문의'
-                                                }
-                                            </span>
-                                            <span class="service-category">${service.service_category || '기타'}</span>
-                                        </div>
-                                    `).join('')}
-                                </div>
-                                ${hospital.non_covered_services.length > 5 ? `
-                                <div class="show-more-prices">
-                                    <button onclick="showAllPrices('${hospitalId}')" class="show-more-btn">
-                                        <i class="fas fa-plus"></i>
-                                        ${hospital.non_covered_services.length - 5}개 가격 더보기
-                                    </button>
-                                </div>
-                                ` : ''}
-                            </div>
-                            ` : ''}
-                            
-                            <!-- 액션 버튼들 -->
-                            <div class="modal-actions">
-                                <button class="modal-action-btn primary" onclick="reserveHospital('${hospital.name || hospital.hospital_name}')">
-                                    <i class="fas fa-calendar-check"></i>
-                                    예약하기
-                                </button>
-                                <button class="modal-action-btn secondary" onclick="getDirections('${hospital.name || hospital.hospital_name}')">
-                                    <i class="fas fa-directions"></i>
-                                    길찾기
-                                </button>
-                                ${hospital.phone || hospital.contact_number ? `
-                                <button class="modal-action-btn tertiary" onclick="callHospital('${hospital.phone || hospital.contact_number}')">
-                                    <i class="fas fa-phone"></i>
-                                    전화하기
-                                </button>
-                                ` : ''}
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            `;
-            
-            // 모달을 body에 추가
-            const modalElement = document.createElement('div');
-            modalElement.innerHTML = modalHTML;
-            document.body.appendChild(modalElement);
-            
-            // 모달 스타일 추가
-            addEnhancedModalStyles();
-            
-            // 음성 안내
-            if (window.speechEnabled) {
-                speakText(`${hospital.name || hospital.hospital_name} 상세 정보를 표시합니다.`);
-            }
-            
-        } else {
-            alert('병원 상세 정보를 불러올 수 없습니다.');
+        const response = await fetch(`${window.API_BASE_URL}/health`);
+        if (response.ok) {
+            console.log('백엔드 서버 연결 성공');
+            return true;
         }
     } catch (error) {
-        console.error('병원 상세 정보 로드 오류:', error);
-        alert('병원 정보를 불러오는 중 오류가 발생했습니다.');
-    } finally {
-        hideLoadingSpinner();
+        console.warn('백엔드 서버 연결 실패:', error);
+        return false;
     }
-};
+}
 
-// 모달 닫기
-window.closeEnhancedModal = function() {
-    const modal = document.querySelector('.enhanced-modal-overlay');
-    if (modal) {
-        modal.remove();
+// 병원 통계 데이터 로드
+async function loadHospitalStats() {
+    try {
+        const response = await fetch(`${window.API_BASE_URL}/api/hospitals/stats/overview`);
+        if (response.ok) {
+            const stats = await response.json();
+            const heroSubtitle = document.querySelector('.hero-subtitle');
+            if (heroSubtitle && stats && stats.total_hospitals) {
+                heroSubtitle.innerHTML = `
+                    전국 <strong>${stats.total_hospitals}개</strong> 의료기관과 연결된<br>
+                    보훈대상자 맞춤 의료서비스를 제공합니다.
+                `;
+            }
+            hospitalStats = stats;
+            console.log('병원 통계 데이터 로드 완료:', stats);
+        }
+    } catch (error) {
+        console.warn('병원 통계 데이터 로드 실패:', error);
+        // 실패 시 기본 값 사용
+        const heroSubtitle = document.querySelector('.hero-subtitle');
+        if (heroSubtitle) {
+            heroSubtitle.innerHTML = `
+                전국 <strong>1,200+개</strong> 의료기관과 연결된<br>
+                보훈대상자 맞춤 의료서비스를 제공합니다.
+            `;
+        }
     }
-};
+}
 
-// ESC 키로 모달 닫기
-document.addEventListener('keydown', function(e) {
-    if (e.key === 'Escape') {
-        closeEnhancedModal();
+// ==============================================
+// 이벤트 리스너 및 초기화
+// ==============================================
+
+// DOM 로드 완료 후 실행
+document.addEventListener('DOMContentLoaded', async function() {
+    initializeEventListeners();
+    setupVoiceGuide();
+    await initializeData();
+    
+    // 접근성 기능 초기화
+    enhanceFocusVisibility();
+    setupHighContrastMode();
+    setupReducedMotion();
+    setupLargeTextMode();
+    setupTouchSupport();
+    
+    // 음성 API 준비
+    if ('speechSynthesis' in window) {
+        const loadVoices = () => {
+            const voices = speechSynthesis.getVoices();
+            if (voices.length > 0) {
+                console.log('음성 API 준비 완료');
+            } else {
+                setTimeout(loadVoices, 100);
+            }
+        };
+        
+        if (speechSynthesis.onvoiceschanged !== undefined) {
+            speechSynthesis.onvoiceschanged = loadVoices;
+        } else {
+            loadVoices();
+        }
     }
+    
+    // 페이지 로드 완료 알림
+    setTimeout(() => {
+        announceToScreenReader('보훈대상자 병원 추천 서비스 페이지가 로드되었습니다. 지금 병원 찾기 버튼을 눌러 시작하세요.');
+    }, 1000);
 });
 
-// 향상된 모달 스타일 추가
-function addEnhancedModalStyles() {
-    if (document.getElementById('enhanced-modal-styles')) return;
+// 이벤트 리스너 초기화
+function initializeEventListeners() {
+    // 병원 찾기 시작 버튼
+    const startButton = document.getElementById('startMatching');
+    if (startButton) {
+        startButton.addEventListener('click', startMatching);
+    }
+
+    // 지역 선택 변경 이벤트
+    const regionSelect = document.getElementById('region');
+    if (regionSelect) {
+        regionSelect.addEventListener('change', updateDistrictOptions);
+    }
+
+    // 증상 카드 클릭 이벤트
+    const symptomCards = document.querySelectorAll('.symptom-card');
+    symptomCards.forEach(card => {
+        card.addEventListener('click', toggleSymptom);
+    });
+
+    // 음성 안내 버튼
+    const voiceButton = document.getElementById('voiceGuide');
+    if (voiceButton) {
+        voiceButton.addEventListener('click', toggleVoiceGuide);
+    }
+
+    // 키보드 접근성
+    document.addEventListener('keydown', handleKeyboardNavigation);
+}
+
+// ==============================================
+// 병원 매칭 프로세스
+// ==============================================
+
+// 병원 찾기 시작
+function startMatching() {
+    const matchingForm = document.getElementById('matchingForm');
+    if (matchingForm) {
+        matchingForm.style.display = 'block';
+        matchingForm.scrollIntoView({ behavior: 'smooth' });
+        
+        // 첫 번째 입력 필드에 포커스
+        const firstInput = matchingForm.querySelector('select, input');
+        if (firstInput) {
+            setTimeout(() => firstInput.focus(), 500);
+        }
+        
+        announceToScreenReader('병원 매칭 폼이 표시되었습니다. 보훈 대상자 정보를 입력해주세요.');
+    }
+}
+
+// 다음 단계로 이동
+function nextStep(stepNumber) {
+    if (validateCurrentStep()) {
+        hideCurrentStep();
+        showStep(stepNumber);
+        updateStepIndicator(stepNumber);
+        currentStep = stepNumber;
+        
+        // 새 단계의 첫 번째 입력 필드에 포커스
+        const newStep = document.querySelector(`[data-step="${stepNumber}"]`);
+        const firstInput = newStep.querySelector('select, input, .symptom-card');
+        if (firstInput) {
+            setTimeout(() => firstInput.focus(), 300);
+        }
+        
+        announceToScreenReader(`${stepNumber}단계로 이동했습니다.`);
+    }
+}
+
+// 이전 단계로 이동
+function prevStep(stepNumber) {
+    hideCurrentStep();
+    showStep(stepNumber);
+    updateStepIndicator(stepNumber);
+    currentStep = stepNumber;
     
-    const style = document.createElement('style');
-    style.id = 'enhanced-modal-styles';
-    style.textContent = `
-        .enhanced-modal-overlay {
+    announceToScreenReader(`${stepNumber}단계로 돌아갔습니다.`);
+}
+
+// 현재 단계 숨기기
+function hideCurrentStep() {
+    const currentStepElement = document.querySelector('.form-step.active');
+    if (currentStepElement) {
+        currentStepElement.classList.remove('active');
+    }
+}
+
+// 특정 단계 보이기
+function showStep(stepNumber) {
+    const stepElement = document.querySelector(`[data-step="${stepNumber}"].form-step`);
+    if (stepElement) {
+        stepElement.classList.add('active');
+    }
+}
+
+// 단계 표시기 업데이트
+function updateStepIndicator(stepNumber) {
+    document.querySelectorAll('.step').forEach(step => {
+        step.classList.remove('active');
+    });
+    
+    const currentIndicator = document.querySelector(`[data-step="${stepNumber}"].step`);
+    if (currentIndicator) {
+        currentIndicator.classList.add('active');
+    }
+}
+
+// 현재 단계 유효성 검사
+function validateCurrentStep() {
+    switch (currentStep) {
+        case 1:
+            const veteranType = document.getElementById('veteranType').value;
+            if (!veteranType) {
+                alert('보훈대상 종류를 선택해주세요.');
+                return false;
+            }
+            formData.veteranType = veteranType;
+            formData.disabilityGrade = document.getElementById('disabilityGrade').value;
+            break;
+            
+        case 2:
+            const region = document.getElementById('region').value;
+            const district = document.getElementById('district').value;
+            if (!region || !district) {
+                alert('거주지역을 모두 선택해주세요.');
+                return false;
+            }
+            formData.region = region;
+            formData.district = district;
+            break;
+            
+        case 3:
+            if (selectedSymptoms.length === 0) {
+                alert('증상을 하나 이상 선택해주세요.');
+                return false;
+            }
+            const urgency = document.querySelector('input[name="urgency"]:checked');
+            if (!urgency) {
+                alert('응급도를 선택해주세요.');
+                return false;
+            }
+            formData.symptoms = selectedSymptoms;
+            formData.urgency = urgency.value;
+            break;
+    }
+    return true;
+}
+
+// ==============================================
+// 폼 처리 함수들
+// ==============================================
+
+// 지역별 시/군/구 옵션 업데이트
+function updateDistrictOptions() {
+    const regionSelect = document.getElementById('region');
+    const districtSelect = document.getElementById('district');
+    const selectedRegion = regionSelect.value;
+    
+    // 기존 옵션 제거
+    districtSelect.innerHTML = '<option value="">선택해주세요</option>';
+    
+    if (selectedRegion && regionData[selectedRegion]) {
+        regionData[selectedRegion].forEach(district => {
+            const option = document.createElement('option');
+            option.value = district;
+            option.textContent = district;
+            districtSelect.appendChild(option);
+        });
+        districtSelect.disabled = false;
+    } else {
+        districtSelect.disabled = true;
+    }
+}
+
+// 증상 선택/해제
+function toggleSymptom(event) {
+    const card = event.currentTarget;
+    const symptomValue = card.dataset.value;
+    
+    if (card.classList.contains('selected')) {
+        // 선택 해제
+        card.classList.remove('selected');
+        selectedSymptoms = selectedSymptoms.filter(s => s !== symptomValue);
+        announceToScreenReader(`${card.querySelector('span').textContent} 선택이 해제되었습니다.`);
+    } else {
+        // 선택
+        card.classList.add('selected');
+        selectedSymptoms.push(symptomValue);
+        announceToScreenReader(`${card.querySelector('span').textContent}이 선택되었습니다.`);
+    }
+    
+    // 숨겨진 입력 필드 업데이트
+    document.getElementById('selectedSymptoms').value = selectedSymptoms.join(',');
+}
+
+// ==============================================
+// 병원 추천 시스템
+// ==============================================
+
+// 추천 결과 표시
+function showRecommendation() {
+    if (validateCurrentStep()) {
+        hideCurrentStep();
+        showStep(4);
+        updateStepIndicator(4);
+        currentStep = 4;
+        
+        generateRecommendation();
+        announceToScreenReader('병원 추천 결과를 생성했습니다.');
+    }
+}
+
+// 추천 결과 생성 - 실제 백엔드 API 호출
+async function generateRecommendation() {
+    const resultsContainer = document.getElementById('recommendationResults');
+    
+    // 로딩 표시
+    resultsContainer.innerHTML = `
+        <div class="loading-container" style="text-align: center; padding: 40px;">
+            <div class="loading-spinner" style="border: 4px solid #f3f3f3; border-top: 4px solid #2c5aa0; border-radius: 50%; width: 50px; height: 50px; animation: spin 1s linear infinite; margin: 0 auto 20px;"></div>
+            <p style="font-size: 18px; color: #666;">23,252개 데이터에서 맞춤 병원을 찾고 있습니다...</p>
+            <p style="font-size: 14px; color: #999; margin-top: 10px;">보훈대상자 맞춤형 AI 추천 알고리즘 실행 중...</p>
+        </div>
+    `;
+    
+    try {
+        // 실제 백엔드 API 호출
+        const recommendations = await getAIRecommendations();
+        
+        if (recommendations && recommendations.length > 0) {
+            // 향상된 추천 결과 표시
+            if (window.displayEnhancedRecommendations) {
+                window.displayEnhancedRecommendations(recommendations);
+            } else {
+                displayBasicRecommendations(recommendations);
+            }
+        } else {
+            // 추천 결과가 없을 경우
+            resultsContainer.innerHTML = `
+                <div style="text-align: center; padding: 40px; color: #666;">
+                    <i class="fas fa-search" style="font-size: 48px; margin-bottom: 20px; color: #ddd;"></i>
+                    <h4>조건에 맞는 병원을 찾을 수 없습니다</h4>
+                    <p>검색 조건을 변경하여 다시 시도해주세요.</p>
+                </div>
+            `;
+        }
+        
+    } catch (error) {
+        console.error('병원 추천 API 호출 실패:', error);
+        // 에러 시 폴백으로 샘플 데이터 표시
+        displayFallbackResults();
+    }
+}
+
+// 실제 AI 추천 API 호출 - 위치 기반 보훈병원 우선 추천
+async function getAIRecommendations() {
+    try {
+        const requestData = {
+            veteranType: formData.veteranType || 'NATIONAL_MERIT',
+            disabilityGrade: formData.disabilityGrade,
+            region: formData.region,
+            district: formData.district,
+            symptoms: formData.symptoms || selectedSymptoms,
+            department: formData.department || symptomToDepartmentMap[selectedSymptoms[0]] || null,
+            urgency: formData.urgency || 'normal',
+            limit: 5
+        };
+        
+        console.log('📍 위치 기반 AI 추천 요청:', requestData);
+        
+        // 위치 기반 추천 API 사용 (api.js의 강화된 함수)
+        const recommendations = await veteransCareAPI.getLocationBasedRecommendations(requestData);
+        
+        if (recommendations && recommendations.length > 0) {
+            console.log('✅ 위치 기반 AI 추천 결과:', recommendations);
+            return recommendations;
+        }
+        
+        // 폴백: 기존 API 방식
+        console.log('🔄 기존 API 방식으로 폴백');
+        
+        const fallbackData = {
+            ...requestData,
+            prioritizeVeteranHospitals: true,
+            ...(userLocation && {
+                lat: userLocation.latitude,
+                lng: userLocation.longitude
+            })
+        };
+        
+        const response = await fetch(`${window.API_BASE_URL}/api/hospitals/recommend`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify(fallbackData)
+        });
+        
+        if (!response.ok) {
+            throw new Error(`API 호출 실패: ${response.status} ${response.statusText}`);
+        }
+        
+        const data = await response.json();
+        console.log('기존 API 추천 결과:', data);
+        
+        // 응답 데이터 구조 정규화
+        if (data.success && data.data && data.data.recommendations) {
+            return data.data.recommendations;
+        } else if (data.recommendations) {
+            return data.recommendations;
+        } else if (Array.isArray(data)) {
+            return data;
+        } else {
+            console.warn('예상과 다른 응답 구조:', data);
+            return [];
+        }
+        
+    } catch (error) {
+        console.error('AI 추천 API 오류:', error);
+        throw error;
+    }
+}
+
+// ==============================================
+// 결과 표시 함수들
+// ==============================================
+
+// 기본 추천 결과 표시
+function displayBasicRecommendations(recommendations) {
+    const resultsContainer = document.getElementById('recommendationResults');
+    
+    if (!recommendations || recommendations.length === 0) {
+        resultsContainer.innerHTML = '<p class="no-results">추천할 병원이 없습니다.</p>';
+        return;
+    }
+    
+    let resultsHTML = '<div class="results-header"><h5>🤖 AI 맞춤 병원 추천</h5><p>23,252개 데이터 분석 결과입니다.</p></div>';
+    
+    recommendations.forEach((hospital, index) => {
+        resultsHTML += `
+            <div class="hospital-result enhanced-card" onclick="showHospitalDetail('${hospital.id || hospital.hospital_id}')">
+                <div class="hospital-rank">${index + 1}위 추천</div>
+                <div class="hospital-name">${hospital.name || hospital.hospital_name || '이름 없음'}</div>
+                
+                ${hospital.score ? `
+                <div class="hospital-score">
+                    <span class="score">${hospital.score.toFixed(1)}</span>
+                    <span class="score-label">점</span>
+                </div>
+                ` : ''}
+                
+                <div class="hospital-info">
+                    <div class="info-item">
+                        <i class="fas fa-map-marker-alt"></i>
+                        <span>${hospital.address || hospital.full_address || '주소 정보 없음'}</span>
+                    </div>
+                    <div class="info-item">
+                        <i class="fas fa-phone"></i>
+                        <span>${hospital.phone || hospital.contact_number || '전화번호 정보 없음'}</span>
+                    </div>
+                    ${hospital.distance ? `
+                    <div class="info-item">
+                        <i class="fas fa-route"></i>
+                        <span>${hospital.distance}km</span>
+                    </div>
+                    ` : ''}
+                </div>
+                
+                ${hospital.recommendation_reason ? `
+                <div class="recommendation-reason">
+                    <i class="fas fa-lightbulb"></i>
+                    <strong>추천 이유:</strong> ${hospital.recommendation_reason}
+                </div>
+                ` : ''}
+                
+                <div class="hospital-actions">
+                    <button class="btn-reserve" onclick="event.stopPropagation(); reserveHospital('${hospital.name || hospital.hospital_name}')">
+                        <i class="fas fa-calendar-check"></i> 예약하기
+                    </button>
+                    <button class="btn-map" onclick="event.stopPropagation(); showOnMap('${hospital.id || hospital.hospital_id}', '${hospital.name || hospital.hospital_name}', '${hospital.latitude || ''}', '${hospital.longitude || ''}')">
+                        <i class="fas fa-map-marked-alt"></i> 지도에서 보기
+                    </button>
+                    <button class="btn-directions" onclick="event.stopPropagation(); getDirections('${hospital.name || hospital.hospital_name}')">
+                        <i class="fas fa-directions"></i> 길찾기
+                    </button>
+                    ${hospital.phone || hospital.contact_number ? `
+                    <button class="btn-call" onclick="event.stopPropagation(); callHospital('${hospital.phone || hospital.contact_number}')">
+                        <i class="fas fa-phone"></i> 전화하기
+                    </button>
+                    ` : ''}
+                </div>
+            </div>
+        `;
+    });
+    
+    resultsContainer.innerHTML = resultsHTML;
+    addEnhancedResultStyles();
+}
+
+// 사용자 위치 요청 (동의 포함)
+async function getUserLocationWithConsent() {
+    try {
+        // 위치 서비스 동의 확인
+        const consent = localStorage.getItem('locationConsent');
+        
+        if (!consent) {
+            const userConsent = await showLocationConsentDialog();
+            if (!userConsent) {
+                console.log('위치 서비스 사용을 거부했습니다.');
+                return null;
+            }
+            localStorage.setItem('locationConsent', 'true');
+        }
+        
+        // API를 통해 위치 정보 획득
+        userLocation = await veteransCareAPI.getUserLocation();
+        
+        if (userLocation) {
+            console.log('✅ 사용자 위치 정보 획득:', userLocation);
+            
+            // 위치 상태 표시
+            showLocationStatus(userLocation);
+            
+            return userLocation;
+        }
+    } catch (error) {
+        console.error('위치 정보 획득 실패:', error);
+        return null;
+    }
+}
+
+// 위치 서비스 동의 다이얼로그
+function showLocationConsentDialog() {
+    return new Promise((resolve) => {
+        const modal = document.createElement('div');
+        modal.className = 'location-consent-modal';
+        modal.innerHTML = `
+            <div class="modal-overlay">
+                <div class="modal-content">
+                    <h3>📍 위치 서비스 사용 동의</h3>
+                    <p>더 정확한 병원 추천을 위해 현재 위치 정보를 사용하시겠습니까?</p>
+                    <div class="location-benefits">
+                        <div class="benefit-item">
+                            <i class="fas fa-route"></i>
+                            <span>거리순 병원 추천</span>
+                        </div>
+                        <div class="benefit-item">
+                            <i class="fas fa-clock"></i>
+                            <span>예상 이동시간 제공</span>
+                        </div>
+                        <div class="benefit-item">
+                            <i class="fas fa-map-marked-alt"></i>
+                            <span>가까운 보훈병원 우선 추천</span>
+                        </div>
+                    </div>
+                    <div class="modal-actions">
+                        <button class="btn-allow" onclick="resolveLocationConsent(true)">
+                            <i class="fas fa-check"></i> 허용
+                        </button>
+                        <button class="btn-deny" onclick="resolveLocationConsent(false)">
+                            <i class="fas fa-times"></i> 거부
+                        </button>
+                    </div>
+                    <p class="privacy-note">
+                        <i class="fas fa-shield-alt"></i>
+                        위치 정보는 병원 추천 목적으로만 사용되며 저장되지 않습니다.
+                    </p>
+                </div>
+            </div>
+        `;
+        
+        document.body.appendChild(modal);
+        
+        // 동의 결과 처리
+        window.resolveLocationConsent = (allowed) => {
+            modal.remove();
+            delete window.resolveLocationConsent;
+            resolve(allowed);
+        };
+        
+        // 스타일 추가
+        const style = document.createElement('style');
+        style.textContent = `
+            .location-consent-modal {
+                position: fixed;
+                top: 0;
+                left: 0;
+                width: 100%;
+                height: 100%;
+                z-index: 10000;
+            }
+            .modal-overlay {
+                background: rgba(0,0,0,0.7);
+                width: 100%;
+                height: 100%;
+                display: flex;
+                justify-content: center;
+                align-items: center;
+            }
+            .modal-content {
+                background: white;
+                padding: 30px;
+                border-radius: 15px;
+                max-width: 450px;
+                width: 90%;
+                text-align: center;
+                box-shadow: 0 10px 30px rgba(0,0,0,0.3);
+            }
+            .location-benefits {
+                margin: 20px 0;
+                text-align: left;
+            }
+            .benefit-item {
+                display: flex;
+                align-items: center;
+                margin: 10px 0;
+                color: #2c5aa0;
+            }
+            .benefit-item i {
+                margin-right: 10px;
+                width: 20px;
+            }
+            .modal-actions {
+                display: flex;
+                gap: 15px;
+                justify-content: center;
+                margin: 25px 0 15px;
+            }
+            .btn-allow, .btn-deny {
+                padding: 12px 25px;
+                border: none;
+                border-radius: 8px;
+                font-weight: 600;
+                cursor: pointer;
+                transition: all 0.3s ease;
+            }
+            .btn-allow {
+                background: #27ae60;
+                color: white;
+            }
+            .btn-allow:hover {
+                background: #219a52;
+            }
+            .btn-deny {
+                background: #e74c3c;
+                color: white;
+            }
+            .btn-deny:hover {
+                background: #c0392b;
+            }
+            .privacy-note {
+                font-size: 12px;
+                color: #666;
+                margin-top: 15px;
+            }
+        `;
+        document.head.appendChild(style);
+    });
+}
+
+// 위치 상태 표시
+function showLocationStatus(location) {
+    let statusMessage = '';
+    let statusClass = 'success';
+    
+    if (location.error) {
+        statusMessage = `📍 위치: ${location.error} (기본값 사용)`;
+        statusClass = 'warning';
+    } else if (location.cached) {
+        statusMessage = `📍 위치: 캐시된 위치 사용 (${location.latitude.toFixed(4)}, ${location.longitude.toFixed(4)})`;
+        statusClass = 'info';
+    } else if (location.default) {
+        statusMessage = `📍 위치: 기본 위치 사용 (서울)`;
+        statusClass = 'warning';
+    } else {
+        statusMessage = `📍 위치: 현재 위치 확인됨 (${location.latitude.toFixed(4)}, ${location.longitude.toFixed(4)})`;
+        statusClass = 'success';
+    }
+    
+    // 상태 표시
+    const statusDiv = document.createElement('div');
+    statusDiv.className = `location-status ${statusClass}`;
+    statusDiv.innerHTML = `
+        <div style="
             position: fixed;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            background: rgba(0, 0, 0, 0.7);
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            z-index: 10000;
-            padding: 20px;
-            box-sizing: border-box;
-        }
-        
-        .enhanced-modal-content {
-            background: white;
-            border-radius: 20px;
-            max-width: 900px;
-            width: 100%;
-            max-height: 90vh;
-            overflow: hidden;
-            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
-            animation: modalSlideIn 0.3s ease;
-        }
-        
-        @keyframes modalSlideIn {
-            from {
-                opacity: 0;
-                transform: translateY(-50px);
-            }
-            to {
-                opacity: 1;
-                transform: translateY(0);
-            }
-        }
-        
-        .modal-header {
-            background: linear-gradient(135deg, #2c5aa0 0%, #4a90e2 100%);
+            bottom: 20px;
+            left: 20px;
+            background: ${statusClass === 'success' ? '#27ae60' : statusClass === 'warning' ? '#f39c12' : '#3498db'};
             color: white;
-            padding: 25px;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-        }
-        
-        .modal-header h3 {
-            margin: 0;
-            font-size: 24px;
-            display: flex;
-            align-items: center;
-            gap: 12px;
-        }
-        
-        .modal-close-btn {
-            background: none;
-            border: none;
-            color: white;
-            font-size: 24px;
-            cursor: pointer;
-            padding: 8px;
-            border-radius: 50%;
-            transition: background 0.3s ease;
-            min-width: 40px;
-            min-height: 40px;
-        }
-        
-        .modal-close-btn:hover {
-            background: rgba(255, 255, 255, 0.2);
-        }
-        
-        .modal-body {
-            padding: 0;
-            overflow-y: auto;
-            max-height: calc(90vh - 140px);
-        }
-        
-        .info-section {
-            padding: 25px;
-            border-bottom: 1px solid #f0f0f0;
-        }
-        
-        .info-section:last-child {
-            border-bottom: none;
-        }
-        
-        .info-section h4 {
-            color: #2c5aa0;
-            font-size: 20px;
-            margin: 0 0 20px 0;
-            display: flex;
-            align-items: center;
-            gap: 10px;
-            padding-bottom: 10px;
-            border-bottom: 2px solid #e8f4f8;
-        }
-        
-        .info-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
-            gap: 20px;
-        }
-        
-        .info-item {
-            display: flex;
-            flex-direction: column;
-            gap: 8px;
-        }
-        
-        .info-item label {
-            font-weight: 600;
-            color: #666;
+            padding: 10px 15px;
+            border-radius: 8px;
             font-size: 14px;
-        }
-        
-        .info-item span {
-            color: #333;
-            font-size: 16px;
-            line-height: 1.5;
-        }
-        
-        .phone-link {
-            color: #2c5aa0;
-            text-decoration: none;
-            display: flex;
-            align-items: center;
-            gap: 8px;
-            transition: color 0.3s ease;
-        }
-        
-        .phone-link:hover {
-            color: #1e3a5f;
-        }
-        
-        .services-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
-            gap: 20px;
-        }
-        
-        .service-card {
-            background: #f8f9fa;
-            padding: 20px;
-            border-radius: 12px;
-            border-left: 4px solid #2c5aa0;
-        }
-        
-        .service-card h5 {
-            color: #2c5aa0;
-            margin: 0 0 10px 0;
-            font-size: 16px;
-        }
-        
-        .service-card p {
-            color: #666;
-            margin: 0;
-            line-height: 1.5;
-            font-size: 14px;
-        }
-        
-        .equipment-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
-            gap: 15px;
-        }
-        
-        .equipment-item {
-            background: #e8f5e8;
-            padding: 15px;
-            border-radius: 10px;
-            border-left: 4px solid #27ae60;
-        }
-        
-        .equipment-name {
-            font-weight: 600;
-            color: #27ae60;
-            margin-bottom: 5px;
-        }
-        
-        .equipment-category {
-            font-size: 12px;
-            color: #666;
-            background: #fff;
-            padding: 4px 8px;
-            border-radius: 12px;
-            display: inline-block;
-            margin-bottom: 5px;
-        }
-        
-        .equipment-purpose {
-            font-size: 13px;
-            color: #666;
-            line-height: 1.4;
-        }
-        
-        .highlight-section {
-            background: linear-gradient(135deg, #fff9e6 0%, #fef5e7 100%);
-        }
-        
-        .benefit-highlight {
-            background: linear-gradient(135deg, #ffc107 0%, #ff8f00 100%);
-            color: #333;
-            padding: 20px;
-            border-radius: 12px;
-            font-size: 16px;
-            font-weight: 500;
-            line-height: 1.6;
-            box-shadow: 0 4px 15px rgba(255, 193, 7, 0.3);
-        }
-        
-        .price-table {
-            background: white;
-            border-radius: 12px;
-            overflow: hidden;
-            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
-        }
-        
-        .price-header {
-            background: #f8f9fa;
-            padding: 15px;
-            display: grid;
-            grid-template-columns: 2fr 1fr 1fr;
-            gap: 15px;
-            font-weight: 600;
-            color: #2c5aa0;
-            border-bottom: 2px solid #e9ecef;
-        }
-        
-        .price-row {
-            padding: 15px;
-            display: grid;
-            grid-template-columns: 2fr 1fr 1fr;
-            gap: 15px;
-            border-bottom: 1px solid #f0f0f0;
-            align-items: center;
-        }
-        
-        .price-row:last-child {
-            border-bottom: none;
-        }
-        
-        .price-row:hover {
-            background: #f8f9fa;
-        }
-        
-        .service-name {
-            font-weight: 500;
-            color: #333;
-        }
-        
-        .service-price {
-            color: #e74c3c;
-            font-weight: 600;
-        }
-        
-        .service-category {
-            background: #e9ecef;
-            padding: 4px 12px;
-            border-radius: 20px;
-            font-size: 12px;
-            color: #666;
+            z-index: 1000;
+            max-width: 300px;
+        ">
+            ${statusMessage}
+        </div>
+    `;
+    
+    document.body.appendChild(statusDiv);
+    
+    // 5초 후 제거
+    setTimeout(() => {
+        statusDiv.remove();
+    }, 5000);
+}
+
+// 폴백 결과 표시 (서버 연결 실패 시)
+function displayFallbackResults() {
+    const resultsContainer = document.getElementById('recommendationResults');
+    
+    let filteredHospitals = sampleHospitals;
+    if (formData.region === 'busan') {
+        filteredHospitals = sampleHospitals.filter(h => h.name.includes('부산'));
+    } else if (formData.region === 'daejeon') {
+        filteredHospitals = sampleHospitals.filter(h => h.name.includes('대전') || h.name.includes('중앙'));
+    }
+    
+    let resultsHTML = `
+        <div class="fallback-notice">
+            <i class="fas fa-info-circle" style="color: #f39c12; margin-right: 8px;"></i>
+            <strong>오프라인 모드:</strong> 서버 연결 없이 기본 병원 목록을 표시합니다.
+        </div>
+        <div class="results-header">
+            <h5>🏥 추천 병원 목록</h5>
+            <p>회원님의 조건에 맞는 병원들입니다.</p>
+        </div>
+    `;
+    
+    filteredHospitals.forEach((hospital, index) => {
+        resultsHTML += `
+            <div class="hospital-result">
+                <div class="hospital-name">${hospital.name}</div>
+                <div class="hospital-info">
+                    <div class="info-item">
+                        <i class="fas fa-map-marker-alt"></i>
+                        <span>${hospital.address}</span>
+                    </div>
+                    <div class="info-item">
+                        <i class="fas fa-phone"></i>
+                        <span>${hospital.phone}</span>
+                    </div>
+                    <div class="info-item">
+                        <i class="fas fa-route"></i>
+                        <span>${hospital.distance}</span>
+                    </div>
+                </div>
+                <div class="hospital-benefits">
+                    <h5><i class="fas fa-gift"></i> 보훈 혜택</h5>
+                    <p>${hospital.benefits}</p>
+                </div>
+                <div class="hospital-actions">
+                    <button class="btn-reserve" onclick="reserveHospital('${hospital.name}')">
+                        <i class="fas fa-calendar-check"></i> 예약하기
+                    </button>
+                    <button class="btn-directions" onclick="getDirections('${hospital.name}')">
+                        <i class="fas fa-directions"></i> 길찾기
+                    </button>
+                    <button class="btn-call" onclick="callHospital('${hospital.phone}')">
+                        <i class="fas fa-phone"></i> 전화하기
+                    </button>
+                </div>
+            </div>
+        `;
+    });
+    
+    resultsContainer.innerHTML = resultsHTML;
+    
+    // 폴백 알림 스타일 추가
+    const fallbackStyle = document.createElement('style');
+    fallbackStyle.textContent = `
+        .fallback-notice {
+            background: #fff3cd;
+            border: 1px solid #ffeaa7;
+            color: #856404;
+            padding: 12px;
+            border-radius: 8px;
+            margin-bottom: 20px;
             text-align: center;
         }
+    `;
+    document.head.appendChild(fallbackStyle);
+}
+
+// 향상된 결과 스타일 추가
+function addEnhancedResultStyles() {
+    if (document.getElementById('enhanced-result-styles')) return;
+    
+    const style = document.createElement('style');
+    style.id = 'enhanced-result-styles';
+    style.textContent = `
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
         
-        .show-more-btn {
-            background: #f8f9fa;
-            border: 2px dashed #dee2e6;
-            color: #6c757d;
-            padding: 15px;
+        .enhanced-card {
+            border: 2px solid #e9ecef;
             border-radius: 12px;
-            width: 100%;
+            padding: 20px;
+            margin-bottom: 20px;
+            background: white;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+            transition: all 0.3s ease;
+            cursor: pointer;
+            position: relative;
+        }
+        
+        .enhanced-card:hover {
+            border-color: #2c5aa0;
+            box-shadow: 0 8px 25px rgba(44, 90, 160, 0.2);
+            transform: translateY(-3px);
+        }
+        
+        .hospital-rank {
+            position: absolute;
+            top: -10px;
+            right: 20px;
+            background: #2c5aa0;
+            color: white;
+            padding: 5px 12px;
+            border-radius: 15px;
+            font-size: 12px;
+            font-weight: bold;
+        }
+        
+        .hospital-score {
+            position: absolute;
+            top: 15px;
+            right: 20px;
+            text-align: center;
+            background: #f8f9fa;
+            border: 2px solid #2c5aa0;
+            border-radius: 50px;
+            padding: 10px;
+            min-width: 60px;
+        }
+        
+        .hospital-score .score {
+            display: block;
+            font-size: 18px;
+            font-weight: bold;
+            color: #2c5aa0;
+            line-height: 1;
+        }
+        
+        .hospital-score .score-label {
+            font-size: 10px;
+            color: #666;
+        }
+        
+        .recommendation-reason {
+            background: #e3f2fd;
+            border-left: 4px solid #2196f3;
+            padding: 12px;
+            margin: 15px 0;
+            border-radius: 0 8px 8px 0;
+            font-size: 14px;
+            color: #1976d2;
+        }
+        
+        .hospital-actions {
+            display: flex;
+            gap: 12px;
+            flex-wrap: wrap;
+            margin-top: 20px;
+        }
+        
+        .btn-reserve, .btn-directions, .btn-call {
+            background: #2c5aa0;
+            color: white;
+            border: none;
+            padding: 12px 20px;
+            border-radius: 8px;
             cursor: pointer;
             font-size: 14px;
+            font-weight: 500;
+            min-height: 44px;
             display: flex;
             align-items: center;
-            justify-content: center;
             gap: 8px;
             transition: all 0.3s ease;
-            margin-top: 15px;
-        }
-        
-        .show-more-btn:hover {
-            background: #e9ecef;
-            border-color: #adb5bd;
-            color: #495057;
-        }
-        
-        .modal-actions {
-            padding: 25px;
-            background: #f8f9fa;
-            display: flex;
-            gap: 15px;
-            justify-content: center;
-        }
-        
-        .modal-action-btn {
             flex: 1;
-            max-width: 200px;
-            padding: 15px 25px;
-            border: none;
+            min-width: 120px;
+        }
+        
+        .btn-reserve {
+            background: #27ae60;
+        }
+        
+        .btn-directions {
+            background: #3498db;
+        }
+        
+        .btn-call {
+            background: #e74c3c;
+        }
+        
+        .btn-reserve:hover {
+            background: #229954;
+            transform: translateY(-1px);
+        }
+        
+        .btn-directions:hover {
+            background: #2980b9;
+            transform: translateY(-1px);
+        }
+        
+        .btn-call:hover {
+            background: #c0392b;
+            transform: translateY(-1px);
+        }
+        
+        .results-header {
+            text-align: center;
+            margin-bottom: 30px;
+            padding: 20px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
             border-radius: 12px;
+        }
+        
+        .results-header h5 {
+            font-size: 24px;
+            margin-bottom: 8px;
+            text-shadow: 0 2px 4px rgba(0,0,0,0.3);
+        }
+        
+        .results-header p {
             font-size: 16px;
-            font-weight: 600;
-            cursor: pointer;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            gap: 10px;
-            transition: all 0.3s ease;
-            min-height: 48px;
-        }
-        
-        .modal-action-btn.primary {
-            background: linear-gradient(135deg, #27ae60 0%, #2ecc71 100%);
-            color: white;
-            box-shadow: 0 4px 15px rgba(39, 174, 96, 0.3);
-        }
-        
-        .modal-action-btn.primary:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 6px 20px rgba(39, 174, 96, 0.4);
-        }
-        
-        .modal-action-btn.secondary {
-            background: linear-gradient(135deg, #3498db 0%, #5dade2 100%);
-            color: white;
-            box-shadow: 0 4px 15px rgba(52, 152, 219, 0.3);
-        }
-        
-        .modal-action-btn.secondary:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 6px 20px rgba(52, 152, 219, 0.4);
-        }
-        
-        .modal-action-btn.tertiary {
-            background: linear-gradient(135deg, #e74c3c 0%, #ec7063 100%);
-            color: white;
-            box-shadow: 0 4px 15px rgba(231, 76, 60, 0.3);
-        }
-        
-        .modal-action-btn.tertiary:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 6px 20px rgba(231, 76, 60, 0.4);
+            opacity: 0.9;
+            margin: 0;
         }
         
         @media (max-width: 768px) {
-            .enhanced-modal-content {
-                margin: 10px;
-                max-height: 95vh;
-            }
-            
-            .modal-header {
-                padding: 20px;
-            }
-            
-            .modal-header h3 {
-                font-size: 20px;
-            }
-            
-            .info-section {
-                padding: 20px;
-            }
-            
-            .info-grid {
-                grid-template-columns: 1fr;
-            }
-            
-            .services-grid {
-                grid-template-columns: 1fr;
-            }
-            
-            .equipment-grid {
-                grid-template-columns: 1fr;
-            }
-            
-            .price-header,
-            .price-row {
-                grid-template-columns: 1fr;
-                gap: 10px;
-            }
-            
-            .modal-actions {
+            .hospital-actions {
                 flex-direction: column;
-                padding: 20px;
             }
             
-            .modal-action-btn {
-                max-width: none;
+            .btn-reserve, .btn-directions, .btn-call {
+                flex: none;
+                width: 100%;
             }
         }
     `;
     
     document.head.appendChild(style);
 }
+
+// ==============================================
+// 병원 액션 함수들
+// ==============================================
+
+// 병원 예약 기능
+window.reserveHospital = function(hospitalName) {
+    if (window.speechEnabled) {
+        speakText(`${hospitalName} 예약 기능을 실행합니다.`);
+    }
+    
+    const modal = document.createElement('div');
+    modal.style.cssText = `
+        position: fixed;
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        background: rgba(0,0,0,0.7);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        z-index: 10000;
+    `;
+    
+    modal.innerHTML = `
+        <div style="
+            background: white;
+            padding: 30px;
+            border-radius: 12px;
+            max-width: 400px;
+            width: 90%;
+            text-align: center;
+        ">
+            <h4 style="color: #2c5aa0; margin-bottom: 20px;">
+                <i class="fas fa-calendar-check"></i> ${hospitalName}
+            </h4>
+            <p style="margin-bottom: 20px; color: #666;">
+                예약 기능은 향후 업데이트 예정입니다.<br>
+                현재는 병원에 직접 전화하여 예약해주세요.
+            </p>
+            <button onclick="this.parentElement.parentElement.remove()" style="
+                background: #2c5aa0;
+                color: white;
+                border: none;
+                padding: 12px 24px;
+                border-radius: 8px;
+                cursor: pointer;
+                font-size: 16px;
+            ">확인</button>
+        </div>
+    `;
+    
+    document.body.appendChild(modal);
+    
+    modal.addEventListener('click', (e) => {
+        if (e.target === modal) {
+            modal.remove();
+        }
+    });
+};
+
+// 길찾기 기능
+window.getDirections = function(hospitalName) {
+    if (window.speechEnabled) {
+        speakText(`${hospitalName}로 길찾기를 시작합니다.`);
+    }
+    
+    const modal = document.createElement('div');
+    modal.style.cssText = `
+        position: fixed;
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        background: rgba(0,0,0,0.7);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        z-index: 10000;
+    `;
+    
+    modal.innerHTML = `
+        <div style="
+            background: white;
+            padding: 30px;
+            border-radius: 12px;
+            max-width: 400px;
+            width: 90%;
+            text-align: center;
+        ">
+            <h4 style="color: #2c5aa0; margin-bottom: 20px;">
+                <i class="fas fa-route"></i> ${hospitalName} 길찾기
+            </h4>
+            <p style="margin-bottom: 20px; color: #666;">
+                어떤 지도 서비스를 사용하시겠습니까?
+            </p>
+            <div style="display: flex; gap: 10px; justify-content: center; flex-wrap: wrap;">
+                <button onclick="openKakaoMap('${hospitalName}'); this.parentElement.parentElement.parentElement.remove();" style="
+                    background: #ffeb3b;
+                    color: #333;
+                    border: none;
+                    padding: 12px 20px;
+                    border-radius: 8px;
+                    cursor: pointer;
+                    font-size: 14px;
+                ">
+                    <i class="fas fa-map"></i> 카카오맵
+                </button>
+                <button onclick="openNaverMap('${hospitalName}'); this.parentElement.parentElement.parentElement.remove();" style="
+                    background: #03c75a;
+                    color: white;
+                    border: none;
+                    padding: 12px 20px;
+                    border-radius: 8px;
+                    cursor: pointer;
+                    font-size: 14px;
+                ">
+                    <i class="fas fa-map-marked-alt"></i> 네이버맵
+                </button>
+                <button onclick="openGoogleMaps('${hospitalName}'); this.parentElement.parentElement.parentElement.remove();" style="
+                    background: #4285f4;
+                    color: white;
+                    border: none;
+                    padding: 12px 20px;
+                    border-radius: 8px;
+                    cursor: pointer;
+                    font-size: 14px;
+                ">
+                    <i class="fab fa-google"></i> 구글맵
+                </button>
+            </div>
+            <button onclick="this.parentElement.parentElement.remove()" style="
+                background: #6c757d;
+                color: white;
+                border: none;
+                padding: 8px 16px;
+                border-radius: 6px;
+                cursor: pointer;
+                font-size: 14px;
+                margin-top: 15px;
+            ">취소</button>
+        </div>
+    `;
+    
+    document.body.appendChild(modal);
+    
+    modal.addEventListener('click', (e) => {
+        if (e.target === modal) {
+            modal.remove();
+        }
+    });
+};
+
+// 지도 서비스별 열기 함수들
+window.openKakaoMap = function(hospitalName) {
+    const url = `https://map.kakao.com/link/search/${encodeURIComponent(hospitalName)}`;
+    window.open(url, '_blank');
+};
+
+window.openNaverMap = function(hospitalName) {
+    const url = `https://map.naver.com/v5/search/${encodeURIComponent(hospitalName)}`;
+    window.open(url, '_blank');
+};
+
+window.openGoogleMaps = function(hospitalName) {
+    const url = `https://www.google.com/maps/search/${encodeURIComponent(hospitalName)}`;
+    window.open(url, '_blank');
+};
+
+// 전화하기 기능
+window.callHospital = function(phoneNumber) {
+    if (!phoneNumber || phoneNumber === '전화번호 정보 없음') {
+        alert('전화번호 정보가 없습니다.');
+        return;
+    }
+    
+    if (window.speechEnabled) {
+        speakText('병원에 전화를 겁니다.');
+    }
+    
+    const isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
+    
+    if (isMobile) {
+        window.location.href = `tel:${phoneNumber}`;
+    } else {
+        const modal = document.createElement('div');
+        modal.style.cssText = `
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0,0,0,0.7);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 10000;
+        `;
+        
+        modal.innerHTML = `
+            <div style="
+                background: white;
+                padding: 30px;
+                border-radius: 12px;
+                max-width: 400px;
+                width: 90%;
+                text-align: center;
+            ">
+                <h4 style="color: #2c5aa0; margin-bottom: 20px;">
+                    <i class="fas fa-phone"></i> 병원 전화하기
+                </h4>
+                <p style="margin-bottom: 20px; color: #666;">
+                    전화번호: <strong>${phoneNumber}</strong><br>
+                    모바일에서 전화를 걸거나 직접 다이얼하세요.
+                </p>
+                <div style="display: flex; gap: 10px; justify-content: center;">
+                    <button onclick="copyToClipboard('${phoneNumber}'); this.parentElement.parentElement.parentElement.remove();" style="
+                        background: #17a2b8;
+                        color: white;
+                        border: none;
+                        padding: 12px 20px;
+                        border-radius: 8px;
+                        cursor: pointer;
+                        font-size: 14px;
+                    ">
+                        <i class="fas fa-copy"></i> 복사하기
+                    </button>
+                    <button onclick="this.parentElement.parentElement.parentElement.remove()" style="
+                        background: #6c757d;
+                        color: white;
+                        border: none;
+                        padding: 12px 20px;
+                        border-radius: 8px;
+                        cursor: pointer;
+                        font-size: 14px;
+                    ">닫기</button>
+                </div>
+            </div>
+        `;
+        
+        document.body.appendChild(modal);
+        
+        modal.addEventListener('click', (e) => {
+            if (e.target === modal) {
+                modal.remove();
+            }
+        });
+    }
+};
+
+// 클립보드에 복사하기
+function copyToClipboard(text) {
+    if (navigator.clipboard) {
+        navigator.clipboard.writeText(text).then(() => {
+            alert('전화번호가 복사되었습니다.');
+        }).catch(() => {
+            promptManualCopy(text);
+        });
+    } else {
+        promptManualCopy(text);
+    }
+}
+
+// 수동 복사 안내
+function promptManualCopy(text) {
+    const textarea = document.createElement('textarea');
+    textarea.value = text;
+    document.body.appendChild(textarea);
+    textarea.select();
+    document.execCommand('copy');
+    document.body.removeChild(textarea);
+    alert('전화번호가 복사되었습니다.');
+}
+
+// ==============================================
+// 병원 상세 정보 모달
+// ==============================================
+
+// 병원 상세 정보 표시
+window.showHospitalDetail = async function(hospitalId) {
+    try {
+        showLoadingSpinner('병원 상세 정보를 불러오는 중...');
+        
+        const hospitalDetail = await fetchHospitalDetail(hospitalId);
+        hideLoadingSpinner();
+        
+        const detailModal = createHospitalDetailModal(hospitalDetail);
+        document.body.appendChild(detailModal);
+        
+    } catch (error) {
+        console.error('병원 상세 정보 로딩 실패:', error);
+        hideLoadingSpinner();
+        
+        const basicModal = createBasicInfoModal(hospitalId);
+        document.body.appendChild(basicModal);
+    }
+};
 
 // 로딩 스피너 함수들
 function showLoadingSpinner(message = '로딩 중...') {
@@ -724,11 +1377,6 @@ function showLoadingSpinner(message = '로딩 중...') {
             margin: 0 auto 20px;
         }
         
-        @keyframes spin {
-            0% { transform: rotate(0deg); }
-            100% { transform: rotate(360deg); }
-        }
-        
         #loading-spinner p {
             margin: 0;
             color: #666;
@@ -745,564 +1393,11 @@ function hideLoadingSpinner() {
     if (spinner) {
         spinner.remove();
     }
-}// 향상된 추천 결과 표시 시스템
-window.displayEnhancedRecommendations = function(recommendations) {
-    const resultsContainer = document.getElementById('recommendationResults');
-    
-    if (!recommendations || recommendations.length === 0) {
-        resultsContainer.innerHTML = `
-            <div style="text-align: center; padding: 40px; color: #666;">
-                <i class="fas fa-search" style="font-size: 48px; margin-bottom: 20px; color: #ddd;"></i>
-                <h4>조건에 맞는 병원을 찾을 수 없습니다</h4>
-                <p>검색 조건을 변경하여 다시 시도해주세요.</p>
-            </div>
-        `;
-        return;
-    }
-    
-    let resultsHTML = `
-        <div class="enhanced-results-header">
-            <h4>🤖 AI 맞춤 병원 추천</h4>
-            <p>23,252개 데이터 분석 결과 • ${recommendations.length}개 병원 추천</p>
-        </div>
-    `;
-    
-    recommendations.forEach((hospital, index) => {
-        const rankClass = index === 0 ? 'rank-first' : index === 1 ? 'rank-second' : index === 2 ? 'rank-third' : '';
-        
-        resultsHTML += `
-            <div class="enhanced-hospital-card ${rankClass}" onclick="showHospitalDetail('${hospital.id || hospital.hospital_id}')">
-                <div class="hospital-rank-badge">
-                    ${index + 1}위 추천
-                    ${hospital.score ? `<span class="score">${hospital.score.toFixed(1)}점</span>` : ''}
-                </div>
-                
-                <div class="hospital-main-info">
-                    <h5 class="hospital-name">
-                        <i class="fas fa-hospital"></i>
-                        ${hospital.name || hospital.hospital_name || '이름 없음'}
-                    </h5>
-                    
-                    <div class="hospital-meta">
-                        ${hospital.type || hospital.hospital_type ? `
-                        <span class="hospital-type">
-                            <i class="fas fa-building"></i>
-                            ${hospital.type || hospital.hospital_type}
-                        </span>
-                        ` : ''}
-                        ${hospital.distance ? `
-                        <span class="hospital-distance">
-                            <i class="fas fa-map-marker-alt"></i>
-                            ${hospital.distance}km
-                        </span>
-                        ` : ''}
-                        ${hospital.estimated_wait_time ? `
-                        <span class="hospital-wait-time">
-                            <i class="fas fa-clock"></i>
-                            ${hospital.estimated_wait_time}
-                        </span>
-                        ` : ''}
-                    </div>
-                </div>
-                
-                <div class="hospital-details">
-                    <div class="hospital-address">
-                        <i class="fas fa-map-marker-alt"></i>
-                        <span>${hospital.address || hospital.full_address || '주소 정보 없음'}</span>
-                    </div>
-                    
-                    ${hospital.phone || hospital.contact_number ? `
-                    <div class="hospital-phone">
-                        <i class="fas fa-phone"></i>
-                        <span>${hospital.phone || hospital.contact_number}</span>
-                    </div>
-                    ` : ''}
-                    
-                    ${hospital.specialties ? `
-                    <div class="hospital-specialties">
-                        <i class="fas fa-user-md"></i>
-                        <span><strong>전문분야:</strong> ${hospital.specialties}</span>
-                    </div>
-                    ` : ''}
-                </div>
-                
-                ${hospital.recommendation_reason ? `
-                <div class="recommendation-reason">
-                    <i class="fas fa-lightbulb"></i>
-                    <strong>추천 이유:</strong> ${hospital.recommendation_reason}
-                </div>
-                ` : ''}
-                
-                ${hospital.veteran_benefits ? `
-                <div class="veteran-benefits">
-                    <i class="fas fa-medal"></i>
-                    <div class="benefits-content">
-                        <strong>보훈 혜택</strong>
-                        <p>${hospital.veteran_benefits}</p>
-                    </div>
-                </div>
-                ` : ''}
-                
-                ${hospital.equipment && Array.isArray(hospital.equipment) && hospital.equipment.length > 0 ? `
-                <div class="hospital-equipment">
-                    <i class="fas fa-stethoscope"></i>
-                    <strong>보유 장비:</strong>
-                    <div class="equipment-tags">
-                        ${hospital.equipment.slice(0, 4).map(eq => `
-                            <span class="equipment-tag">${eq.equipment_name || eq}</span>
-                        `).join('')}
-                        ${hospital.equipment.length > 4 ? `<span class="equipment-more">+${hospital.equipment.length - 4}개 더</span>` : ''}
-                    </div>
-                </div>
-                ` : ''}
-                
-                <div class="hospital-actions">
-                    <button class="action-btn primary" onclick="event.stopPropagation(); reserveHospital('${hospital.name || hospital.hospital_name}')">
-                        <i class="fas fa-calendar-check"></i>
-                        예약하기
-                    </button>
-                    <button class="action-btn secondary" onclick="event.stopPropagation(); getDirections('${hospital.name || hospital.hospital_name}')">
-                        <i class="fas fa-directions"></i>
-                        길찾기
-                    </button>
-                    ${hospital.phone || hospital.contact_number ? `
-                    <button class="action-btn tertiary" onclick="event.stopPropagation(); callHospital('${hospital.phone || hospital.contact_number}')">
-                        <i class="fas fa-phone"></i>
-                        전화
-                    </button>
-                    ` : ''}
-                </div>
-            </div>
-        `;
-    });
-    
-    resultsContainer.innerHTML = resultsHTML;
-    
-    // 향상된 스타일 추가
-    addEnhancedRecommendationStyles();
-    
-    // 첫 번째 결과에 포커스
-    const firstCard = document.querySelector('.enhanced-hospital-card');
-    if (firstCard) {
-        firstCard.scrollIntoView({ behavior: 'smooth', block: 'center' });
-    }
-    
-    // 음성 안내
-    if (window.speechEnabled) {
-        speakText(`${recommendations.length}개의 맞춤 병원을 추천했습니다. ${recommendations[0].name || recommendations[0].hospital_name}이 가장 적합한 병원입니다.`);
-    }
-};
-
-// 향상된 추천 결과 스타일 추가
-function addEnhancedRecommendationStyles() {
-    if (document.getElementById('enhanced-recommendation-styles')) return;
-    
-    const style = document.createElement('style');
-    style.id = 'enhanced-recommendation-styles';
-    style.textContent = `
-        .enhanced-results-header {
-            text-align: center;
-            margin-bottom: 30px;
-            padding: 25px;
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            color: white;
-            border-radius: 15px;
-            box-shadow: 0 8px 32px rgba(0,0,0,0.1);
-        }
-        
-        .enhanced-results-header h4 {
-            font-size: 24px;
-            margin-bottom: 8px;
-            text-shadow: 0 2px 4px rgba(0,0,0,0.3);
-        }
-        
-        .enhanced-results-header p {
-            font-size: 16px;
-            opacity: 0.9;
-            margin: 0;
-        }
-        
-        .enhanced-hospital-card {
-            background: white;
-            border: 2px solid #e9ecef;
-            border-radius: 16px;
-            padding: 25px;
-            margin-bottom: 25px;
-            box-shadow: 0 6px 20px rgba(0,0,0,0.08);
-            transition: all 0.3s ease;
-            cursor: pointer;
-            position: relative;
-            overflow: hidden;
-        }
-        
-        .enhanced-hospital-card:hover {
-            border-color: #2c5aa0;
-            box-shadow: 0 12px 32px rgba(44, 90, 160, 0.15);
-            transform: translateY(-4px);
-        }
-        
-        .enhanced-hospital-card.rank-first {
-            border-left: 6px solid #FFD700;
-            background: linear-gradient(135deg, #fff9e6 0%, #ffffff 100%);
-        }
-        
-        .enhanced-hospital-card.rank-second {
-            border-left: 6px solid #C0C0C0;
-            background: linear-gradient(135deg, #f8f9fa 0%, #ffffff 100%);
-        }
-        
-        .enhanced-hospital-card.rank-third {
-            border-left: 6px solid #CD7F32;
-            background: linear-gradient(135deg, #fff5f0 0%, #ffffff 100%);
-        }
-        
-        .hospital-rank-badge {
-            position: absolute;
-            top: -10px;
-            right: 20px;
-            background: #2c5aa0;
-            color: white;
-            padding: 8px 16px;
-            border-radius: 20px;
-            font-size: 14px;
-            font-weight: bold;
-            display: flex;
-            align-items: center;
-            gap: 8px;
-            box-shadow: 0 4px 12px rgba(44, 90, 160, 0.3);
-        }
-        
-        .hospital-rank-badge .score {
-            background: rgba(255,255,255,0.2);
-            padding: 4px 8px;
-            border-radius: 10px;
-            font-size: 12px;
-        }
-        
-        .rank-first .hospital-rank-badge {
-            background: linear-gradient(135deg, #FFD700 0%, #FFA500 100%);
-            color: #333;
-        }
-        
-        .hospital-main-info {
-            margin-bottom: 20px;
-        }
-        
-        .hospital-name {
-            font-size: 22px;
-            color: #2c5aa0;
-            margin: 0 0 12px 0;
-            display: flex;
-            align-items: center;
-            gap: 10px;
-        }
-        
-        .hospital-name i {
-            color: #e74c3c;
-        }
-        
-        .hospital-meta {
-            display: flex;
-            flex-wrap: wrap;
-            gap: 15px;
-            font-size: 14px;
-            color: #666;
-        }
-        
-        .hospital-meta span {
-            display: flex;
-            align-items: center;
-            gap: 6px;
-            background: #f8f9fa;
-            padding: 6px 12px;
-            border-radius: 20px;
-        }
-        
-        .hospital-details {
-            background: #f8f9fa;
-            padding: 20px;
-            border-radius: 12px;
-            margin-bottom: 20px;
-        }
-        
-        .hospital-details > div {
-            display: flex;
-            align-items: flex-start;
-            gap: 12px;
-            margin-bottom: 12px;
-            line-height: 1.5;
-        }
-        
-        .hospital-details > div:last-child {
-            margin-bottom: 0;
-        }
-        
-        .hospital-details i {
-            color: #2c5aa0;
-            margin-top: 2px;
-            min-width: 16px;
-        }
-        
-        .recommendation-reason {
-            background: linear-gradient(135deg, #e3f2fd 0%, #f3e5f5 100%);
-            border-left: 4px solid #2196f3;
-            padding: 15px;
-            margin: 20px 0;
-            border-radius: 0 12px 12px 0;
-            font-size: 15px;
-            color: #1976d2;
-        }
-        
-        .recommendation-reason i {
-            color: #ff9800;
-            margin-right: 8px;
-        }
-        
-        .veteran-benefits {
-            background: linear-gradient(135deg, #fff3cd 0%, #fef9e7 100%);
-            border-left: 4px solid #ffc107;
-            padding: 20px;
-            margin: 20px 0;
-            border-radius: 0 12px 12px 0;
-        }
-        
-        .veteran-benefits i {
-            color: #f39c12;
-            float: left;
-            margin-right: 12px;
-            margin-top: 2px;
-            font-size: 18px;
-        }
-        
-        .benefits-content strong {
-            color: #856404;
-            display: block;
-            margin-bottom: 8px;
-            font-size: 16px;
-        }
-        
-        .benefits-content p {
-            color: #856404;
-            margin: 0;
-            line-height: 1.6;
-        }
-        
-        .hospital-equipment {
-            background: #e8f5e8;
-            padding: 15px;
-            margin: 15px 0;
-            border-radius: 12px;
-            border-left: 4px solid #27ae60;
-        }
-        
-        .hospital-equipment i {
-            color: #27ae60;
-            margin-right: 8px;
-        }
-        
-        .equipment-tags {
-            display: flex;
-            flex-wrap: wrap;
-            gap: 8px;
-            margin-top: 10px;
-        }
-        
-        .equipment-tag {
-            background: #27ae60;
-            color: white;
-            padding: 6px 12px;
-            border-radius: 16px;
-            font-size: 12px;
-            font-weight: 500;
-        }
-        
-        .equipment-more {
-            background: #95a5a6;
-            color: white;
-            padding: 6px 12px;
-            border-radius: 16px;
-            font-size: 12px;
-        }
-        
-        .hospital-actions {
-            display: flex;
-            gap: 12px;
-            flex-wrap: wrap;
-            margin-top: 25px;
-            padding-top: 20px;
-            border-top: 2px solid #f1f3f4;
-        }
-        
-        .action-btn {
-            flex: 1;
-            min-width: 120px;
-            padding: 14px 20px;
-            border: none;
-            border-radius: 12px;
-            font-size: 15px;
-            font-weight: 600;
-            cursor: pointer;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            gap: 8px;
-            transition: all 0.3s ease;
-            text-decoration: none;
-            min-height: 48px;
-        }
-        
-        .action-btn.primary {
-            background: linear-gradient(135deg, #27ae60 0%, #2ecc71 100%);
-            color: white;
-            box-shadow: 0 4px 15px rgba(39, 174, 96, 0.3);
-        }
-        
-        .action-btn.primary:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 6px 20px rgba(39, 174, 96, 0.4);
-        }
-        
-        .action-btn.secondary {
-            background: linear-gradient(135deg, #3498db 0%, #5dade2 100%);
-            color: white;
-            box-shadow: 0 4px 15px rgba(52, 152, 219, 0.3);
-        }
-        
-        .action-btn.secondary:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 6px 20px rgba(52, 152, 219, 0.4);
-        }
-        
-        .action-btn.tertiary {
-            background: linear-gradient(135deg, #e74c3c 0%, #ec7063 100%);
-            color: white;
-            box-shadow: 0 4px 15px rgba(231, 76, 60, 0.3);
-        }
-        
-        .action-btn.tertiary:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 6px 20px rgba(231, 76, 60, 0.4);
-        }
-        
-        @keyframes fadeInUp {
-            from {
-                opacity: 0;
-                transform: translateY(30px);
-            }
-            to {
-                opacity: 1;
-                transform: translateY(0);
-            }
-        }
-        
-        .enhanced-hospital-card {
-            animation: fadeInUp 0.6s ease forwards;
-        }
-        
-        .enhanced-hospital-card:nth-child(2) { animation-delay: 0.1s; }
-        .enhanced-hospital-card:nth-child(3) { animation-delay: 0.2s; }
-        .enhanced-hospital-card:nth-child(4) { animation-delay: 0.3s; }
-        .enhanced-hospital-card:nth-child(5) { animation-delay: 0.4s; }
-        .enhanced-hospital-card:nth-child(6) { animation-delay: 0.5s; }
-        
-        @media (max-width: 768px) {
-            .enhanced-hospital-card {
-                padding: 20px;
-                margin-bottom: 20px;
-            }
-            
-            .hospital-actions {
-                flex-direction: column;
-            }
-            
-            .action-btn {
-                flex: none;
-                width: 100%;
-            }
-            
-            .hospital-meta {
-                flex-direction: column;
-                gap: 8px;
-            }
-        }
-    `;
-    
-    document.head.appendChild(style);
-}// 병원 상세 정보 표시 (향상된 버전)
-async function showHospitalDetail(hospitalId) {
-    console.log('병원 상세 정보 표시:', hospitalId);
-    
-    // 로딩 모달 먼저 표시
-    const loadingModal = createLoadingModal('병원 상세 정보를 불러오는 중...');
-    document.body.appendChild(loadingModal);
-    
-    try {
-        // 백엔드에서 병원 상세 정보 가져오기
-        const hospitalDetail = await fetchHospitalDetail(hospitalId);
-        
-        // 로딩 모달 제거
-        loadingModal.remove();
-        
-        // 상세 정보 모달 표시
-        const detailModal = createHospitalDetailModal(hospitalDetail);
-        document.body.appendChild(detailModal);
-        
-    } catch (error) {
-        console.error('병원 상세 정보 로딩 실패:', error);
-        
-        // 로딩 모달 제거
-        loadingModal.remove();
-        
-        // 기본 정보 모달 표시
-        const basicModal = createBasicInfoModal(hospitalId);
-        document.body.appendChild(basicModal);
-    }
-}
-
-// 로딩 모달 생성
-function createLoadingModal(message) {
-    const modal = document.createElement('div');
-    modal.style.cssText = `
-        position: fixed;
-        top: 0;
-        left: 0;
-        right: 0;
-        bottom: 0;
-        background: rgba(0,0,0,0.7);
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        z-index: 10000;
-    `;
-    
-    modal.innerHTML = `
-        <div style="
-            background: white;
-            padding: 30px;
-            border-radius: 12px;
-            max-width: 400px;
-            width: 90%;
-            text-align: center;
-        ">
-            <div class="loading-spinner" style="
-                border: 4px solid #f3f3f3;
-                border-top: 4px solid #2c5aa0;
-                border-radius: 50%;
-                width: 40px;
-                height: 40px;
-                animation: spin 1s linear infinite;
-                margin: 0 auto 20px;
-            "></div>
-            <p style="color: #666; margin: 0;">${message}</p>
-        </div>
-    `;
-    
-    return modal;
 }
 
 // 병원 상세 정보 API 호출
 async function fetchHospitalDetail(hospitalId) {
-    const apiUrl = `${window.API_BASE_URL || 'http://localhost:5001'}/api/hospitals/${hospitalId}`;
+    const apiUrl = `${window.API_BASE_URL}/api/hospitals/${hospitalId}`;
     
     const response = await fetch(apiUrl);
     
@@ -1415,7 +1510,6 @@ function createHospitalDetailModal(hospitalDetail) {
         </div>
     `;
     
-    // 모달 외부 클릭 시 닫기
     modal.addEventListener('click', (e) => {
         if (e.target === modal) {
             modal.remove();
@@ -1486,38 +1580,6 @@ function generateHospitalDetailContent(hospitalDetail) {
         `;
     }
     
-    // 의료장비 정보 (있는 경우)
-    if (hospitalDetail.equipment && Array.isArray(hospitalDetail.equipment) && hospitalDetail.equipment.length > 0) {
-        content += `
-            <div style="background: #e3f2fd; padding: 20px; border-radius: 8px; margin-bottom: 20px;">
-                <h5 style="color: #1976d2; margin-bottom: 15px;"><i class="fas fa-stethoscope"></i> 보유 의료장비</h5>
-                <div style="display: flex; flex-wrap: wrap; gap: 8px;">
-                    ${hospitalDetail.equipment.map(eq => `
-                        <span style="
-                            background: #bbdefb;
-                            color: #1565c0;
-                            padding: 6px 12px;
-                            border-radius: 16px;
-                            font-size: 14px;
-                        ">${eq.equipment_name || eq}</span>
-                    `).join('')}
-                </div>
-            </div>
-        `;
-    }
-    
-    // 추천 이유 (있는 경우)
-    if (hospitalDetail.recommendation_reason) {
-        content += `
-            <div style="background: #f3e5f5; padding: 20px; border-radius: 8px; margin-bottom: 20px; border-left: 4px solid #9c27b0;">
-                <h5 style="color: #7b1fa2; margin-bottom: 15px;"><i class="fas fa-lightbulb"></i> 추천 이유</h5>
-                <p style="margin: 0; line-height: 1.6; color: #7b1fa2;">
-                    ${hospitalDetail.recommendation_reason}
-                </p>
-            </div>
-        `;
-    }
-    
     return content;
 }
 
@@ -1572,7 +1634,6 @@ function createBasicInfoModal(hospitalId) {
         </div>
     `;
     
-    // 모달 외부 클릭 시 닫기
     modal.addEventListener('click', (e) => {
         if (e.target === modal) {
             modal.remove();
@@ -1580,1080 +1641,17 @@ function createBasicInfoModal(hospitalId) {
     });
     
     return modal;
-}// 전역 변수
-window.API_BASE_URL = 'http://localhost:5001';
-let currentStep = 1;
-let selectedSymptoms = [];
-let formData = {};
-let regionData = {}; // API에서 로드될 지역 데이터
-let userLocation = null; // 사용자 위치 정보
-let hospitalStats = null; // 병원 통계 정보
-
-// 진료과목과 증상 매핑 (백엔드 API와 연동)
-const symptomToDepartmentMap = {
-    head: '신경외과',
-    heart: '순환기내과', 
-    stomach: '소화기내과',
-    bone: '정형외과',
-    eye: '안과',
-    ear: '이비인후과', 
-    skin: '피부과',
-    mental: '정신건강의학과'
-};
-
-// 샘플 병원 데이터 (실제로는 백엔드 API에서 가져옴)
-const sampleHospitals = [
-    {
-        name: "중앙보훈병원",
-        address: "서울특별시 강동구 진황도로 61길 53",
-        phone: "02-2225-1234",
-        distance: "2.3km",
-        waitTime: "30분",
-        specialty: "내과, 외과, 정형외과, 재활의학과",
-        benefits: "보훈병원 - 보훈대상자 의료비 100% 지원"
-    },
-    {
-        name: "서울성모병원",
-        address: "서울특별시 서초구 반포대로 222",
-        phone: "02-2258-5000",
-        distance: "5.7km",
-        waitTime: "45분",
-        specialty: "내과, 순환기내과, 신경외과",
-        benefits: "보훈 위탁병원 - 의료비 90% 지원"
-    },
-    {
-        name: "부산보훈병원",
-        address: "부산광역시 남구 유엔평화로 58",
-        phone: "051-601-6000",
-        distance: "1.8km",
-        waitTime: "20분",
-        specialty: "내과, 외과, 정형외과, 재활의학과",
-        benefits: "보훈병원 - 보훈대상자 의료비 100% 지원"
-    },
-    {
-        name: "삼성서울병원",
-        address: "서울특별시 강남구 일원로 81",
-        phone: "02-3410-2114",
-        distance: "8.1km",
-        waitTime: "60분",
-        specialty: "내과, 외과, 신경외과, 순환기내과",
-        benefits: "보훈 위탁병원 - 의료비 85% 지원"
-    },
-    {
-        name: "서울대학교병원",
-        address: "서울특별시 종로구 대학로 101",
-        phone: "02-2072-2114",
-        distance: "6.4km",
-        waitTime: "50분",
-        specialty: "내과, 외과, 신경외과, 정형외과",
-        benefits: "보훈 위탁병원 - 의료비 90% 지원"
-    }
-];
-
-// 병원 통계 데이터 로드 및 업데이트
-async function loadHospitalStats() {
-    try {
-        const stats = await veteransCareAPI.getHospitalStats();
-        
-        // 히어로 섹션의 통계 업데이트
-        const heroSubtitle = document.querySelector('.hero-subtitle');
-        if (heroSubtitle && stats) {
-            const totalHospitals = stats.total_hospitals || '1,000+';
-            heroSubtitle.innerHTML = `
-                전국 <strong>${totalHospitals}개</strong> 의료기관과 연결된<br>
-                보훈대상자 맞춤 의료서비스를 제공합니다.
-            `;
-        }
-        
-        hospitalStats = stats;
-        console.log('병원 통계 데이터 로드 완료:', stats);
-        
-    } catch (error) {
-        console.warn('병원 통계 데이터 로드 실패:', error);
-        // 실패 시 기본 값 사용
-        const heroSubtitle = document.querySelector('.hero-subtitle');
-        if (heroSubtitle) {
-            heroSubtitle.innerHTML = `
-                전국 <strong>1,200+개</strong> 의료기관과 연결된<br>
-                보훈대상자 맞춤 의료서비스를 제공합니다.
-            `;
-        }
-    }
 }
 
-// 데이터 초기화 함수
-async function initializeData() {
-    try {
-        // 지역 데이터 초기화 (실제로는 API에서 가져옴)
-        regionData = {
-            'seoul': ['강남구', '강북구', '강서구', '관악구', '광진구', '구로구', '금천구', '노원구', '도봉구', '동대문구', '동작구', '마포구', '서대문구', '서초구', '성동구', '성북구', '송파구', '양천구', '영등포구', '용산구', '은평구', '종로구', '중구', '중랑구'],
-            'busan': ['강서구', '금정구', '기장군', '남구', '동구', '동래구', '부산진구', '북구', '사상구', '사하구', '서구', '수영구', '연제구', '영도구', '중구', '해운대구'],
-            'daegu': ['남구', '달서구', '달성군', '동구', '북구', '서구', '수성구', '중구'],
-            'incheon': ['강화군', '계양구', '남동구', '동구', '미추홀구', '부평구', '서구', '연수구', '옹진군', '중구'],
-            'gwangju': ['광산구', '남구', '동구', '북구', '서구'],
-            'daejeon': ['대덕구', '동구', '서구', '유성구', '중구'],
-            'ulsan': ['남구', '동구', '북구', '울주군', '중구'],
-            'sejong': ['세종특별자치시'],
-            'gyeonggi': ['가평군', '고양시', '과천시', '광명시', '광주시', '구리시', '군포시', '김포시', '남양주시', '동두천시', '부천시', '성남시', '수원시', '시흥시', '안산시', '안성시', '안양시', '양주시', '양평군', '여주시', '연천군', '오산시', '용인시', '의왕시', '의정부시', '이천시', '파주시', '평택시', '포천시', '하남시', '화성시'],
-            'gangwon': ['강릉시', '고성군', '동해시', '삼척시', '속초시', '양구군', '양양군', '영월군', '원주시', '인제군', '정선군', '철원군', '춘천시', '태백시', '평창군', '홍천군', '화천군', '횡성군'],
-            'chungbuk': ['괴산군', '단양군', '보은군', '영동군', '옥천군', '음성군', '제천시', '진천군', '청주시', '충주시', '증평군'],
-            'chungnam': ['계룡시', '공주시', '금산군', '논산시', '당진시', '보령시', '부여군', '서산시', '서천군', '아산시', '예산군', '천안시', '청양군', '태안군', '홍성군'],
-            'jeonbuk': ['고창군', '군산시', '김제시', '남원시', '무주군', '부안군', '순창군', '완주군', '익산시', '임실군', '장수군', '전주시', '정읍시', '진안군'],
-            'jeonnam': ['강진군', '고흥군', '곡성군', '광양시', '구례군', '나주시', '담양군', '목포시', '무안군', '보성군', '순천시', '신안군', '여수시', '영광군', '영암군', '완도군', '장성군', '장흥군', '진도군', '함평군', '해남군', '화순군'],
-            'gyeongbuk': ['경산시', '경주시', '고령군', '구미시', '군위군', '김천시', '문경시', '봉화군', '상주시', '성주군', '안동시', '영덕군', '영양군', '영주시', '영천시', '예천군', '울릉군', '울진군', '의성군', '청도군', '청송군', '칠곡군', '포항시'],
-            'gyeongnam': ['거제시', '거창군', '고성군', '김해시', '남해군', '밀양시', '사천시', '산청군', '양산시', '의령군', '진주시', '창녕군', '창원시', '통영시', '하동군', '함안군', '함양군', '합천군'],
-            'jeju': ['서귀포시', '제주시']
-        };
-        
-        // API 연결 상태 확인
-        await checkAPIConnection();
-        
-        // 병원 통계 데이터 로드 및 업데이트
-        await loadHospitalStats();
-        
-        // 사용자 위치 정보 요청 (선택적)
-        if (navigator.geolocation) {
-            navigator.geolocation.getCurrentPosition(
-                (position) => {
-                    userLocation = {
-                        latitude: position.coords.latitude,
-                        longitude: position.coords.longitude
-                    };
-                    console.log('사용자 위치 정보 획득 완료');
-                },
-                (error) => {
-                    console.log('위치 정보 획득 실패:', error.message);
-                }
-            );
-        }
-        
-        console.log('데이터 초기화 완료');
-        
-    } catch (error) {
-        console.error('데이터 초기화 오류:', error);
-        handleError(error, '데이터 로딩 중 오류가 발생했습니다.');
-    }
-}
-
-// DOM 로드 완료 후 실행
-document.addEventListener('DOMContentLoaded', async function() {
-    initializeEventListeners();
-    setupVoiceGuide();
-    await initializeData();
-});
-
-// 이벤트 리스너 초기화
-function initializeEventListeners() {
-    // 병원 찾기 시작 버튼
-    const startButton = document.getElementById('startMatching');
-    if (startButton) {
-        startButton.addEventListener('click', startMatching);
-    }
-
-    // 지역 선택 변경 이벤트
-    const regionSelect = document.getElementById('region');
-    if (regionSelect) {
-        regionSelect.addEventListener('change', updateDistrictOptions);
-    }
-
-    // 증상 카드 클릭 이벤트
-    const symptomCards = document.querySelectorAll('.symptom-card');
-    symptomCards.forEach(card => {
-        card.addEventListener('click', toggleSymptom);
-    });
-
-    // 음성 안내 버튼
-    const voiceButton = document.getElementById('voiceGuide');
-    if (voiceButton) {
-        voiceButton.addEventListener('click', toggleVoiceGuide);
-    }
-
-    // 키보드 접근성
-    document.addEventListener('keydown', handleKeyboardNavigation);
-}
-
-// 병원 찾기 시작
-function startMatching() {
-    const matchingForm = document.getElementById('matchingForm');
-    if (matchingForm) {
-        matchingForm.style.display = 'block';
-        matchingForm.scrollIntoView({ behavior: 'smooth' });
-        
-        // 첫 번째 입력 필드에 포커스
-        const firstInput = matchingForm.querySelector('select, input');
-        if (firstInput) {
-            setTimeout(() => firstInput.focus(), 500);
-        }
-        
-        announceToScreenReader('병원 매칭 폼이 표시되었습니다. 보훈 대상자 정보를 입력해주세요.');
-    }
-}
-
-// 다음 단계로 이동
-function nextStep(stepNumber) {
-    if (validateCurrentStep()) {
-        hideCurrentStep();
-        showStep(stepNumber);
-        updateStepIndicator(stepNumber);
-        currentStep = stepNumber;
-        
-        // 새 단계의 첫 번째 입력 필드에 포커스
-        const newStep = document.querySelector(`[data-step="${stepNumber}"]`);
-        const firstInput = newStep.querySelector('select, input, .symptom-card');
-        if (firstInput) {
-            setTimeout(() => firstInput.focus(), 300);
-        }
-        
-        announceToScreenReader(`${stepNumber}단계로 이동했습니다.`);
-    }
-}
-
-// 이전 단계로 이동
-function prevStep(stepNumber) {
-    hideCurrentStep();
-    showStep(stepNumber);
-    updateStepIndicator(stepNumber);
-    currentStep = stepNumber;
-    
-    announceToScreenReader(`${stepNumber}단계로 돌아갔습니다.`);
-}
-
-// 현재 단계 숨기기
-function hideCurrentStep() {
-    const currentStepElement = document.querySelector('.form-step.active');
-    if (currentStepElement) {
-        currentStepElement.classList.remove('active');
-    }
-}
-
-// 특정 단계 보이기
-function showStep(stepNumber) {
-    const stepElement = document.querySelector(`[data-step="${stepNumber}"].form-step`);
-    if (stepElement) {
-        stepElement.classList.add('active');
-    }
-}
-
-// 단계 표시기 업데이트
-function updateStepIndicator(stepNumber) {
-    // 모든 단계 표시기에서 active 클래스 제거
-    document.querySelectorAll('.step').forEach(step => {
-        step.classList.remove('active');
-    });
-    
-    // 현재 단계 표시기에 active 클래스 추가
-    const currentIndicator = document.querySelector(`[data-step="${stepNumber}"].step`);
-    if (currentIndicator) {
-        currentIndicator.classList.add('active');
-    }
-}
-
-// 현재 단계 유효성 검사
-function validateCurrentStep() {
-    switch (currentStep) {
-        case 1:
-            const veteranType = document.getElementById('veteranType').value;
-            if (!veteranType) {
-                alert('보훈대상 종류를 선택해주세요.');
-                return false;
-            }
-            formData.veteranType = veteranType;
-            formData.disabilityGrade = document.getElementById('disabilityGrade').value;
-            break;
-            
-        case 2:
-            const region = document.getElementById('region').value;
-            const district = document.getElementById('district').value;
-            if (!region || !district) {
-                alert('거주지역을 모두 선택해주세요.');
-                return false;
-            }
-            formData.region = region;
-            formData.district = district;
-            break;
-            
-        case 3:
-            if (selectedSymptoms.length === 0) {
-                alert('증상을 하나 이상 선택해주세요.');
-                return false;
-            }
-            const urgency = document.querySelector('input[name="urgency"]:checked');
-            if (!urgency) {
-                alert('응급도를 선택해주세요.');
-                return false;
-            }
-            formData.symptoms = selectedSymptoms;
-            formData.urgency = urgency.value;
-            break;
-    }
-    return true;
-}
-
-// 지역별 시/군/구 옵션 업데이트
-function updateDistrictOptions() {
-    const regionSelect = document.getElementById('region');
-    const districtSelect = document.getElementById('district');
-    const selectedRegion = regionSelect.value;
-    
-    // 기존 옵션 제거
-    districtSelect.innerHTML = '<option value="">선택해주세요</option>';
-    
-    if (selectedRegion && regionData[selectedRegion]) {
-        regionData[selectedRegion].forEach(district => {
-            const option = document.createElement('option');
-            option.value = district;
-            option.textContent = district;
-            districtSelect.appendChild(option);
-        });
-        districtSelect.disabled = false;
-    } else {
-        districtSelect.disabled = true;
-    }
-}
-
-// 증상 선택/해제
-function toggleSymptom(event) {
-    const card = event.currentTarget;
-    const symptomValue = card.dataset.value;
-    
-    if (card.classList.contains('selected')) {
-        // 선택 해제
-        card.classList.remove('selected');
-        selectedSymptoms = selectedSymptoms.filter(s => s !== symptomValue);
-        announceToScreenReader(`${card.querySelector('span').textContent} 선택이 해제되었습니다.`);
-    } else {
-        // 선택
-        card.classList.add('selected');
-        selectedSymptoms.push(symptomValue);
-        announceToScreenReader(`${card.querySelector('span').textContent}이 선택되었습니다.`);
-    }
-    
-    // 숨겨진 입력 필드 업데이트
-    document.getElementById('selectedSymptoms').value = selectedSymptoms.join(',');
-}
-
-// 추천 결과 표시
-function showRecommendation() {
-    if (validateCurrentStep()) {
-        hideCurrentStep();
-        showStep(4);
-        updateStepIndicator(4);
-        currentStep = 4;
-        
-        generateRecommendation();
-        announceToScreenReader('병원 추천 결과를 생성했습니다.');
-    }
-}
-
-// 추천 결과 생성 - 실제 백엔드 API 호출
-async function generateRecommendation() {
-    const resultsContainer = document.getElementById('recommendationResults');
-    
-    // 로딩 표시
-    resultsContainer.innerHTML = `
-        <div class="loading-container" style="text-align: center; padding: 40px;">
-            <div class="loading-spinner" style="border: 4px solid #f3f3f3; border-top: 4px solid #2c5aa0; border-radius: 50%; width: 50px; height: 50px; animation: spin 1s linear infinite; margin: 0 auto 20px;"></div>
-            <p style="font-size: 18px; color: #666;">23,252개 데이터에서 맞춤 병원을 찾고 있습니다...</p>
-            <p style="font-size: 14px; color: #999; margin-top: 10px;">보훈대상자 맞춤형 AI 추천 알고리즘 실행 중...</p>
-        </div>
-    `;
-    
-    try {
-        // 실제 백엔드 API 호출
-        const recommendations = await getAIRecommendations();
-        
-        if (recommendations && recommendations.length > 0) {
-            // 향상된 추천 결과 표시
-            if (window.displayEnhancedRecommendations) {
-                window.displayEnhancedRecommendations(recommendations);
-            } else {
-                // 폴백: 기본 결과 표시
-                displayBasicRecommendations(recommendations);
-            }
-        } else {
-            // 추천 결과가 없을 경우
-            resultsContainer.innerHTML = `
-                <div style="text-align: center; padding: 40px; color: #666;">
-                    <i class="fas fa-search" style="font-size: 48px; margin-bottom: 20px; color: #ddd;"></i>
-                    <h4>조건에 맞는 병원을 찾을 수 없습니다</h4>
-                    <p>검색 조건을 변경하여 다시 시도해주세요.</p>
-                </div>
-            `;
-        }
-        
-    } catch (error) {
-        console.error('병원 추천 API 호출 실패:', error);
-        // 에러 시 폴백으로 샘플 데이터 표시
-        displayHospitalResults();
-    }
-}
-
-// 실제 AI 추천 API 호출 - 백엔드 연동 최적화
-async function getAIRecommendations() {
-    try {
-        // 모든 폼 데이터를 종합하여 요청 데이터 구성
-        const requestData = {
-            // 기본 정보
-            veteranType: formData.veteranType || 'NATIONAL_MERIT',
-            disabilityGrade: formData.disabilityGrade,
-            
-            // 위치 정보
-            region: formData.region,
-            district: formData.district,
-            
-            // 증상 정보
-            symptoms: formData.symptoms || [],
-            urgency: formData.urgency || 'normal',
-            
-            // 사용자 위치 (있는 경우)
-            ...(userLocation && {
-                lat: userLocation.latitude,
-                lng: userLocation.longitude
-            }),
-            
-            // 기본 설정
-            limit: 5
-        };
-        
-        console.log('AI 추천 요청 데이터:', requestData);
-        
-        const response = await fetch(`${window.API_BASE_URL || 'http://localhost:5001'}/api/hospitals/recommend`, {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json'
-            },
-            body: JSON.stringify(requestData)
-        });
-        
-        if (!response.ok) {
-            throw new Error(`API 호출 실패: ${response.status} ${response.statusText}`);
-        }
-        
-        const data = await response.json();
-        console.log('AI 추천 결과:', data);
-        
-        // 응답 데이터 구조 확인 및 정규화
-        if (data.success && data.data && data.data.recommendations) {
-            return data.data.recommendations;
-        } else if (data.recommendations) {
-            return data.recommendations;
-        } else if (Array.isArray(data)) {
-            return data;
-        } else {
-            console.warn('예상과 다른 응답 구조:', data);
-            return [];
-        }
-        
-    } catch (error) {
-        console.error('AI 추천 API 오류:', error);
-        throw error;
-    }
-}
-
-// 기본 추천 결과 표시 (폴백)
-function displayBasicRecommendations(recommendations) {
-    const resultsContainer = document.getElementById('recommendationResults');
-    
-    if (!recommendations || recommendations.length === 0) {
-        resultsContainer.innerHTML = '<p class="no-results">추천할 병원이 없습니다.</p>';
-        return;
-    }
-    
-    let resultsHTML = '<div class="results-header"><h5>🤖 AI 맞춤 병원 추천</h5><p>23,252개 데이터 분석 결과입니다.</p></div>';
-    
-    recommendations.forEach((hospital, index) => {
-        resultsHTML += `
-            <div class="hospital-result enhanced-card" onclick="showHospitalDetail('${hospital.id || hospital.hospital_id}')">
-                <div class="hospital-rank">${index + 1}위 추천</div>
-                <div class="hospital-name">${hospital.name || hospital.hospital_name || '이름 없음'}</div>
-                
-                ${hospital.score ? `
-                <div class="hospital-score">
-                    <span class="score">${hospital.score.toFixed(1)}</span>
-                    <span class="score-label">점</span>
-                </div>
-                ` : ''}
-                
-                <div class="hospital-info">
-                    <div class="info-item">
-                        <i class="fas fa-map-marker-alt"></i>
-                        <span>${hospital.address || hospital.full_address || '주소 정보 없음'}</span>
-                    </div>
-                    <div class="info-item">
-                        <i class="fas fa-phone"></i>
-                        <span>${hospital.phone || hospital.contact_number || '전화번호 정보 없음'}</span>
-                    </div>
-                    ${hospital.distance ? `
-                    <div class="info-item">
-                        <i class="fas fa-route"></i>
-                        <span>${hospital.distance}km</span>
-                    </div>
-                    ` : ''}
-                    ${hospital.estimated_wait_time ? `
-                    <div class="info-item">
-                        <i class="fas fa-clock"></i>
-                        <span>대기시간: ${hospital.estimated_wait_time}</span>
-                    </div>
-                    ` : ''}
-                </div>
-                
-                ${hospital.specialties ? `
-                <div class="info-item" style="margin-top: 12px;">
-                    <i class="fas fa-user-md"></i>
-                    <span><strong>전문분야:</strong> ${hospital.specialties}</span>
-                </div>
-                ` : ''}
-                
-                ${hospital.recommendation_reason ? `
-                <div class="recommendation-reason">
-                    <i class="fas fa-lightbulb"></i>
-                    <strong>추천 이유:</strong> ${hospital.recommendation_reason}
-                </div>
-                ` : ''}
-                
-                ${hospital.veteran_benefits ? `
-                <div class="hospital-benefits">
-                    <h5><i class="fas fa-gift"></i> 보훈 혜택</h5>
-                    <p>${hospital.veteran_benefits}</p>
-                </div>
-                ` : ''}
-                
-                <div style="margin-top: 20px; display: flex; gap: 12px; flex-wrap: wrap;">
-                    <button class="btn-reserve" onclick="event.stopPropagation(); reserveHospital('${hospital.name || hospital.hospital_name}')">
-                        <i class="fas fa-calendar-check"></i> 예약하기
-                    </button>
-                    <button class="btn-directions" onclick="event.stopPropagation(); getDirections('${hospital.name || hospital.hospital_name}')">
-                        <i class="fas fa-directions"></i> 길찾기
-                    </button>
-                    ${hospital.phone || hospital.contact_number ? `
-                    <button class="btn-call" onclick="event.stopPropagation(); callHospital('${hospital.phone || hospital.contact_number}')">
-                        <i class="fas fa-phone"></i> 전화하기
-                    </button>
-                    ` : ''}
-                </div>
-            </div>
-        `;
-    });
-    
-    resultsContainer.innerHTML = resultsHTML;
-    
-    // 향상된 스타일 추가
-    addEnhancedResultStyles();
-}
-
-// 병원 결과 표시
-function displayHospitalResults() {
-    const resultsContainer = document.getElementById('recommendationResults');
-    let resultsHTML = '<div class="results-header"><h5>🏥 추천 병원 목록</h5><p>회원님의 조건에 맞는 병원들입니다.</p></div>';
-    
-    // 지역에 따라 적절한 병원 필터링 (실제로는 서버에서 처리)
-    let filteredHospitals = sampleHospitals;
-    if (formData.region === 'busan') {
-        filteredHospitals = sampleHospitals.filter(h => h.name.includes('부산'));
-    } else {
-        filteredHospitals = sampleHospitals.filter(h => h.name.includes('서울') || h.name.includes('중앙'));
-    }
-    
-    filteredHospitals.forEach((hospital, index) => {
-        resultsHTML += `
-            <div class="hospital-result">
-                <div class="hospital-name">${hospital.name}</div>
-                <div class="hospital-info">
-                    <div class="info-item">
-                        <i class="fas fa-map-marker-alt"></i>
-                        <span>${hospital.address}</span>
-                    </div>
-                    <div class="info-item">
-                        <i class="fas fa-phone"></i>
-                        <span>${hospital.phone}</span>
-                    </div>
-                    <div class="info-item">
-                        <i class="fas fa-route"></i>
-                        <span>${hospital.distance}</span>
-                    </div>
-                    <div class="info-item">
-                        <i class="fas fa-clock"></i>
-                        <span>대기시간: ${hospital.waitTime}</span>
-                    </div>
-                </div>
-                <div class="info-item" style="margin-top: 12px;">
-                    <i class="fas fa-user-md"></i>
-                    <span><strong>진료과목:</strong> ${hospital.specialty}</span>
-                </div>
-                <div class="hospital-benefits">
-                    <h5><i class="fas fa-gift"></i> 보훈 혜택</h5>
-                    <p>${hospital.benefits}</p>
-                </div>
-                <div style="margin-top: 20px; display: flex; gap: 12px;">
-                    <button class="btn-reserve" onclick="reserveHospital('${hospital.name}')" style="background: #27ae60; color: white; border: none; padding: 12px 24px; border-radius: 8px; cursor: pointer; font-size: 16px; min-height: 44px;">
-                        <i class="fas fa-calendar-check"></i> 예약하기
-                    </button>
-                    <button class="btn-directions" onclick="getDirections('${hospital.name}')" style="background: #3498db; color: white; border: none; padding: 12px 24px; border-radius: 8px; cursor: pointer; font-size: 16px; min-height: 44px;">
-                        <i class="fas fa-directions"></i> 길찾기
-                    </button>
-                </div>
-            </div>
-        `;
-    });
-    
-    resultsContainer.innerHTML = resultsHTML;
-    
-    // CSS 애니메이션을 위한 스타일 추가
-    const style = document.createElement('style');
-    style.textContent = `
-        @keyframes spin {
-            0% { transform: rotate(0deg); }
-            100% { transform: rotate(360deg); }
-        }
-        .results-header {
-            text-align: center;
-            margin-bottom: 30px;
-        }
-        .results-header h5 {
-            font-size: 24px;
-            color: #2c5aa0;
-            margin-bottom: 8px;
-        }
-        .results-header p {
-            color: #666;
-            font-size: 16px;
-        }
-        .btn-reserve:hover {
-            background: #219a52 !important;
-        }
-        .btn-directions:hover {
-            background: #2980b9 !important;
-        }
-    `;
-    document.head.appendChild(style);
-}
-
-// 향상된 결과 스타일 추가
-function addEnhancedResultStyles() {
-    if (document.getElementById('enhanced-result-styles')) return;
-    
-    const style = document.createElement('style');
-    style.id = 'enhanced-result-styles';
-    style.textContent = `
-        .enhanced-card {
-            border: 2px solid #e9ecef;
-            border-radius: 12px;
-            padding: 20px;
-            margin-bottom: 20px;
-            background: white;
-            box-shadow: 0 4px 15px rgba(0,0,0,0.1);
-            transition: all 0.3s ease;
-            cursor: pointer;
-            position: relative;
-        }
-        
-        .enhanced-card:hover {
-            border-color: #2c5aa0;
-            box-shadow: 0 8px 25px rgba(44, 90, 160, 0.2);
-            transform: translateY(-3px);
-        }
-        
-        .hospital-rank {
-            position: absolute;
-            top: -10px;
-            right: 20px;
-            background: #2c5aa0;
-            color: white;
-            padding: 5px 12px;
-            border-radius: 15px;
-            font-size: 12px;
-            font-weight: bold;
-        }
-        
-        .hospital-score {
-            position: absolute;
-            top: 15px;
-            right: 20px;
-            text-align: center;
-            background: #f8f9fa;
-            border: 2px solid #2c5aa0;
-            border-radius: 50px;
-            padding: 10px;
-            min-width: 60px;
-        }
-        
-        .hospital-score .score {
-            display: block;
-            font-size: 18px;
-            font-weight: bold;
-            color: #2c5aa0;
-            line-height: 1;
-        }
-        
-        .hospital-score .score-label {
-            font-size: 10px;
-            color: #666;
-        }
-        
-        .recommendation-reason {
-            background: #e3f2fd;
-            border-left: 4px solid #2196f3;
-            padding: 12px;
-            margin: 15px 0;
-            border-radius: 0 8px 8px 0;
-            font-size: 14px;
-            color: #1976d2;
-        }
-        
-        .btn-reserve, .btn-directions, .btn-call {
-            background: #2c5aa0;
-            color: white;
-            border: none;
-            padding: 12px 20px;
-            border-radius: 8px;
-            cursor: pointer;
-            font-size: 14px;
-            font-weight: 500;
-            min-height: 44px;
-            display: flex;
-            align-items: center;
-            gap: 8px;
-            transition: all 0.3s ease;
-        }
-        
-        .btn-reserve {
-            background: #27ae60;
-        }
-        
-        .btn-directions {
-            background: #3498db;
-        }
-        
-        .btn-call {
-            background: #e74c3c;
-        }
-        
-        .btn-reserve:hover {
-            background: #229954;
-            transform: translateY(-1px);
-        }
-        
-        .btn-directions:hover {
-            background: #2980b9;
-            transform: translateY(-1px);
-        }
-        
-        .btn-call:hover {
-            background: #c0392b;
-            transform: translateY(-1px);
-        }
-        
-        .results-header {
-            text-align: center;
-            margin-bottom: 30px;
-            padding: 20px;
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            color: white;
-            border-radius: 12px;
-        }
-        
-        .results-header h5 {
-            font-size: 24px;
-            margin-bottom: 8px;
-            text-shadow: 0 2px 4px rgba(0,0,0,0.3);
-        }
-        
-        .results-header p {
-            font-size: 16px;
-            opacity: 0.9;
-            margin: 0;
-        }
-    `;
-    
-    document.head.appendChild(style);
-}
-
-// 병원 예약 기능 (향상됨)
-function reserveHospital(hospitalName) {
-    // 음성 안내
-    if (window.speechEnabled) {
-        speakText(`${hospitalName} 예약 기능을 실행합니다.`);
-    }
-    
-    // 실제 예약 시스템 연동 예정
-    const modal = document.createElement('div');
-    modal.style.cssText = `
-        position: fixed;
-        top: 0;
-        left: 0;
-        right: 0;
-        bottom: 0;
-        background: rgba(0,0,0,0.7);
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        z-index: 10000;
-    `;
-    
-    modal.innerHTML = `
-        <div style="
-            background: white;
-            padding: 30px;
-            border-radius: 12px;
-            max-width: 400px;
-            width: 90%;
-            text-align: center;
-        ">
-            <h4 style="color: #2c5aa0; margin-bottom: 20px;">
-                <i class="fas fa-calendar-check"></i> ${hospitalName}
-            </h4>
-            <p style="margin-bottom: 20px; color: #666;">
-                예약 기능은 향후 업데이트 예정입니다.<br>
-                현재는 병원에 직접 전화하여 예약해주세요.
-            </p>
-            <button onclick="this.parentElement.parentElement.remove()" style="
-                background: #2c5aa0;
-                color: white;
-                border: none;
-                padding: 12px 24px;
-                border-radius: 8px;
-                cursor: pointer;
-                font-size: 16px;
-            ">확인</button>
-        </div>
-    `;
-    
-    document.body.appendChild(modal);
-    
-    // 모달 외부 클릭 시 닫기
-    modal.addEventListener('click', (e) => {
-        if (e.target === modal) {
-            modal.remove();
-        }
-    });
-}
-
-// 길찾기 기능 (향상됨)
-function getDirections(hospitalName) {
-    // 음성 안내
-    if (window.speechEnabled) {
-        speakText(`${hospitalName}로 길찾기를 시작합니다.`);
-    }
-    
-    // 여러 지도 서비스 중 선택
-    const modal = document.createElement('div');
-    modal.style.cssText = `
-        position: fixed;
-        top: 0;
-        left: 0;
-        right: 0;
-        bottom: 0;
-        background: rgba(0,0,0,0.7);
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        z-index: 10000;
-    `;
-    
-    modal.innerHTML = `
-        <div style="
-            background: white;
-            padding: 30px;
-            border-radius: 12px;
-            max-width: 400px;
-            width: 90%;
-            text-align: center;
-        ">
-            <h4 style="color: #2c5aa0; margin-bottom: 20px;">
-                <i class="fas fa-route"></i> ${hospitalName} 길찾기
-            </h4>
-            <p style="margin-bottom: 20px; color: #666;">
-                어떤 지도 서비스를 사용하시겠습니까?
-            </p>
-            <div style="display: flex; gap: 10px; justify-content: center; flex-wrap: wrap;">
-                <button onclick="openKakaoMap('${hospitalName}'); this.parentElement.parentElement.parentElement.remove();" style="
-                    background: #ffeb3b;
-                    color: #333;
-                    border: none;
-                    padding: 12px 20px;
-                    border-radius: 8px;
-                    cursor: pointer;
-                    font-size: 14px;
-                ">
-                    <i class="fas fa-map"></i> 카카오맵
-                </button>
-                <button onclick="openNaverMap('${hospitalName}'); this.parentElement.parentElement.parentElement.remove();" style="
-                    background: #03c75a;
-                    color: white;
-                    border: none;
-                    padding: 12px 20px;
-                    border-radius: 8px;
-                    cursor: pointer;
-                    font-size: 14px;
-                ">
-                    <i class="fas fa-map-marked-alt"></i> 네이버맵
-                </button>
-                <button onclick="openGoogleMaps('${hospitalName}'); this.parentElement.parentElement.parentElement.remove();" style="
-                    background: #4285f4;
-                    color: white;
-                    border: none;
-                    padding: 12px 20px;
-                    border-radius: 8px;
-                    cursor: pointer;
-                    font-size: 14px;
-                ">
-                    <i class="fab fa-google"></i> 구글맵
-                </button>
-            </div>
-            <button onclick="this.parentElement.parentElement.remove()" style="
-                background: #6c757d;
-                color: white;
-                border: none;
-                padding: 8px 16px;
-                border-radius: 6px;
-                cursor: pointer;
-                font-size: 14px;
-                margin-top: 15px;
-            ">취소</button>
-        </div>
-    `;
-    
-    document.body.appendChild(modal);
-    
-    // 모달 외부 클릭 시 닫기
-    modal.addEventListener('click', (e) => {
-        if (e.target === modal) {
-            modal.remove();
-        }
-    });
-}
-
-// 지도 서비스별 열기 함수들
-function openKakaoMap(hospitalName) {
-    const url = `https://map.kakao.com/link/search/${encodeURIComponent(hospitalName)}`;
-    window.open(url, '_blank');
-}
-
-function openNaverMap(hospitalName) {
-    const url = `https://map.naver.com/v5/search/${encodeURIComponent(hospitalName)}`;
-    window.open(url, '_blank');
-}
-
-function openGoogleMaps(hospitalName) {
-    const url = `https://www.google.com/maps/search/${encodeURIComponent(hospitalName)}`;
-    window.open(url, '_blank');
-}
-
-// 전화하기 기능 (향상됨)
-function callHospital(phoneNumber) {
-    if (!phoneNumber || phoneNumber === '전화번호 정보 없음') {
-        alert('전화번호 정보가 없습니다.');
-        return;
-    }
-    
-    // 음성 안내
-    if (window.speechEnabled) {
-        speakText('병원에 전화를 겁니다.');
-    }
-    
-    // 모바일에서는 바로 전화, 데스크톱에서는 확인 후 전화
-    const isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
-    
-    if (isMobile) {
-        window.location.href = `tel:${phoneNumber}`;
-    } else {
-        const modal = document.createElement('div');
-        modal.style.cssText = `
-            position: fixed;
-            top: 0;
-            left: 0;
-            right: 0;
-            bottom: 0;
-            background: rgba(0,0,0,0.7);
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            z-index: 10000;
-        `;
-        
-        modal.innerHTML = `
-            <div style="
-                background: white;
-                padding: 30px;
-                border-radius: 12px;
-                max-width: 400px;
-                width: 90%;
-                text-align: center;
-            ">
-                <h4 style="color: #2c5aa0; margin-bottom: 20px;">
-                    <i class="fas fa-phone"></i> 병원 전화하기
-                </h4>
-                <p style="margin-bottom: 20px; color: #666;">
-                    전화번호: <strong>${phoneNumber}</strong><br>
-                    모바일에서 전화를 걸거나 직접 다이얼하세요.
-                </p>
-                <div style="display: flex; gap: 10px; justify-content: center;">
-                    <button onclick="copyToClipboard('${phoneNumber}'); this.parentElement.parentElement.parentElement.remove();" style="
-                        background: #17a2b8;
-                        color: white;
-                        border: none;
-                        padding: 12px 20px;
-                        border-radius: 8px;
-                        cursor: pointer;
-                        font-size: 14px;
-                    ">
-                        <i class="fas fa-copy"></i> 복사하기
-                    </button>
-                    <button onclick="this.parentElement.parentElement.parentElement.remove()" style="
-                        background: #6c757d;
-                        color: white;
-                        border: none;
-                        padding: 12px 20px;
-                        border-radius: 8px;
-                        cursor: pointer;
-                        font-size: 14px;
-                    ">닫기</button>
-                </div>
-            </div>
-        `;
-        
-        document.body.appendChild(modal);
-        
-        // 모달 외부 클릭 시 닫기
-        modal.addEventListener('click', (e) => {
-            if (e.target === modal) {
-                modal.remove();
-            }
-        });
-    }
-}
-
-// 클립보드에 복사하기
-function copyToClipboard(text) {
-    if (navigator.clipboard) {
-        navigator.clipboard.writeText(text).then(() => {
-            alert('전화번호가 복사되었습니다.');
-        }).catch(() => {
-            // 폴백: 수동 복사 안내
-            promptManualCopy(text);
-        });
-    } else {
-        // 폴백: 수동 복사 안내
-        promptManualCopy(text);
-    }
-}
-
-// 수동 복사 안내
-function promptManualCopy(text) {
-    const textarea = document.createElement('textarea');
-    textarea.value = text;
-    document.body.appendChild(textarea);
-    textarea.select();
-    document.execCommand('copy');
-    document.body.removeChild(textarea);
-    alert('전화번호가 복사되었습니다.');
-}
+// ==============================================
+// 음성 안내 시스템
+// ==============================================
 
 // 음성 안내 설정
 function setupVoiceGuide() {
-    // 웹 음성 API 지원 확인
     if ('speechSynthesis' in window) {
         window.speechEnabled = false;
+        console.log('음성 API 준비 완료');
     } else {
         const voiceButton = document.getElementById('voiceGuide');
         if (voiceButton) {
@@ -2678,355 +1676,497 @@ function toggleVoiceGuide() {
         } else {
             icon.className = 'fas fa-volume-mute';
             text.textContent = '음성안내 꺼짐';
-            button.style.background = '#e74c3c';
-            window.speechSynthesis.cancel();
+            button.style.background = '#6c757d';
+            speechSynthesis.cancel();
         }
+        
+        announceToScreenReader(`음성 안내가 ${window.speechEnabled ? '켜졌' : '꺼졌'}습니다.`);
     }
 }
 
-// 텍스트를 음성으로 변환
+// 텍스트 음성 변환
 function speakText(text) {
-    if ('speechSynthesis' in window && window.speechEnabled) {
-        // 기존 음성 중지
-        window.speechSynthesis.cancel();
+    if (window.speechEnabled && 'speechSynthesis' in window) {
+        speechSynthesis.cancel();
         
         const utterance = new SpeechSynthesisUtterance(text);
         utterance.lang = 'ko-KR';
-        utterance.rate = 0.8; // 느린 속도로 설정 (고령자 친화적)
-        utterance.pitch = 1;
-        utterance.volume = 0.8;
+        utterance.rate = 0.9;
+        utterance.pitch = 1.0;
+        utterance.volume = 1.0;
         
-        // 한국어 음성 찾기
+        // 한국어 음성 선택
         const voices = speechSynthesis.getVoices();
         const koreanVoice = voices.find(voice => voice.lang.includes('ko'));
         if (koreanVoice) {
             utterance.voice = koreanVoice;
         }
         
-        window.speechSynthesis.speak(utterance);
+        speechSynthesis.speak(utterance);
     }
 }
 
-// 스크린 리더 사용자를 위한 공지
+// 스크린 리더용 알림
 function announceToScreenReader(message) {
     const announcement = document.createElement('div');
     announcement.setAttribute('aria-live', 'polite');
     announcement.setAttribute('aria-atomic', 'true');
-    announcement.className = 'visually-hidden';
+    announcement.className = 'sr-only';
     announcement.textContent = message;
     
     document.body.appendChild(announcement);
     
-    // 음성 안내가 켜져있으면 함께 읽기
-    if (window.speechEnabled) {
-        setTimeout(() => speakText(message), 100);
-    }
-    
-    // 3초 후 제거
     setTimeout(() => {
-        if (announcement.parentNode) {
-            announcement.parentNode.removeChild(announcement);
-        }
-    }, 3000);
+        document.body.removeChild(announcement);
+    }, 1000);
 }
 
-// 키보드 네비게이션 처리
-function handleKeyboardNavigation(event) {
-    // ESC 키로 음성 중지
-    if (event.key === 'Escape' && 'speechSynthesis' in window) {
-        window.speechSynthesis.cancel();
+// ==============================================
+// 고급 길찾기 시스템
+// ==============================================
+
+// 향상된 길찾기 함수 (다중 네비앱 지원)
+window.getDirections = function(hospitalName, hospitalAddress = null, latitude = null, longitude = null) {
+    if (window.speechEnabled) {
+        speakText(`${hospitalName}로 길찾기 옵션을 표시합니다.`);
     }
     
-    // Enter 키로 증상 카드 선택
-    if (event.key === 'Enter' && event.target.classList.contains('symptom-card')) {
-        event.preventDefault();
-        toggleSymptom(event);
-    }
-    
-    // 탭 키 네비게이션 개선
-    if (event.key === 'Tab') {
-        const focusableElements = document.querySelectorAll(
-            'button, select, input, a, [tabindex]:not([tabindex="-1"]), .symptom-card'
-        );
-        
-        // 현재 포커스된 요소가 마지막 요소인 경우
-        if (event.target === focusableElements[focusableElements.length - 1] && !event.shiftKey) {
-            // 첫 번째 요소로 이동 (순환)
-            event.preventDefault();
-            focusableElements[0].focus();
-        }
-        // 현재 포커스된 요소가 첫 번째 요소이고 Shift+Tab인 경우
-        else if (event.target === focusableElements[0] && event.shiftKey) {
-            // 마지막 요소로 이동 (순환)
-            event.preventDefault();
-            focusableElements[focusableElements.length - 1].focus();
-        }
-    }
-}
-
-// 폼 데이터 저장 (로컬 스토리지 대신 메모리 사용)
-function saveFormData() {
-    // 실제 구현에서는 서버에 저장하거나 세션 스토리지 사용
-    window.formDataBackup = { ...formData };
-}
-
-// 폼 데이터 복원
-function restoreFormData() {
-    if (window.formDataBackup) {
-        formData = { ...window.formDataBackup };
-        
-        // 폼 필드에 데이터 복원
-        if (formData.veteranType) {
-            document.getElementById('veteranType').value = formData.veteranType;
-        }
-        if (formData.disabilityGrade) {
-            document.getElementById('disabilityGrade').value = formData.disabilityGrade;
-        }
-        if (formData.region) {
-            document.getElementById('region').value = formData.region;
-            updateDistrictOptions();
-            if (formData.district) {
-                setTimeout(() => {
-                    document.getElementById('district').value = formData.district;
-                }, 100);
-            }
-        }
-        if (formData.symptoms) {
-            selectedSymptoms = [...formData.symptoms];
-            formData.symptoms.forEach(symptom => {
-                const card = document.querySelector(`[data-value="${symptom}"]`);
-                if (card) {
-                    card.classList.add('selected');
-                }
-            });
-        }
-        if (formData.urgency) {
-            const urgencyRadio = document.querySelector(`input[name="urgency"][value="${formData.urgency}"]`);
-            if (urgencyRadio) {
-                urgencyRadio.checked = true;
-            }
-        }
-    }
-}
-
-// 페이지 언로드 시 데이터 저장
-window.addEventListener('beforeunload', saveFormData);
-
-// 페이지 로드 시 데이터 복원
-window.addEventListener('load', restoreFormData);
-
-// 가까운 병원 백업 검색
-async function getNearbyHospitalsAsBackup() {
-    try {
-        let lat = 37.5665; // 서울시청 기본값
-        let lng = 126.9780;
-        
-        if (userLocation) {
-            lat = userLocation.latitude;
-            lng = userLocation.longitude;
-        } else if (formData.region) {
-            const regionCoords = {
-                'seoul': { lat: 37.5665, lng: 126.9780 },
-                'busan': { lat: 35.1796, lng: 129.0756 },
-                'daegu': { lat: 35.8714, lng: 128.6014 },
-                'incheon': { lat: 37.4563, lng: 126.7052 },
-                'gwangju': { lat: 35.1595, lng: 126.8526 },
-                'daejeon': { lat: 36.3504, lng: 127.3845 },
-                'ulsan': { lat: 35.5384, lng: 129.3114 },
-                'sejong': { lat: 36.4800, lng: 127.2890 },
-                'gyeonggi': { lat: 37.4138, lng: 127.5183 },
-                'gangwon': { lat: 37.8228, lng: 128.1555 },
-                'chungbuk': { lat: 36.8, lng: 127.7 },
-                'chungnam': { lat: 36.5184, lng: 126.8000 },
-                'jeonbuk': { lat: 35.7175, lng: 127.153 },
-                'jeonnam': { lat: 34.8679, lng: 126.991 },
-                'gyeongbuk': { lat: 36.4919, lng: 128.888 },
-                'gyeongnam': { lat: 35.4606, lng: 128.2132 },
-                'jeju': { lat: 33.4996, lng: 126.5312 }
-            };
+    // 길찾기 모달 생성
+    const modal = document.createElement('div');
+    modal.className = 'navigation-modal-overlay';
+    modal.innerHTML = `
+        <div class="navigation-modal">
+            <div class="modal-header">
+                <h4><i class="fas fa-route"></i> ${hospitalName} 길찾기</h4>
+                <button class="close-btn" onclick="this.closest('.navigation-modal-overlay').remove()">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
             
-            if (regionCoords[formData.region]) {
-                lat = regionCoords[formData.region].lat;
-                lng = regionCoords[formData.region].lng;
-            }
-        }
-        
-        const response = await fetch(`http://localhost:5001/api/hospitals/nearby?lat=${lat}&lng=${lng}&radius=50&limit=5`);
-        
-        if (!response.ok) {
-            throw new Error(`근처 병원 검색 실패: ${response.status}`);
-        }
-        
-        const data = await response.json();
-        
-        if (data.success && data.data && data.data.hospitals) {
-            return data.data.hospitals;
-        } else if (data.hospitals) {
-            return data.hospitals;
-        } else if (Array.isArray(data)) {
-            return data;
-        }
-        
-        return [];
-        
-    } catch (error) {
-        console.error('백업 병원 검색 오류:', error);
-        return [];
-    }
-}
-
-// 폴백 결과 표시 (서버 연결 실패 시)
-function displayFallbackResults() {
-    const resultsContainer = document.getElementById('recommendationResults');
-    
-    // 지역에 따라 적절한 병원 필터링
-    let filteredHospitals = sampleHospitals;
-    if (formData.region === 'busan') {
-        filteredHospitals = sampleHospitals.filter(h => h.name.includes('부산'));
-    } else if (formData.region === 'daejeon') {
-        filteredHospitals = sampleHospitals.filter(h => h.name.includes('대전') || h.name.includes('중앙'));
-    } else {
-        filteredHospitals = sampleHospitals.filter(h => h.name.includes('서울') || h.name.includes('중앙') || h.name.includes('삼성') || h.name.includes('서울대'));
-    }
-    
-    let resultsHTML = `
-        <div class="fallback-notice">
-            <i class="fas fa-info-circle" style="color: #f39c12; margin-right: 8px;"></i>
-            <strong>오프라인 모드:</strong> 서버 연결 없이 기본 병원 목록을 표시합니다.
-        </div>
-        <div class="results-header">
-            <h5>🏥 추천 병원 목록</h5>
-            <p>회원님의 조건에 맞는 병원들입니다.</p>
-        </div>
-    `;
-    
-    filteredHospitals.forEach((hospital, index) => {
-        resultsHTML += `
-            <div class="hospital-result">
-                <div class="hospital-name">${hospital.name}</div>
-                <div class="hospital-info">
+            <div class="hospital-info-section">
+                ${hospitalAddress ? `
+                <div class="address-info">
+                    <i class="fas fa-map-marker-alt"></i>
+                    <span>${hospitalAddress}</span>
+                </div>
+                ` : ''}
+                <div class="travel-info">
                     <div class="info-item">
-                        <i class="fas fa-map-marker-alt"></i>
-                        <span>${hospital.address}</span>
+                        <i class="fas fa-car"></i>
+                        <span>예상 소요시간: ${calculateTravelTime(5)}분</span>
                     </div>
                     <div class="info-item">
-                        <i class="fas fa-phone"></i>
-                        <span>${hospital.phone}</span>
-                    </div>
-                    <div class="info-item">
-                        <i class="fas fa-route"></i>
-                        <span>${hospital.distance}</span>
-                    </div>
-                    <div class="info-item">
-                        <i class="fas fa-clock"></i>
-                        <span>대기시간: ${hospital.waitTime}</span>
+                        <i class="fas fa-parking"></i>
+                        <span>주차: 병원 주차장 이용 가능</span>
                     </div>
                 </div>
-                <div class="info-item" style="margin-top: 12px;">
-                    <i class="fas fa-user-md"></i>
-                    <span><strong>진료과목:</strong> ${hospital.specialty}</span>
-                </div>
-                <div class="hospital-benefits">
-                    <h5><i class="fas fa-gift"></i> 보훈 혜택</h5>
-                    <p>${hospital.benefits}</p>
-                </div>
-                <div style="margin-top: 20px; display: flex; gap: 12px; flex-wrap: wrap;">
-                    <button class="btn-reserve" onclick="reserveHospital('${hospital.name}')">
-                        <i class="fas fa-calendar-check"></i> 예약하기
+            </div>
+            
+            <div class="navigation-apps">
+                <h5><i class="fas fa-mobile-alt"></i> 내비게이션 앱 선택</h5>
+                <div class="nav-buttons">
+                    <button class="nav-btn kakao" onclick="openKakaoNavi('${hospitalName}', ${latitude}, ${longitude}, '${hospitalAddress}')">
+                        <div class="nav-icon">🗺️</div>
+                        <div class="nav-content">
+                            <span class="app-name">카카오내비</span>
+                            <small>가장 빠른 경로</small>
+                        </div>
                     </button>
-                    <button class="btn-directions" onclick="getDirections('${hospital.name}')">
-                        <i class="fas fa-directions"></i> 길찾기
+                    
+                    <button class="nav-btn naver" onclick="openNaverMap('${hospitalName}', ${latitude}, ${longitude}, '${hospitalAddress}')">
+                        <div class="nav-icon">📍</div>
+                        <div class="nav-content">
+                            <span class="app-name">네이버맵</span>
+                            <small>대중교통 포함</small>
+                        </div>
                     </button>
-                    <button class="btn-call" onclick="callHospital('${hospital.phone}')">
-                        <i class="fas fa-phone"></i> 전화하기
+                    
+                    <button class="nav-btn tmap" onclick="openTmap('${hospitalName}', ${latitude}, ${longitude}, '${hospitalAddress}')">
+                        <div class="nav-icon">🚗</div>
+                        <div class="nav-content">
+                            <span class="app-name">티맵</span>
+                            <small>실시간 교통정보</small>
+                        </div>
+                    </button>
+                    
+                    <button class="nav-btn google" onclick="openGoogleMaps('${hospitalName}', ${latitude}, ${longitude}, '${hospitalAddress}')">
+                        <div class="nav-icon">🌐</div>
+                        <div class="nav-content">
+                            <span class="app-name">구글맵</span>
+                            <small>글로벌 서비스</small>
+                        </div>
                     </button>
                 </div>
             </div>
-        `;
+            
+            <div class="web-navigation">
+                <h5><i class="fas fa-globe"></i> 웹에서 바로 보기</h5>
+                <div class="web-buttons">
+                    <button class="web-btn" onclick="openKakaoMapWeb('${hospitalName}')">
+                        카카오맵 웹
+                    </button>
+                    <button class="web-btn" onclick="openNaverMapWeb('${hospitalName}')">
+                        네이버맵 웹
+                    </button>
+                </div>
+            </div>
+            
+            <div class="additional-options">
+                <button class="option-btn" onclick="copyAddressToClipboard('${hospitalAddress || hospitalName}')">
+                    <i class="fas fa-copy"></i> 주소 복사
+                </button>
+                <button class="option-btn" onclick="shareLocation('${hospitalName}', '${hospitalAddress}')">
+                    <i class="fas fa-share"></i> 위치 공유
+                </button>
+            </div>
+        </div>
+    `;
+    
+    document.body.appendChild(modal);
+    
+    // 모달 외부 클릭시 닫기
+    modal.addEventListener('click', (e) => {
+        if (e.target === modal) {
+            modal.remove();
+        }
     });
     
-    resultsContainer.innerHTML = resultsHTML;
-    
-    // 폴백 알림 스타일 추가
-    const fallbackStyle = document.createElement('style');
-    fallbackStyle.textContent = `
-        .fallback-notice {
-            background: #fff3cd;
-            border: 1px solid #ffeaa7;
-            color: #856404;
-            padding: 12px;
-            border-radius: 8px;
-            margin-bottom: 20px;
-            text-align: center;
+    // ESC 키로 닫기
+    const handleEscape = (e) => {
+        if (e.key === 'Escape') {
+            modal.remove();
+            document.removeEventListener('keydown', handleEscape);
         }
+    };
+    document.addEventListener('keydown', handleEscape);
+};
+
+// 예상 소요시간 계산
+function calculateTravelTime(distance) {
+    const distanceKm = parseFloat(distance) || 5;
+    
+    // 거리별 예상 시간 (서울 기준 평균 속도)
+    if (distanceKm <= 5) return Math.round(distanceKm * 8); // 도심, 느린 속도
+    if (distanceKm <= 15) return Math.round(distanceKm * 4); // 중간 거리
+    return Math.round(distanceKm * 3); // 장거리, 빠른 속도
+}
+
+// 네비게이션 앱 열기 함수들
+window.openKakaoNavi = function(name, lat, lng, address) {
+    const isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
+    
+    if (isMobile && lat && lng) {
+        // 모바일에서 카카오내비 앱 실행
+        const naviUrl = `kakaonavi://navigate?destination=${lat},${lng}&destination_name=${encodeURIComponent(name)}`;
+        window.location.href = naviUrl;
+        
+        // 앱이 설치되지 않은 경우 웹으로 이동
+        setTimeout(() => {
+            openKakaoMapWeb(name);
+        }, 1000);
+    } else {
+        openKakaoMapWeb(name);
+    }
+    
+    // 모달 닫기
+    document.querySelector('.navigation-modal-overlay')?.remove();
+};
+
+window.openNaverMap = function(name, lat, lng, address) {
+    const isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
+    
+    if (isMobile && lat && lng) {
+        // 모바일에서 네이버맵 앱 실행
+        const naverUrl = `nmap://route/car?dlat=${lat}&dlng=${lng}&dname=${encodeURIComponent(name)}`;
+        window.location.href = naverUrl;
+        
+        // 앱이 설치되지 않은 경우 웹으로 이동
+        setTimeout(() => {
+            openNaverMapWeb(name);
+        }, 1000);
+    } else {
+        openNaverMapWeb(name);
+    }
+    
+    document.querySelector('.navigation-modal-overlay')?.remove();
+};
+
+window.openTmap = function(name, lat, lng, address) {
+    const isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
+    
+    if (isMobile && lat && lng) {
+        // 티맵 앱 실행
+        const tmapUrl = `tmap://route?goalname=${encodeURIComponent(name)}&goalx=${lng}&goaly=${lat}`;
+        window.location.href = tmapUrl;
+        
+        // 앱이 설치되지 않은 경우 웹으로 이동
+        setTimeout(() => {
+            const webUrl = `https://www.tmapglobal.com/ko_kr/route?destination=${encodeURIComponent(name)}`;
+            window.open(webUrl, '_blank');
+        }, 1000);
+    } else {
+        const webUrl = `https://www.tmapglobal.com/ko_kr/route?destination=${encodeURIComponent(name)}`;
+        window.open(webUrl, '_blank');
+    }
+    
+    document.querySelector('.navigation-modal-overlay')?.remove();
+};
+
+window.openGoogleMaps = function(name, lat, lng, address) {
+    let url;
+    if (lat && lng) {
+        url = `https://www.google.com/maps/dir/?api=1&destination=${lat},${lng}&destination_place_id=${encodeURIComponent(name)}`;
+    } else {
+        url = `https://www.google.com/maps/search/${encodeURIComponent(name)}`;
+    }
+    
+    window.open(url, '_blank');
+    document.querySelector('.navigation-modal-overlay')?.remove();
+};
+
+// 웹 지도 서비스 열기
+window.openKakaoMapWeb = function(name) {
+    const url = `https://map.kakao.com/link/search/${encodeURIComponent(name)}`;
+    window.open(url, '_blank');
+};
+
+window.openNaverMapWeb = function(name) {
+    const url = `https://map.naver.com/v5/search/${encodeURIComponent(name)}`;
+    window.open(url, '_blank');
+};
+
+// 추가 옵션 함수들
+window.copyAddressToClipboard = function(address) {
+    if (!address || address === 'null') {
+        alert('주소 정보가 없습니다.');
+        return;
+    }
+    
+    if (navigator.clipboard) {
+        navigator.clipboard.writeText(address).then(() => {
+            showToast('주소가 클립보드에 복사되었습니다.');
+        }).catch(() => {
+            promptManualCopy(address);
+        });
+    } else {
+        promptManualCopy(address);
+    }
+};
+
+window.shareLocation = function(name, address) {
+    if (navigator.share) {
+        navigator.share({
+            title: `${name} 위치`,
+            text: `${name}의 위치를 공유합니다.`,
+            url: window.location.href
+        }).catch(console.error);
+    } else {
+        // 폴백: 텍스트 복사
+        const shareText = `${name}\n${address || ''}`;
+        copyAddressToClipboard(shareText);
+    }
+};
+
+// 토스트 메시지 표시
+function showToast(message) {
+    const toast = document.createElement('div');
+    toast.className = 'toast-message';
+    toast.textContent = message;
+    toast.style.cssText = `
+        position: fixed;
+        bottom: 20px;
+        left: 50%;
+        transform: translateX(-50%);
+        background: #333;
+        color: white;
+        padding: 12px 24px;
+        border-radius: 25px;
+        z-index: 10002;
+        font-size: 14px;
+        box-shadow: 0 4px 12px rgba(0,0,0,0.3);
+        animation: slideUp 0.3s ease;
     `;
-    document.head.appendChild(fallbackStyle);
+    
+    document.body.appendChild(toast);
+    
+    setTimeout(() => {
+        toast.style.animation = 'slideDown 0.3s ease forwards';
+        setTimeout(() => toast.remove(), 300);
+    }, 2000);
 }
 
-// 병원 결과 표시 (기존 함수 - 호환성 유지)
-function displayHospitalResults() {
-    displayFallbackResults();
-}
+// ==============================================
+// 접근성 기능들
+// ==============================================
 
-// 접근성 개선을 위한 추가 기능들
-
-// 포커스 표시 개선
+// 포커스 가시성 향상
 function enhanceFocusVisibility() {
     const style = document.createElement('style');
     style.textContent = `
-        .symptom-card:focus {
-            outline: 3px solid #2c5aa0;
-            outline-offset: 2px;
-            box-shadow: 0 0 0 6px rgba(44, 90, 160, 0.2);
+        *:focus {
+            outline: 3px solid #2c5aa0 !important;
+            outline-offset: 2px !important;
+            box-shadow: 0 0 0 3px rgba(44, 90, 160, 0.3) !important;
         }
         
-        .radio-option:focus-within {
-            outline: 3px solid #2c5aa0;
-            outline-offset: 2px;
-        }
-        
-        button:focus, select:focus, input:focus {
-            box-shadow: 0 0 0 3px rgba(44, 90, 160, 0.3);
+        .btn:focus,
+        button:focus {
+            transform: scale(1.05);
+            transition: transform 0.2s ease;
         }
     `;
     document.head.appendChild(style);
 }
 
-// 고대비 모드 지원
+// 고대비 모드 설정
 function setupHighContrastMode() {
-    const isHighContrast = window.matchMedia('(prefers-contrast: high)').matches;
-    if (isHighContrast) {
-        document.body.classList.add('high-contrast');
-    }
+    const highContrastBtn = document.createElement('button');
+    highContrastBtn.id = 'highContrastToggle';
+    highContrastBtn.innerHTML = '<i class="fas fa-adjust"></i><span>고대비 모드</span>';
+    highContrastBtn.className = 'accessibility-btn';
+    highContrastBtn.style.cssText = `
+        position: fixed;
+        top: 120px;
+        right: 20px;
+        z-index: 1000;
+        background: #444;
+        color: white;
+        border: none;
+        padding: 12px;
+        border-radius: 8px;
+        cursor: pointer;
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        font-size: 14px;
+        min-height: 44px;
+    `;
     
-    // 고대비 모드 변경 감지
-    window.matchMedia('(prefers-contrast: high)').addEventListener('change', (e) => {
-        if (e.matches) {
+    let highContrastEnabled = false;
+    
+    highContrastBtn.addEventListener('click', () => {
+        highContrastEnabled = !highContrastEnabled;
+        
+        if (highContrastEnabled) {
             document.body.classList.add('high-contrast');
+            highContrastBtn.querySelector('span').textContent = '고대비 해제';
+            announceToScreenReader('고대비 모드가 켜졌습니다.');
         } else {
             document.body.classList.remove('high-contrast');
+            highContrastBtn.querySelector('span').textContent = '고대비 모드';
+            announceToScreenReader('고대비 모드가 꺼졌습니다.');
         }
     });
+    
+    document.body.appendChild(highContrastBtn);
+    
+    // 고대비 모드 CSS
+    const highContrastStyle = document.createElement('style');
+    highContrastStyle.textContent = `
+        .high-contrast {
+            filter: contrast(150%) brightness(1.2);
+        }
+        
+        .high-contrast .hero {
+            background: #000 !important;
+            color: #fff !important;
+        }
+        
+        .high-contrast .card {
+            background: #fff !important;
+            border: 3px solid #000 !important;
+            color: #000 !important;
+        }
+        
+        .high-contrast .btn {
+            background: #000 !important;
+            color: #fff !important;
+            border: 2px solid #fff !important;
+        }
+    `;
+    document.head.appendChild(highContrastStyle);
 }
 
-// 애니메이션 감소 모드 지원
+// 애니메이션 감소 모드
 function setupReducedMotion() {
-    const prefersReducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
-    if (prefersReducedMotion) {
-        document.body.classList.add('reduced-motion');
+    const prefersReducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)');
+    
+    if (prefersReducedMotion.matches) {
+        const style = document.createElement('style');
+        style.textContent = `
+            *, *::before, *::after {
+                animation-duration: 0.01ms !important;
+                animation-iteration-count: 1 !important;
+                transition-duration: 0.01ms !important;
+                scroll-behavior: auto !important;
+            }
+        `;
+        document.head.appendChild(style);
     }
 }
 
-// 큰 텍스트 모드 지원
+// 큰 텍스트 모드
 function setupLargeTextMode() {
-    // 사용자가 브라우저에서 폰트 크기를 크게 설정한 경우 감지
-    const rootFontSize = parseFloat(getComputedStyle(document.documentElement).fontSize);
-    if (rootFontSize > 16) {
-        document.body.classList.add('large-text');
-    }
+    const largeTextBtn = document.createElement('button');
+    largeTextBtn.id = 'largeTextToggle';
+    largeTextBtn.innerHTML = '<i class="fas fa-text-height"></i><span>큰 글씨</span>';
+    largeTextBtn.className = 'accessibility-btn';
+    largeTextBtn.style.cssText = `
+        position: fixed;
+        top: 180px;
+        right: 20px;
+        z-index: 1000;
+        background: #6f42c1;
+        color: white;
+        border: none;
+        padding: 12px;
+        border-radius: 8px;
+        cursor: pointer;
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        font-size: 14px;
+        min-height: 44px;
+    `;
+    
+    let largeTextEnabled = false;
+    
+    largeTextBtn.addEventListener('click', () => {
+        largeTextEnabled = !largeTextEnabled;
+        
+        if (largeTextEnabled) {
+            document.body.classList.add('large-text');
+            largeTextBtn.querySelector('span').textContent = '보통 글씨';
+            announceToScreenReader('큰 글씨 모드가 켜졌습니다.');
+        } else {
+            document.body.classList.remove('large-text');
+            largeTextBtn.querySelector('span').textContent = '큰 글씨';
+            announceToScreenReader('보통 글씨 모드로 돌아왔습니다.');
+        }
+    });
+    
+    document.body.appendChild(largeTextBtn);
+    
+    // 큰 텍스트 CSS
+    const largeTextStyle = document.createElement('style');
+    largeTextStyle.textContent = `
+        .large-text {
+            font-size: 120% !important;
+        }
+        
+        .large-text h1 { font-size: 3.6rem !important; }
+        .large-text h2 { font-size: 3rem !important; }
+        .large-text h3 { font-size: 2.4rem !important; }
+        .large-text h4 { font-size: 2rem !important; }
+        .large-text h5 { font-size: 1.6rem !important; }
+        .large-text p, .large-text span, .large-text div { font-size: 1.2rem !important; }
+        .large-text button { font-size: 1.1rem !important; padding: 14px 20px !important; }
+        .large-text input, .large-text select { font-size: 1.1rem !important; padding: 12px !important; }
+    `;
+    document.head.appendChild(largeTextStyle);
 }
 
-// 터치 디바이스 지원 개선
+// 터치 지원 개선
 function setupTouchSupport() {
     // 터치 디바이스 감지
     const isTouchDevice = 'ontouchstart' in window || navigator.maxTouchPoints > 0;
@@ -3034,217 +2174,1640 @@ function setupTouchSupport() {
     if (isTouchDevice) {
         document.body.classList.add('touch-device');
         
-        // 터치 영역 확대
-        const style = document.createElement('style');
-        style.textContent = `
+        // 터치 최적화 CSS
+        const touchStyle = document.createElement('style');
+        touchStyle.textContent = `
             .touch-device button,
-            .touch-device select,
-            .touch-device .symptom-card,
-            .touch-device .radio-option {
-                min-height: 48px;
-                min-width: 48px;
+            .touch-device .btn,
+            .touch-device .card,
+            .touch-device .symptom-card {
+                min-height: 48px !important;
+                min-width: 48px !important;
+                padding: 12px 16px !important;
+                margin: 4px !important;
             }
             
             .touch-device .symptom-card {
-                padding: 20px;
+                padding: 20px !important;
+                margin: 8px !important;
+            }
+            
+            .touch-device select,
+            .touch-device input {
+                min-height: 48px !important;
+                font-size: 16px !important;
+                padding: 12px !important;
             }
         `;
-        document.head.appendChild(style);
+        document.head.appendChild(touchStyle);
     }
 }
 
-// 에러 처리 및 사용자 피드백
-function handleError(error, userMessage = '오류가 발생했습니다. 다시 시도해주세요.') {
-    console.error('Error:', error);
-    
-    // 사용자에게 친화적인 에러 메시지 표시
-    const errorContainer = document.createElement('div');
-    errorContainer.className = 'error-message';
-    errorContainer.innerHTML = `
-        <div style="background: #fee; border: 2px solid #e74c3c; color: #c0392b; padding: 16px; border-radius: 8px; margin: 20px 0;">
-            <i class="fas fa-exclamation-triangle" style="margin-right: 8px;"></i>
-            ${userMessage}
-        </div>
-    `;
-    
-    const mainContent = document.querySelector('.main');
-    if (mainContent) {
-        mainContent.insertBefore(errorContainer, mainContent.firstChild);
+// 키보드 네비게이션 처리
+function handleKeyboardNavigation(event) {
+    // Tab 키 순환 개선
+    if (event.key === 'Tab') {
+        const focusableElements = document.querySelectorAll(
+            'button, [href], input, select, textarea, [tabindex]:not([tabindex="-1"])'
+        );
         
-        // 5초 후 에러 메시지 제거
-        setTimeout(() => {
-            if (errorContainer.parentNode) {
-                errorContainer.parentNode.removeChild(errorContainer);
-            }
-        }, 5000);
-    }
-    
-    // 스크린 리더에 알림
-    announceToScreenReader(userMessage);
-}
-
-// 성공 메시지 표시
-function showSuccessMessage(message) {
-    const successContainer = document.createElement('div');
-    successContainer.className = 'success-message';
-    successContainer.innerHTML = `
-        <div style="background: #e8f5e8; border: 2px solid #27ae60; color: #2d5016; padding: 16px; border-radius: 8px; margin: 20px 0;">
-            <i class="fas fa-check-circle" style="margin-right: 8px;"></i>
-            ${message}
-        </div>
-    `;
-    
-    const mainContent = document.querySelector('.main');
-    if (mainContent) {
-        mainContent.insertBefore(successContainer, mainContent.firstChild);
+        const firstElement = focusableElements[0];
+        const lastElement = focusableElements[focusableElements.length - 1];
         
-        // 3초 후 성공 메시지 제거
-        setTimeout(() => {
-            if (successContainer.parentNode) {
-                successContainer.parentNode.removeChild(successContainer);
-            }
-        }, 3000);
-    }
-    
-    announceToScreenReader(message);
-}
-
-// 초기화 함수들 실행
-document.addEventListener('DOMContentLoaded', function() {
-    enhanceFocusVisibility();
-    setupHighContrastMode();
-    setupReducedMotion();
-    setupLargeTextMode();
-    setupTouchSupport();
-    
-    // 음성 API 로드 대기
-    if ('speechSynthesis' in window) {
-        // 음성 목록 로드 대기
-        const loadVoices = () => {
-            const voices = speechSynthesis.getVoices();
-            if (voices.length > 0) {
-                console.log('음성 API 준비 완료');
-            } else {
-                setTimeout(loadVoices, 100);
-            }
-        };
-        
-        if (speechSynthesis.onvoiceschanged !== undefined) {
-            speechSynthesis.onvoiceschanged = loadVoices;
-        } else {
-            loadVoices();
+        if (event.shiftKey && document.activeElement === firstElement) {
+            event.preventDefault();
+            lastElement.focus();
+        } else if (!event.shiftKey && document.activeElement === lastElement) {
+            event.preventDefault();
+            firstElement.focus();
         }
     }
     
-    // 페이지 로드 완료 알림
-    setTimeout(() => {
-        announceToScreenReader('보훈대상자 병원 추천 서비스 페이지가 로드되었습니다. 지금 병원 찾기 버튼을 눌러 시작하세요.');
-    }, 1000);
-});
-
-// 전역 에러 핸들러
-window.addEventListener('error', function(event) {
-    handleError(event.error, '페이지에서 오류가 발생했습니다. 페이지를 새로고침하거나 고객센터에 문의해주세요.');
-});
-
-// 네트워크 상태 감지
-window.addEventListener('online', function() {
-    showSuccessMessage('인터넷 연결이 복구되었습니다.');
-});
-
-window.addEventListener('offline', function() {
-    handleError(new Error('Network offline'), '인터넷 연결이 끊어졌습니다. 연결을 확인해주세요.');
-});
-
-// 브라우저 호환성 체크
-function checkBrowserCompatibility() {
-    const isCompatible = 
-        'querySelector' in document &&
-        'addEventListener' in window &&
-        'classList' in document.createElement('div');
+    // Enter 키로 버튼 활성화 (접근성 향상)
+    if (event.key === 'Enter' && event.target.classList.contains('symptom-card')) {
+        event.target.click();
+    }
     
-    if (!isCompatible) {
-        handleError(
-            new Error('Browser compatibility'),
-            '브라우저가 이 서비스를 완전히 지원하지 않습니다. 최신 브라우저로 업데이트해주세요.'
-        );
+    // ESC 키로 모달 닫기
+    if (event.key === 'Escape') {
+        const modals = document.querySelectorAll('.navigation-modal-overlay, .hospital-detail-modal');
+        modals.forEach(modal => modal.remove());
+    }
+    
+    // 음성 안내 단축키 (Ctrl + V)
+    if (event.ctrlKey && event.key === 'v') {
+        event.preventDefault();
+        toggleVoiceGuide();
     }
 }
 
-// 페이지 성능 모니터링
-function monitorPerformance() {
-    if ('performance' in window) {
-        window.addEventListener('load', function() {
-            setTimeout(() => {
-                try {
-                    // 최신 Performance API 사용 (권장)
-                    if ('getEntriesByType' in performance) {
-                        const navigationEntries = performance.getEntriesByType('navigation');
-                        if (navigationEntries.length > 0) {
-                            const loadTime = navigationEntries[0].loadEventEnd - navigationEntries[0].loadEventStart;
-                            
-                            if (loadTime > 5000) {
-                                console.warn('페이지 로딩이 느립니다:', loadTime + 'ms');
-                            }
-                            return;
-                        }
-                    }
-                    
-                    // 레거시 API 사용 (안전하게 체크)
-                    if ('navigation' in performance && 
-                        performance.navigation.timing && 
-                        performance.navigation.timing.loadEventEnd && 
-                        performance.navigation.timing.navigationStart) {
-                        
-                        const loadTime = performance.navigation.timing.loadEventEnd - 
-                                        performance.navigation.timing.navigationStart;
-                        
-                        // 로딩이 5초 이상 걸린 경우 사용자에게 알림
-                        if (loadTime > 5000) {
-                            console.warn('페이지 로딩이 느립니다:', loadTime + 'ms');
-                        }
-                    } else {
-                        console.log('성능 측정 API를 사용할 수 없습니다.');
-                    }
-                    
-                } catch (error) {
-                    console.warn('성능 모니터링 중 오류:', error.message);
-                }
-            }, 1000); // 1초 대기로 증가 (로딩 완료 보장)
+// ==============================================
+// 오류 처리 및 폴백 시스템
+// ==============================================
+
+// 전역 오류 처리
+function handleError(error, userMessage = '오류가 발생했습니다.') {
+    console.error('Application Error:', error);
+    
+    // 사용자에게 친화적인 오류 메시지 표시
+    showErrorMessage(userMessage);
+    
+    // 음성 안내가 켜져있으면 오류 안내
+    if (window.speechEnabled) {
+        speakText(userMessage + ' 다시 시도해주세요.');
+    }
+}
+
+// 오류 메시지 표시
+function showErrorMessage(message) {
+    const errorDiv = document.createElement('div');
+    errorDiv.className = 'error-message';
+    errorDiv.innerHTML = `
+        <div style="
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            background: #f8d7da;
+            color: #721c24;
+            border: 1px solid #f5c6cb;
+            border-radius: 8px;
+            padding: 16px 20px;
+            z-index: 10001;
+            max-width: 300px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.2);
+        ">
+            <div style="display: flex; align-items: center; gap: 10px;">
+                <i class="fas fa-exclamation-triangle"></i>
+                <span>${message}</span>
+                <button onclick="this.closest('.error-message').remove()" style="
+                    background: none;
+                    border: none;
+                    color: #721c24;
+                    cursor: pointer;
+                    font-size: 18px;
+                    padding: 0;
+                    margin-left: auto;
+                ">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+        </div>
+    `;
+    
+    document.body.appendChild(errorDiv);
+    
+    // 5초 후 자동 제거
+    setTimeout(() => {
+        if (errorDiv.parentNode) {
+            errorDiv.remove();
+        }
+    }, 5000);
+}
+
+// 네트워크 상태 감지
+function setupNetworkStatusMonitoring() {
+    function updateNetworkStatus() {
+        const isOnline = navigator.onLine;
+        const statusElement = document.getElementById('networkStatus');
+        
+        if (!isOnline) {
+            if (!statusElement) {
+                const offlineNotice = document.createElement('div');
+                offlineNotice.id = 'networkStatus';
+                offlineNotice.innerHTML = `
+                    <div style="
+                        position: fixed;
+                        top: 0;
+                        left: 0;
+                        right: 0;
+                        background: #856404;
+                        color: white;
+                        text-align: center;
+                        padding: 10px;
+                        z-index: 10000;
+                        font-size: 14px;
+                    ">
+                        <i class="fas fa-wifi" style="margin-right: 8px;"></i>
+                        인터넷 연결이 끊어졌습니다. 오프라인 모드로 작동합니다.
+                    </div>
+                `;
+                document.body.appendChild(offlineNotice);
+            }
+        } else {
+            if (statusElement) {
+                statusElement.remove();
+            }
+        }
+    }
+    
+    window.addEventListener('online', updateNetworkStatus);
+    window.addEventListener('offline', updateNetworkStatus);
+    
+    // 초기 상태 확인
+    updateNetworkStatus();
+}
+
+// ==============================================
+// 유틸리티 함수들
+// ==============================================
+
+// 스크롤 애니메이션
+function smoothScrollTo(element) {
+    if (element) {
+        element.scrollIntoView({
+            behavior: 'smooth',
+            block: 'center'
         });
     }
 }
 
-// 사용자 활동 추적 (접근성 개선을 위해)
-function trackUserActivity() {
-    let inactiveTime = 0;
-    const maxInactiveTime = 300000; // 5분
+// 폼 데이터 유효성 검사
+function validateFormData(data) {
+    const required = ['veteranType', 'region', 'district'];
     
-    // 비활성 시간 초기화 함수
-    function resetInactiveTime() {
-        inactiveTime = 0;
+    for (const field of required) {
+        if (!data[field]) {
+            return {
+                valid: false,
+                message: `${getFieldLabel(field)}을(를) 선택해주세요.`
+            };
+        }
     }
     
-    // 사용자 활동 감지 이벤트들
-    ['mousedown', 'mousemove', 'keypress', 'scroll', 'touchstart', 'click'].forEach(event => {
-        document.addEventListener(event, resetInactiveTime, true);
-    });
-    
-    // 1분마다 비활성 시간 체크
-    setInterval(() => {
-        inactiveTime += 60000;
-        
-        // 5분 비활성 시 알림
-        if (inactiveTime >= maxInactiveTime) {
-            if (window.speechEnabled) {
-                speakText('5분간 활동이 없었습니다. 도움이 필요하시면 고객센터에 문의해주세요.');
-            }
-            inactiveTime = 0; // 알림 후 초기화
-        }
-    }, 60000);
+    return { valid: true };
 }
 
-// 모든 초기화 함수 실행
-checkBrowserCompatibility();
-monitorPerformance();
-trackUserActivity();
+function getFieldLabel(field) {
+    const labels = {
+        veteranType: '보훈대상 종류',
+        region: '시/도',
+        district: '시/군/구',
+        symptoms: '증상'
+    };
+    
+    return labels[field] || field;
+}
+
+// 로컬 스토리지 안전 사용
+function safeLocalStorage() {
+    try {
+        const test = '__localStorage_test__';
+        localStorage.setItem(test, test);
+        localStorage.removeItem(test);
+        return true;
+    } catch (e) {
+        return false;
+    }
+}
+
+// 데이터 저장 (가능한 경우)
+function saveFormProgress() {
+    if (safeLocalStorage()) {
+        try {
+            localStorage.setItem('veteransCareProgress', JSON.stringify({
+                formData,
+                currentStep,
+                selectedSymptoms,
+                timestamp: Date.now()
+            }));
+        } catch (e) {
+            console.warn('데이터 저장 실패:', e);
+        }
+    }
+}
+
+// 데이터 복원 (가능한 경우)
+function restoreFormProgress() {
+    if (safeLocalStorage()) {
+        try {
+            const saved = localStorage.getItem('veteransCareProgress');
+            if (saved) {
+                const data = JSON.parse(saved);
+                
+                // 24시간 이내 데이터만 복원
+                if (Date.now() - data.timestamp < 24 * 60 * 60 * 1000) {
+                    formData = data.formData || {};
+                    selectedSymptoms = data.selectedSymptoms || [];
+                    
+                    // 폼 필드 복원
+                    restoreFormFields();
+                    
+                    announceToScreenReader('이전 입력 정보가 복원되었습니다.');
+                }
+            }
+        } catch (e) {
+            console.warn('데이터 복원 실패:', e);
+        }
+    }
+}
+
+function restoreFormFields() {
+    Object.keys(formData).forEach(key => {
+        const element = document.getElementById(key);
+        if (element && formData[key]) {
+            element.value = formData[key];
+            
+            // 지역 선택 시 시/군/구 옵션 업데이트
+            if (key === 'region') {
+                updateDistrictOptions();
+            }
+        }
+    });
+    
+    // 선택된 증상 복원
+    selectedSymptoms.forEach(symptom => {
+        const card = document.querySelector(`[data-value="${symptom}"]`);
+        if (card) {
+            card.classList.add('selected');
+        }
+    });
+}
+
+// ==============================================
+// 성능 최적화
+// ==============================================
+
+// 디바운싱 함수
+function debounce(func, wait) {
+    let timeout;
+    return function executedFunction(...args) {
+        const later = () => {
+            clearTimeout(timeout);
+            func(...args);
+        };
+        clearTimeout(timeout);
+        timeout = setTimeout(later, wait);
+    };
+}
+
+// 스로틀링 함수
+function throttle(func, limit) {
+    let inThrottle;
+    return function() {
+        const args = arguments;
+        const context = this;
+        if (!inThrottle) {
+            func.apply(context, args);
+            inThrottle = true;
+            setTimeout(() => inThrottle = false, limit);
+        }
+    };
+}
+
+// 이미지 지연 로딩
+function setupLazyLoading() {
+    const images = document.querySelectorAll('img[data-src]');
+    
+    if ('IntersectionObserver' in window) {
+        const imageObserver = new IntersectionObserver((entries, observer) => {
+            entries.forEach(entry => {
+                if (entry.isIntersecting) {
+                    const img = entry.target;
+                    img.src = img.dataset.src;
+                    img.classList.remove('lazy');
+                    imageObserver.unobserve(img);
+                }
+            });
+        });
+        
+        images.forEach(img => imageObserver.observe(img));
+    } else {
+        // 폴백: 모든 이미지 즉시 로드
+        images.forEach(img => {
+            img.src = img.dataset.src;
+            img.classList.remove('lazy');
+        });
+    }
+}
+
+// ==============================================
+// 고급 상호작용 기능
+// ==============================================
+
+// 드래그 앤 드롭으로 증상 순서 변경
+function setupDragAndDrop() {
+    const symptomCards = document.querySelectorAll('.symptom-card');
+    
+    symptomCards.forEach(card => {
+        card.draggable = true;
+        
+        card.addEventListener('dragstart', (e) => {
+            e.dataTransfer.setData('text/plain', card.dataset.value);
+            card.classList.add('dragging');
+        });
+        
+        card.addEventListener('dragend', () => {
+            card.classList.remove('dragging');
+        });
+        
+        card.addEventListener('dragover', (e) => {
+            e.preventDefault();
+        });
+        
+        card.addEventListener('drop', (e) => {
+            e.preventDefault();
+            const draggedValue = e.dataTransfer.getData('text/plain');
+            const draggedCard = document.querySelector(`[data-value="${draggedValue}"]`);
+            
+            if (draggedCard && draggedCard !== card) {
+                // 순서 변경 로직
+                const container = card.parentNode;
+                const cardRect = card.getBoundingClientRect();
+                const dropY = e.clientY;
+                
+                if (dropY > cardRect.top + cardRect.height / 2) {
+                    container.insertBefore(draggedCard, card.nextSibling);
+                } else {
+                    container.insertBefore(draggedCard, card);
+                }
+                
+                announceToScreenReader('증상 순서가 변경되었습니다.');
+            }
+        });
+    });
+}
+
+// 제스처 지원 (모바일)
+function setupGestureSupport() {
+    let startX, startY, startTime;
+    
+    document.addEventListener('touchstart', (e) => {
+        if (e.touches.length === 1) {
+            startX = e.touches[0].clientX;
+            startY = e.touches[0].clientY;
+            startTime = Date.now();
+        }
+    });
+    
+    document.addEventListener('touchend', (e) => {
+        if (e.changedTouches.length === 1) {
+            const endX = e.changedTouches[0].clientX;
+            const endY = e.changedTouches[0].clientY;
+            const endTime = Date.now();
+            
+            const diffX = endX - startX;
+            const diffY = endY - startY;
+            const timeDiff = endTime - startTime;
+            
+            // 스와이프 감지 (빠르고 긴 동작)
+            if (timeDiff < 300 && Math.abs(diffX) > 50) {
+                if (diffX > 0 && currentStep > 1) {
+                    // 오른쪽 스와이프: 이전 단계
+                    prevStep(currentStep - 1);
+                } else if (diffX < 0 && currentStep < 4) {
+                    // 왼쪽 스와이프: 다음 단계
+                    if (validateCurrentStep()) {
+                        nextStep(currentStep + 1);
+                    }
+                }
+            }
+        }
+    });
+}
+
+// ==============================================
+// 고급 기능들
+// ==============================================
+
+// 즐겨찾기 병원 관리
+function setupFavoriteHospitals() {
+    window.toggleFavorite = function(hospitalId, hospitalName) {
+        if (!safeLocalStorage()) {
+            alert('즐겨찾기 기능을 사용할 수 없습니다.');
+            return;
+        }
+        
+        try {
+            let favorites = JSON.parse(localStorage.getItem('favoriteHospitals') || '[]');
+            const index = favorites.findIndex(fav => fav.id === hospitalId);
+            
+            if (index > -1) {
+                // 즐겨찾기 제거
+                favorites.splice(index, 1);
+                announceToScreenReader(`${hospitalName}이 즐겨찾기에서 제거되었습니다.`);
+            } else {
+                // 즐겨찾기 추가
+                favorites.push({
+                    id: hospitalId,
+                    name: hospitalName,
+                    addedAt: Date.now()
+                });
+                announceToScreenReader(`${hospitalName}이 즐겨찾기에 추가되었습니다.`);
+            }
+            
+            localStorage.setItem('favoriteHospitals', JSON.stringify(favorites));
+            updateFavoriteButtons();
+            
+        } catch (error) {
+            console.error('즐겨찾기 처리 오류:', error);
+            alert('즐겨찾기 처리 중 오류가 발생했습니다.');
+        }
+    };
+    
+    function updateFavoriteButtons() {
+        const favoriteButtons = document.querySelectorAll('.favorite-btn');
+        const favorites = JSON.parse(localStorage.getItem('favoriteHospitals') || '[]');
+        
+        favoriteButtons.forEach(btn => {
+            const hospitalId = btn.dataset.hospitalId;
+            const isFavorite = favorites.some(fav => fav.id === hospitalId);
+            
+            if (isFavorite) {
+                btn.classList.add('favorited');
+                btn.innerHTML = '<i class="fas fa-heart"></i>';
+            } else {
+                btn.classList.remove('favorited');
+                btn.innerHTML = '<i class="far fa-heart"></i>';
+            }
+        });
+    }
+}
+
+// 최근 검색 기록 관리
+function setupSearchHistory() {
+    function addToSearchHistory(searchData) {
+        if (!safeLocalStorage()) return;
+        
+        try {
+            let history = JSON.parse(localStorage.getItem('searchHistory') || '[]');
+            
+            // 중복 제거
+            history = history.filter(item => 
+                !(item.region === searchData.region && 
+                  item.district === searchData.district && 
+                  JSON.stringify(item.symptoms) === JSON.stringify(searchData.symptoms))
+            );
+            
+            // 새 검색 추가 (맨 앞에)
+            history.unshift({
+                ...searchData,
+                searchedAt: Date.now()
+            });
+            
+            // 최대 10개까지만 보관
+            history = history.slice(0, 10);
+            
+            localStorage.setItem('searchHistory', JSON.stringify(history));
+        } catch (error) {
+            console.error('검색 기록 저장 오류:', error);
+        }
+    }
+    
+    window.showSearchHistory = function() {
+        if (!safeLocalStorage()) {
+            alert('검색 기록 기능을 사용할 수 없습니다.');
+            return;
+        }
+        
+        try {
+            const history = JSON.parse(localStorage.getItem('searchHistory') || '[]');
+            
+            if (history.length === 0) {
+                alert('저장된 검색 기록이 없습니다.');
+                return;
+            }
+            
+            const modal = document.createElement('div');
+            modal.className = 'search-history-modal';
+            modal.innerHTML = `
+                <div class="modal-overlay">
+                    <div class="modal-content">
+                        <div class="modal-header">
+                            <h4><i class="fas fa-history"></i> 최근 검색 기록</h4>
+                            <button onclick="this.closest('.search-history-modal').remove()">
+                                <i class="fas fa-times"></i>
+                            </button>
+                        </div>
+                        <div class="history-list">
+                            ${history.map((item, index) => `
+                                <div class="history-item" onclick="restoreSearch(${index})">
+                                    <div class="search-info">
+                                        <strong>${item.region} ${item.district}</strong>
+                                        <span class="symptoms">${item.symptoms.map(s => getSymptomLabel(s)).join(', ')}</span>
+                                        <small>${new Date(item.searchedAt).toLocaleDateString()}</small>
+                                    </div>
+                                    <button onclick="event.stopPropagation(); removeSearchHistory(${index})" class="remove-btn">
+                                        <i class="fas fa-trash"></i>
+                                    </button>
+                                </div>
+                            `).join('')}
+                        </div>
+                        <div class="modal-footer">
+                            <button onclick="clearSearchHistory()" class="btn-clear">
+                                <i class="fas fa-trash-alt"></i> 전체 삭제
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            `;
+            
+            document.body.appendChild(modal);
+            
+        } catch (error) {
+            console.error('검색 기록 표시 오류:', error);
+            alert('검색 기록을 불러올 수 없습니다.');
+        }
+    };
+    
+    window.restoreSearch = function(index) {
+        try {
+            const history = JSON.parse(localStorage.getItem('searchHistory') || '[]');
+            const searchData = history[index];
+            
+            if (searchData) {
+                // 폼 데이터 복원
+                formData = { ...searchData };
+                selectedSymptoms = [...searchData.symptoms];
+                
+                // UI 업데이트
+                restoreFormFields();
+                
+                // 모달 닫기
+                document.querySelector('.search-history-modal').remove();
+                
+                announceToScreenReader('이전 검색 조건이 복원되었습니다.');
+            }
+        } catch (error) {
+            console.error('검색 복원 오류:', error);
+        }
+    };
+    
+    window.removeSearchHistory = function(index) {
+        try {
+            let history = JSON.parse(localStorage.getItem('searchHistory') || '[]');
+            history.splice(index, 1);
+            localStorage.setItem('searchHistory', JSON.stringify(history));
+            
+            // 모달 새로고침
+            document.querySelector('.search-history-modal').remove();
+            showSearchHistory();
+            
+        } catch (error) {
+            console.error('검색 기록 삭제 오류:', error);
+        }
+    };
+    
+    window.clearSearchHistory = function() {
+        if (confirm('모든 검색 기록을 삭제하시겠습니까?')) {
+            localStorage.removeItem('searchHistory');
+            document.querySelector('.search-history-modal').remove();
+            announceToScreenReader('검색 기록이 모두 삭제되었습니다.');
+        }
+    };
+    
+    function getSymptomLabel(symptom) {
+        const labels = {
+            head: '두통/머리',
+            heart: '심장/가슴',
+            stomach: '복통/소화',
+            bone: '관절/근육',
+            eye: '눈/시력',
+            ear: '귀/청력',
+            skin: '피부',
+            mental: '정신건강'
+        };
+        return labels[symptom] || symptom;
+    }
+    
+    // 검색 완료 시 기록에 추가
+    const originalGenerateRecommendation = generateRecommendation;
+    generateRecommendation = function() {
+        addToSearchHistory(formData);
+        return originalGenerateRecommendation.call(this);
+    };
+}
+
+// 피드백 시스템
+function setupFeedbackSystem() {
+    window.showFeedbackForm = function() {
+        const modal = document.createElement('div');
+        modal.className = 'feedback-modal';
+        modal.innerHTML = `
+            <div class="modal-overlay">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <h4><i class="fas fa-comment"></i> 서비스 피드백</h4>
+                        <button onclick="this.closest('.feedback-modal').remove()">
+                            <i class="fas fa-times"></i>
+                        </button>
+                    </div>
+                    <div class="feedback-form">
+                        <div class="rating-section">
+                            <label>서비스 만족도:</label>
+                            <div class="star-rating">
+                                <span class="star" data-rating="1">★</span>
+                                <span class="star" data-rating="2">★</span>
+                                <span class="star" data-rating="3">★</span>
+                                <span class="star" data-rating="4">★</span>
+                                <span class="star" data-rating="5">★</span>
+                            </div>
+                        </div>
+                        <div class="comment-section">
+                            <label for="feedbackComment">의견 및 개선사항:</label>
+                            <textarea id="feedbackComment" rows="4" 
+                                    placeholder="서비스 이용 소감이나 개선사항을 자유롭게 작성해주세요."></textarea>
+                        </div>
+                        <div class="contact-section">
+                            <label for="feedbackContact">연락처 (선택):</label>
+                            <input type="text" id="feedbackContact" 
+                                   placeholder="답변을 원하시면 이메일이나 전화번호를 입력해주세요.">
+                        </div>
+                    </div>
+                    <div class="modal-footer">
+                        <button onclick="submitFeedback()" class="btn-submit">
+                            <i class="fas fa-paper-plane"></i> 피드백 전송
+                        </button>
+                        <button onclick="this.closest('.feedback-modal').remove()" class="btn-cancel">
+                            취소
+                        </button>
+                    </div>
+                </div>
+            </div>
+        `;
+        
+        document.body.appendChild(modal);
+        
+        // 별점 클릭 이벤트
+        modal.querySelectorAll('.star').forEach(star => {
+            star.addEventListener('click', function() {
+                const rating = parseInt(this.dataset.rating);
+                updateStarRating(rating);
+            });
+        });
+        
+        function updateStarRating(rating) {
+            modal.querySelectorAll('.star').forEach((star, index) => {
+                if (index < rating) {
+                    star.classList.add('selected');
+                } else {
+                    star.classList.remove('selected');
+                }
+            });
+            modal.dataset.rating = rating;
+        }
+    };
+    
+    window.submitFeedback = function() {
+        const modal = document.querySelector('.feedback-modal');
+        const rating = modal.dataset.rating || 0;
+        const comment = document.getElementById('feedbackComment').value;
+        const contact = document.getElementById('feedbackContact').value;
+        
+        if (rating === 0) {
+            alert('만족도를 선택해주세요.');
+            return;
+        }
+        
+        // 피드백 데이터 저장 (실제로는 서버로 전송)
+        const feedbackData = {
+            rating: parseInt(rating),
+            comment: comment.trim(),
+            contact: contact.trim(),
+            timestamp: Date.now(),
+            userAgent: navigator.userAgent,
+            url: window.location.href
+        };
+        
+        console.log('피드백 데이터:', feedbackData);
+        
+        // 성공 메시지
+        modal.innerHTML = `
+            <div class="modal-overlay">
+                <div class="modal-content success">
+                    <div class="success-icon">
+                        <i class="fas fa-check-circle"></i>
+                    </div>
+                    <h4>피드백이 전송되었습니다!</h4>
+                    <p>소중한 의견 감사합니다.<br>서비스 개선에 반영하겠습니다.</p>
+                    <button onclick="this.closest('.feedback-modal').remove()" class="btn-ok">
+                        확인
+                    </button>
+                </div>
+            </div>
+        `;
+        
+        announceToScreenReader('피드백이 성공적으로 전송되었습니다.');
+        
+        // 3초 후 자동 닫기
+        setTimeout(() => {
+            modal.remove();
+        }, 3000);
+    };
+}
+
+// ==============================================
+// 초기화 및 이벤트 바인딩 완료
+// ==============================================
+
+// 페이지 완전 로드 후 추가 설정
+window.addEventListener('load', function() {
+    // 성능 최적화 기능들
+    setupLazyLoading();
+    setupNetworkStatusMonitoring();
+    
+    // 고급 기능들
+    setupFavoriteHospitals();
+    setupSearchHistory();
+    setupFeedbackSystem();
+    
+    // 상호작용 기능들
+    setupDragAndDrop();
+    setupGestureSupport();
+    
+    // 기존 진행상황 복원 시도
+    restoreFormProgress();
+    
+    console.log('🎉 보훈케어 내비게이터 완전 로드 완료');
+    console.log('📊 총 기능: 음성안내, 고급 길찾기, 접근성, 즐겨찾기, 검색기록, 피드백');
+    
+    // 로드 완료 알림
+    setTimeout(() => {
+        if (window.speechEnabled) {
+            speakText('보훈케어 내비게이터가 완전히 로드되었습니다. 모든 기능을 사용할 수 있습니다.');
+        }
+    }, 2000);
+});
+
+// 페이지 언로드 시 진행상황 저장
+window.addEventListener('beforeunload', function() {
+    saveFormProgress();
+});
+
+// 브라우저 뒤로가기/앞으로가기 지원
+window.addEventListener('popstate', function(event) {
+    if (event.state && event.state.step) {
+        currentStep = event.state.step;
+        showStep(currentStep);
+        updateStepIndicator(currentStep);
+    }
+});
+
+// 단계 변경시 히스토리 추가
+function addToHistory(step) {
+    const state = { step: step };
+    const url = `${window.location.pathname}#step${step}`;
+    history.pushState(state, `Step ${step}`, url);
+}
+
+// CSS 애니메이션 키프레임 추가
+const additionalStyles = document.createElement('style');
+additionalStyles.textContent = `
+    @keyframes slideUp {
+        from { transform: translateX(-50%) translateY(100%); opacity: 0; }
+        to { transform: translateX(-50%) translateY(0); opacity: 1; }
+    }
+    
+    @keyframes slideDown {
+        from { transform: translateX(-50%) translateY(0); opacity: 1; }
+        to { transform: translateX(-50%) translateY(100%); opacity: 0; }
+    }
+    
+    @keyframes fadeInUp {
+        from { transform: translateY(30px); opacity: 0; }
+        to { transform: translateY(0); opacity: 1; }
+    }
+    
+    @keyframes pulse {
+        0%, 100% { transform: scale(1); }
+        50% { transform: scale(1.05); }
+    }
+    
+    /* 길찾기 모달 스타일 */
+    .navigation-modal-overlay {
+        position: fixed;
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        background: rgba(0, 0, 0, 0.8);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        z-index: 10000;
+        animation: fadeInUp 0.3s ease;
+    }
+    
+    .navigation-modal {
+        background: white;
+        border-radius: 16px;
+        padding: 24px;
+        max-width: 500px;
+        width: 90%;
+        max-height: 80vh;
+        overflow-y: auto;
+        box-shadow: 0 20px 40px rgba(0, 0, 0, 0.3);
+    }
+    
+    .modal-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 20px;
+        padding-bottom: 15px;
+        border-bottom: 2px solid #f0f0f0;
+    }
+    
+    .modal-header h4 {
+        color: #2c5aa0;
+        margin: 0;
+        font-size: 20px;
+    }
+    
+    .close-btn {
+        background: #dc3545;
+        color: white;
+        border: none;
+        width: 36px;
+        height: 36px;
+        border-radius: 50%;
+        cursor: pointer;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        transition: all 0.3s ease;
+    }
+    
+    .close-btn:hover {
+        background: #c82333;
+        transform: scale(1.1);
+    }
+    
+    .hospital-info-section {
+        background: #f8f9fa;
+        padding: 16px;
+        border-radius: 8px;
+        margin-bottom: 20px;
+    }
+    
+    .address-info {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        margin-bottom: 12px;
+        font-weight: 500;
+    }
+    
+    .address-info i {
+        color: #dc3545;
+        font-size: 16px;
+    }
+    
+    .travel-info {
+        display: flex;
+        gap: 20px;
+        flex-wrap: wrap;
+    }
+    
+    .info-item {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        font-size: 14px;
+        color: #666;
+    }
+    
+    .info-item i {
+        color: #28a745;
+    }
+    
+    .navigation-apps h5 {
+        color: #2c5aa0;
+        margin-bottom: 15px;
+        font-size: 16px;
+    }
+    
+    .nav-buttons {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 12px;
+        margin-bottom: 20px;
+    }
+    
+    .nav-btn {
+        background: white;
+        border: 2px solid #e9ecef;
+        border-radius: 12px;
+        padding: 16px;
+        cursor: pointer;
+        transition: all 0.3s ease;
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        text-align: left;
+        min-height: 70px;
+    }
+    
+    .nav-btn:hover {
+        border-color: #2c5aa0;
+        background: #f8f9fa;
+        transform: translateY(-2px);
+        box-shadow: 0 4px 12px rgba(44, 90, 160, 0.2);
+    }
+    
+    .nav-btn.kakao:hover { border-color: #fee500; background: #fffbf0; }
+    .nav-btn.naver:hover { border-color: #03c75a; background: #f0fff4; }
+    .nav-btn.tmap:hover { border-color: #ff6b35; background: #fff5f0; }
+    .nav-btn.google:hover { border-color: #4285f4; background: #f0f4ff; }
+    
+    .nav-icon {
+        font-size: 24px;
+        flex-shrink: 0;
+    }
+    
+    .nav-content {
+        flex: 1;
+    }
+    
+    .app-name {
+        display: block;
+        font-weight: bold;
+        color: #333;
+        margin-bottom: 4px;
+    }
+    
+    .nav-content small {
+        color: #666;
+        font-size: 12px;
+    }
+    
+    .web-navigation {
+        border-top: 1px solid #e9ecef;
+        padding-top: 20px;
+        margin-bottom: 20px;
+    }
+    
+    .web-navigation h5 {
+        color: #6c757d;
+        margin-bottom: 12px;
+        font-size: 14px;
+    }
+    
+    .web-buttons {
+        display: flex;
+        gap: 10px;
+    }
+    
+    .web-btn {
+        background: #6c757d;
+        color: white;
+        border: none;
+        padding: 10px 16px;
+        border-radius: 6px;
+        cursor: pointer;
+        font-size: 13px;
+        transition: all 0.3s ease;
+        flex: 1;
+    }
+    
+    .web-btn:hover {
+        background: #5a6268;
+        transform: translateY(-1px);
+    }
+    
+    .additional-options {
+        display: flex;
+        gap: 10px;
+        border-top: 1px solid #e9ecef;
+        padding-top: 16px;
+    }
+    
+    .option-btn {
+        background: #f8f9fa;
+        border: 1px solid #dee2e6;
+        color: #495057;
+        padding: 10px 16px;
+        border-radius: 6px;
+        cursor: pointer;
+        font-size: 13px;
+        transition: all 0.3s ease;
+        flex: 1;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 6px;
+    }
+    
+    .option-btn:hover {
+        background: #e9ecef;
+        border-color: #adb5bd;
+    }
+    
+    /* 모바일 반응형 */
+    @media (max-width: 768px) {
+        .navigation-modal {
+            margin: 20px;
+            width: calc(100% - 40px);
+        }
+        
+        .nav-buttons {
+            grid-template-columns: 1fr;
+        }
+        
+        .web-buttons,
+        .additional-options {
+            flex-direction: column;
+        }
+        
+        .travel-info {
+            flex-direction: column;
+            gap: 8px;
+        }
+    }
+    
+    /* 접근성 개선 */
+    .sr-only {
+        position: absolute;
+        width: 1px;
+        height: 1px;
+        padding: 0;
+        margin: -1px;
+        overflow: hidden;
+        clip: rect(0, 0, 0, 0);
+        white-space: nowrap;
+        border: 0;
+    }
+    
+    /* 드래그 상태 */
+    .dragging {
+        opacity: 0.5;
+        transform: rotate(5deg);
+    }
+    
+    /* 즐겨찾기 버튼 */
+    .favorite-btn {
+        background: none;
+        border: none;
+        color: #ccc;
+        font-size: 18px;
+        cursor: pointer;
+        transition: all 0.3s ease;
+        padding: 8px;
+        border-radius: 50%;
+    }
+    
+    .favorite-btn:hover {
+        color: #e74c3c;
+        transform: scale(1.2);
+    }
+    
+    .favorite-btn.favorited {
+        color: #e74c3c;
+        animation: pulse 0.5s ease;
+    }
+    
+    /* 별점 시스템 */
+    .star-rating {
+        display: flex;
+        gap: 5px;
+        font-size: 24px;
+        margin: 10px 0;
+    }
+    
+    .star {
+        color: #ddd;
+        cursor: pointer;
+        transition: all 0.3s ease;
+        user-select: none;
+    }
+    
+    .star:hover,
+    .star.selected {
+        color: #ffc107;
+        transform: scale(1.2);
+    }
+    
+    /* 성공 모달 */
+    .modal-content.success {
+        text-align: center;
+        padding: 40px 30px;
+    }
+    
+    .success-icon {
+        font-size: 48px;
+        color: #28a745;
+        margin-bottom: 20px;
+    }
+    
+    .btn-ok {
+        background: #28a745;
+        color: white;
+        border: none;
+        padding: 12px 30px;
+        border-radius: 8px;
+        cursor: pointer;
+        font-size: 16px;
+        font-weight: 500;
+        transition: all 0.3s ease;
+        min-height: 44px;
+    }
+    
+    .btn-ok:hover {
+        background: #218838;
+        transform: translateY(-1px);
+        box-shadow: 0 4px 8px rgba(40, 167, 69, 0.3);
+    }
+`;
+document.head.appendChild(additionalStyles);
+
+// ==============================================
+// PWA 지원 (Progressive Web App)
+// ==============================================
+
+// 서비스 워커 등록
+if ('serviceWorker' in navigator) {
+    window.addEventListener('load', function() {
+        navigator.serviceWorker.register('/sw.js')
+            .then(function(registration) {
+                console.log('ServiceWorker 등록 성공:', registration.scope);
+            })
+            .catch(function(error) {
+                console.log('ServiceWorker 등록 실패:', error);
+            });
+    });
+}
+
+// 앱 설치 프롬프트
+let deferredPrompt;
+window.addEventListener('beforeinstallprompt', (e) => {
+    // 기본 설치 프롬프트 방지
+    e.preventDefault();
+    deferredPrompt = e;
+    
+    // 커스텀 설치 버튼 표시
+    showInstallButton();
+});
+
+function showInstallButton() {
+    const installBtn = document.createElement('button');
+    installBtn.id = 'installApp';
+    installBtn.innerHTML = '<i class="fas fa-download"></i><span>앱 설치</span>';
+    installBtn.className = 'install-btn';
+    installBtn.style.cssText = `
+        position: fixed;
+        bottom: 20px;
+        right: 20px;
+        background: #28a745;
+        color: white;
+        border: none;
+        padding: 12px 16px;
+        border-radius: 50px;
+        cursor: pointer;
+        box-shadow: 0 4px 12px rgba(40, 167, 69, 0.4);
+        z-index: 1000;
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        font-size: 14px;
+        font-weight: 500;
+        transition: all 0.3s ease;
+        min-height: 44px;
+    `;
+    
+    installBtn.addEventListener('click', async () => {
+        if (deferredPrompt) {
+            deferredPrompt.prompt();
+            const { outcome } = await deferredPrompt.userChoice;
+            
+            if (outcome === 'accepted') {
+                console.log('사용자가 PWA 설치를 수락했습니다');
+                announceToScreenReader('앱이 설치되었습니다.');
+            }
+            
+            deferredPrompt = null;
+            installBtn.remove();
+        }
+    });
+    
+    document.body.appendChild(installBtn);
+    
+    // 5초 후 버튼에 주목 애니메이션
+    setTimeout(() => {
+        if (installBtn.parentNode) {
+            installBtn.style.animation = 'pulse 2s infinite';
+        }
+    }, 5000);
+}
+
+// PWA 설치됨 감지
+window.addEventListener('appinstalled', (evt) => {
+    console.log('PWA가 설치되었습니다');
+    announceToScreenReader('보훈케어 내비게이터 앱이 홈화면에 추가되었습니다.');
+});
+
+// ==============================================
+// 고급 데이터 분석 및 인사이트
+// ==============================================
+
+// 사용자 행동 분석
+function setupUserAnalytics() {
+    let userSession = {
+        startTime: Date.now(),
+        actions: [],
+        currentStep: 1,
+        searchCount: 0,
+        errorCount: 0
+    };
+    
+    // 사용자 액션 기록
+    function trackAction(action, data = {}) {
+        userSession.actions.push({
+            action,
+            data,
+            timestamp: Date.now(),
+            step: currentStep
+        });
+        
+        // 로컬 스토리지에 저장 (분석용)
+        if (safeLocalStorage()) {
+            try {
+                let analytics = JSON.parse(localStorage.getItem('userAnalytics') || '[]');
+                analytics.push({
+                    action,
+                    data,
+                    timestamp: Date.now(),
+                    step: currentStep,
+                    sessionId: userSession.startTime
+                });
+                
+                // 최대 1000개 이벤트만 보관
+                if (analytics.length > 1000) {
+                    analytics = analytics.slice(-1000);
+                }
+                
+                localStorage.setItem('userAnalytics', JSON.stringify(analytics));
+            } catch (error) {
+                console.warn('분석 데이터 저장 실패:', error);
+            }
+        }
+    }
+    
+    // 주요 이벤트 추적
+    window.trackAction = trackAction;
+    
+    // 단계 이동 추적
+    const originalNextStep = nextStep;
+    nextStep = function(stepNumber) {
+        trackAction('step_change', { from: currentStep, to: stepNumber });
+        return originalNextStep.call(this, stepNumber);
+    };
+    
+    // 검색 실행 추적
+    const originalGenerateRecommendation = generateRecommendation;
+    generateRecommendation = function() {
+        userSession.searchCount++;
+        trackAction('search_executed', {
+            formData: { ...formData },
+            searchCount: userSession.searchCount
+        });
+        return originalGenerateRecommendation.call(this);
+    };
+    
+    // 오류 추적
+    window.addEventListener('error', (event) => {
+        userSession.errorCount++;
+        trackAction('error_occurred', {
+            message: event.error?.message || 'Unknown error',
+            filename: event.filename,
+            lineno: event.lineno,
+            errorCount: userSession.errorCount
+        });
+    });
+    
+    // 세션 종료 시 요약 저장
+    window.addEventListener('beforeunload', function() {
+        const sessionSummary = {
+            ...userSession,
+            endTime: Date.now(),
+            duration: Date.now() - userSession.startTime,
+            finalStep: currentStep
+        };
+        
+        trackAction('session_end', sessionSummary);
+    });
+}
+
+// 사용 패턴 분석 및 개선 제안
+function generateUsageInsights() {
+    if (!safeLocalStorage()) return null;
+    
+    try {
+        const analytics = JSON.parse(localStorage.getItem('userAnalytics') || '[]');
+        const recentData = analytics.filter(event => 
+            Date.now() - event.timestamp < 7 * 24 * 60 * 60 * 1000 // 최근 7일
+        );
+        
+        const insights = {
+            totalSessions: new Set(recentData.map(e => e.sessionId)).size,
+            totalSearches: recentData.filter(e => e.action === 'search_executed').length,
+            averageStepsPerSession: 0,
+            commonDropOffPoint: null,
+            mostUsedFeatures: [],
+            recommendations: []
+        };
+        
+        // 세션별 단계 분석
+        const sessions = {};
+        recentData.forEach(event => {
+            if (!sessions[event.sessionId]) {
+                sessions[event.sessionId] = { maxStep: 1, actions: [] };
+            }
+            sessions[event.sessionId].maxStep = Math.max(sessions[event.sessionId].maxStep, event.step);
+            sessions[event.sessionId].actions.push(event.action);
+        });
+        
+        const completedSteps = Object.values(sessions).map(s => s.maxStep);
+        insights.averageStepsPerSession = completedSteps.reduce((a, b) => a + b, 0) / completedSteps.length;
+        
+        // 중단점 분석
+        const dropOffCounts = { 1: 0, 2: 0, 3: 0, 4: 0 };
+        completedSteps.forEach(step => {
+            if (step < 4) dropOffCounts[step]++;
+        });
+        
+        const maxDropOff = Math.max(...Object.values(dropOffCounts));
+        insights.commonDropOffPoint = Object.keys(dropOffCounts).find(
+            step => dropOffCounts[step] === maxDropOff
+        );
+        
+        // 추천 생성
+        if (insights.averageStepsPerSession < 2) {
+            insights.recommendations.push('첫 번째 단계에서 이탈이 많습니다. 더 간단한 시작 방법을 제공해보세요.');
+        }
+        
+        if (insights.totalSearches / insights.totalSessions < 0.5) {
+            insights.recommendations.push('검색 완료율이 낮습니다. 단계별 안내를 개선해보세요.');
+        }
+        
+        return insights;
+        
+    } catch (error) {
+        console.error('사용 패턴 분석 실패:', error);
+        return null;
+    }
+}
+
+// 관리자용 인사이트 표시
+window.showUsageInsights = function() {
+    const insights = generateUsageInsights();
+    
+    if (!insights) {
+        alert('사용 데이터가 충분하지 않습니다.');
+        return;
+    }
+    
+    const modal = document.createElement('div');
+    modal.className = 'insights-modal';
+    modal.innerHTML = `
+        <div class="modal-overlay">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h4><i class="fas fa-chart-line"></i> 사용 패턴 분석</h4>
+                    <button onclick="this.closest('.insights-modal').remove()">
+                        <i class="fas fa-times"></i>
+                    </button>
+                </div>
+                <div class="insights-content">
+                    <div class="stat-grid">
+                        <div class="stat-item">
+                            <div class="stat-number">${insights.totalSessions}</div>
+                            <div class="stat-label">총 세션 수</div>
+                        </div>
+                        <div class="stat-item">
+                            <div class="stat-number">${insights.totalSearches}</div>
+                            <div class="stat-label">총 검색 수</div>
+                        </div>
+                        <div class="stat-item">
+                            <div class="stat-number">${insights.averageStepsPerSession.toFixed(1)}</div>
+                            <div class="stat-label">평균 완료 단계</div>
+                        </div>
+                        <div class="stat-item">
+                            <div class="stat-number">${insights.commonDropOffPoint}단계</div>
+                            <div class="stat-label">주요 이탈 지점</div>
+                        </div>
+                    </div>
+                    
+                    ${insights.recommendations.length > 0 ? `
+                    <div class="recommendations">
+                        <h5><i class="fas fa-lightbulb"></i> 개선 제안</h5>
+                        <ul>
+                            ${insights.recommendations.map(rec => `<li>${rec}</li>`).join('')}
+                        </ul>
+                    </div>
+                    ` : ''}
+                </div>
+                <div class="modal-footer">
+                    <button onclick="exportAnalyticsData()" class="btn-export">
+                        <i class="fas fa-download"></i> 데이터 내보내기
+                    </button>
+                </div>
+            </div>
+        </div>
+    `;
+    
+    document.body.appendChild(modal);
+};
+
+// 분석 데이터 내보내기
+window.exportAnalyticsData = function() {
+    if (!safeLocalStorage()) {
+        alert('데이터를 내보낼 수 없습니다.');
+        return;
+    }
+    
+    try {
+        const analytics = JSON.parse(localStorage.getItem('userAnalytics') || '[]');
+        const insights = generateUsageInsights();
+        
+        const exportData = {
+            generatedAt: new Date().toISOString(),
+            summary: insights,
+            rawData: analytics,
+            metadata: {
+                userAgent: navigator.userAgent,
+                language: navigator.language,
+                platform: navigator.platform
+            }
+        };
+        
+        const dataStr = JSON.stringify(exportData, null, 2);
+        const dataBlob = new Blob([dataStr], { type: 'application/json' });
+        
+        const link = document.createElement('a');
+        link.href = URL.createObjectURL(dataBlob);
+        link.download = `veterans-care-analytics-${new Date().toISOString().split('T')[0]}.json`;
+        link.click();
+        
+        announceToScreenReader('분석 데이터가 다운로드되었습니다.');
+        
+    } catch (error) {
+        console.error('데이터 내보내기 실패:', error);
+        alert('데이터 내보내기에 실패했습니다.');
+    }
+};
+
+// ==============================================
+// 최종 초기화 및 시작
+// ==============================================
+
+// 개발자 도구 감지 (보안)
+function detectDevTools() {
+    let devtools = { open: false, orientation: null };
+    
+    setInterval(() => {
+        if (window.outerHeight - window.innerHeight > 200 || 
+            window.outerWidth - window.innerWidth > 200) {
+            if (!devtools.open) {
+                devtools.open = true;
+                console.log('🔧 개발자 도구가 감지되었습니다.');
+                console.log('📊 이 서비스는 보훈대상자를 위한 의료 정보 플랫폼입니다.');
+                console.log('🚀 GitHub: https://github.com/veterans-care-navigator');
+            }
+        } else {
+            devtools.open = false;
+        }
+    }, 500);
+}
+
+// 최종 시작 함수
+function finalizeApplication() {
+    // 보안 및 개발 기능
+    detectDevTools();
+    
+    // 분석 시스템 활성화
+    setupUserAnalytics();
+    
+    // 첫 액션 기록
+    if (window.trackAction) {
+        trackAction('app_initialized', {
+            userAgent: navigator.userAgent,
+            language: navigator.language,
+            screenSize: `${screen.width}x${screen.height}`,
+            hasTouch: 'ontouchstart' in window
+        });
+    }
+    
+    // 콘솔 환영 메시지
+    console.log(`
+    🏥 보훈케어 내비게이터 v1.0.0
+    =====================================
+    
+    📊 총 의료 데이터: 23,252개
+    🤖 AI 추천 시스템: 활성화
+    ♿ 접근성 기능: 완전 지원
+    🗺️ 고급 길찾기: 다중 앱 지원
+    📱 PWA 지원: 앱 설치 가능
+    
+    💡 개발자 명령어:
+    - showUsageInsights(): 사용 패턴 분석
+    - showSearchHistory(): 검색 기록 보기
+    - showFeedbackForm(): 피드백 양식
+    - toggleVoiceGuide(): 음성 안내 토글
+    
+    🎯 보훈대상자의 의료 접근성 향상을 위해 개발되었습니다.
+    `);
+    
+    // 접근성 기능 자동 감지 및 적용
+    if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
+        document.body.classList.add('reduced-motion');
+    }
+    
+    if (window.matchMedia('(prefers-contrast: high)').matches) {
+        document.body.classList.add('high-contrast');
+    }
+    
+    // 완료 알림
+    setTimeout(() => {
+        announceToScreenReader('보훈케어 내비게이터 초기화가 완전히 완료되었습니다. 모든 고급 기능을 사용할 수 있습니다.');
+        
+        if (window.speechEnabled) {
+            speakText('보훈케어 내비게이터의 모든 기능이 준비되었습니다. 음성 안내, 고급 길찾기, 접근성 기능이 모두 활성화되었습니다.');
+        }
+    }, 3000);
+}
+
+// 애플리케이션 최종 시작
+document.addEventListener('DOMContentLoaded', finalizeApplication);
+
+// 디버그 모드 (개발 시에만 사용)
+if (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1') {
+    window.DEBUG_MODE = true;
+    window.debugInfo = {
+        currentStep: () => currentStep,
+        formData: () => formData,
+        selectedSymptoms: () => selectedSymptoms,
+        hospitalStats: () => hospitalStats,
+        userLocation: () => userLocation
+    };
+    
+    console.log('🐛 디버그 모드 활성화 - window.debugInfo 사용 가능');
+}
+
+// ==============================================
+// 지도에서 보기 기능
+// ==============================================
+
+// 병원을 지도에서 보기
+window.showOnMap = function(hospitalId, hospitalName, latitude, longitude) {
+    console.log('🗺 지도에서 보기:', hospitalName);
+    
+    // 사용자 위치 정보 가져오기
+    const userLat = userLocation?.latitude || userLocation?.lat;
+    const userLng = userLocation?.longitude || userLocation?.lng;
+    
+    // URL 파라미터 구성
+    const params = new URLSearchParams({
+        hospital: hospitalId,
+        name: encodeURIComponent(hospitalName),
+        lat: latitude || '',
+        lng: longitude || '',
+        userLat: userLat || '',
+        userLng: userLng || ''
+    });
+    
+    // 지도 페이지로 이동
+    window.open(`map.html?${params.toString()}`, '_blank');
+    
+    if (window.speechEnabled) {
+        speakText(`${hospitalName}을 지도에서 확인합니다.`);
+    }
+};

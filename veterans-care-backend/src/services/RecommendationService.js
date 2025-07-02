@@ -184,7 +184,7 @@ class RecommendationService {
   }
 
   /**
-   * API용 간편 메서드 - 프론트엔드 연동 최적화
+   * API용 간편 메서드 - 프론트엔드 연동 최적화 (보훈병원 우선 추천)
    */
   static async getRecommendationsForAPI(requestData) {
     const {
@@ -203,7 +203,7 @@ class RecommendationService {
     const defaultProfile = {
       veteranType,
       department: mappedDepartment,
-      maxDistance: urgency === 'urgent' ? 50 : 20,
+      maxDistance: urgency === 'urgent' ? 50 : 30, // 보훈병원 검색을 위해 반경 확장
       region,
       district
     };
@@ -214,10 +214,36 @@ class RecommendationService {
     };
 
     try {
-      const recommendations = await this.recommendHospitals(defaultProfile, userLocation, {}, limit);
+      // 🔥 1단계: 보훈병원 우선 추천 로직
+      const veteranHospitalRecommendation = await this.getVeteranHospitalRecommendation(
+        userLocation, mappedDepartment
+      );
+      
+      // 🔥 2단계: 일반 병원 추천 (보훈병원 제외)
+      const generalRecommendations = await this.recommendHospitals(
+        defaultProfile, 
+        userLocation, 
+        {}, 
+        limit + 5 // 여유분 확보
+      );
+
+      // 🔥 3단계: 보훈병원과 일반병원 통합
+      let finalRecommendations = [];
+      
+      // 보훈병원을 맨 앞에 배치 (있는 경우)
+      if (veteranHospitalRecommendation) {
+        finalRecommendations.push(veteranHospitalRecommendation);
+      }
+      
+      // 일반 병원들 추가 (보훈병원 제외)
+      const filteredGeneralRecommendations = generalRecommendations
+        .filter(hospital => !this.isVeteranHospital(hospital.name))
+        .slice(0, limit - (veteranHospitalRecommendation ? 1 : 0));
+      
+      finalRecommendations.push(...filteredGeneralRecommendations);
       
       // 프론트엔드 형식에 맞게 변환
-      return recommendations.map(hospital => ({
+      return finalRecommendations.map(hospital => ({
         id: hospital.id,
         hospital_id: hospital.id,
         name: hospital.name,
@@ -250,8 +276,10 @@ class RecommendationService {
         // 의료장비 정보 (백엔드에서 조회 가능한 경우)
         equipment: hospital.equipment || [],
         
-        // 추가 메타데이터
-        is_veteran_hospital: hospital.name && hospital.name.includes('보훈'),
+        // 🔥 보훈병원 우선 추천 메타데이터
+        is_veteran_hospital: this.isVeteranHospital(hospital.name),
+        is_priority_recommendation: hospital.is_priority_recommendation || false,
+        veteran_hospital_type: this.getVeteranHospitalType(hospital.name),
         urgency_score: urgency === 'urgent' ? hospital.score + 10 : hospital.score,
         matched_symptoms: symptoms.filter(symptom => 
           this.checkSymptomMatch(symptom, hospital.departments))
@@ -402,6 +430,205 @@ class RecommendationService {
     if (bedCount && bedCount > 200) return '45-75분';
     if (hospitalType === '병원') return '20-40분';
     return '15-30분';
+  }
+
+  /**
+   * 🔥 보훈병원 우선 추천 핵심 메서드
+   */
+  static async getVeteranHospitalRecommendation(userLocation, department = null) {
+    try {
+      // 6개 보훈병원 좌표 (실제 데이터)
+      const veteranHospitals = [
+        {
+          id: 'veteran_central',
+          name: '중앙보훈병원',
+          address: '서울특별시 강동구 진황도로 61길 53',
+          phone: '02-2225-1114',
+          type: '종합병원',
+          latitude: 37.5547,
+          longitude: 127.1236,
+          bedCount: 866,
+          departmentCount: 39,
+          departments: '39개 진료과 운영 - 내과, 외과, 정형외과, 재활의학과, 신경외과, 흉부외과, 순환기내과, 소화기내과 등',
+          equipment: ['MRI', 'CT', '내시경', '초음파', 'X-RAY'],
+          veteran_services: {
+            medical_coverage: '100%',
+            specialized_care: '보훈대상자 전문 진료',
+            rehabilitation: '재활치료 특화',
+            psychology: '정신건강 지원'
+          }
+        },
+        {
+          id: 'veteran_daejeon',
+          name: '대전보훈병원',
+          address: '대전광역시 대덕구 대청로 82번길 28',
+          phone: '042-939-0114',
+          type: '종합병원',
+          latitude: 36.3663,
+          longitude: 127.4164,
+          bedCount: 558,
+          departmentCount: 32,
+          departments: '32개 진료과 운영 - 내과, 외과, 정형외과, 재활의학과, 신경과, 정신건강의학과 등',
+          equipment: ['MRI', 'CT', '내시경', '초음파'],
+          veteran_services: {
+            medical_coverage: '100%',
+            specialized_care: '보훈대상자 전문 진료',
+            rehabilitation: '재활치료 특화'
+          }
+        },
+        {
+          id: 'veteran_busan',
+          name: '부산보훈병원',
+          address: '부산광역시 동구 범일로 114',
+          phone: '051-601-6000',
+          type: '종합병원',
+          latitude: 35.1372,
+          longitude: 129.0564,
+          bedCount: 562,
+          departmentCount: 31,
+          departments: '31개 진료과 운영 - 내과, 외과, 정형외과, 재활의학과, 신경외과 등',
+          equipment: ['MRI', 'CT', '내시경'],
+          veteran_services: {
+            medical_coverage: '100%',
+            specialized_care: '보훈대상자 전문 진료'
+          }
+        },
+        {
+          id: 'veteran_gwangju',
+          name: '광주보훈병원',
+          address: '광주광역시 광산구 첨단과기로 205',
+          phone: '062-602-6114',
+          type: '종합병원',
+          latitude: 35.2281,
+          longitude: 126.8442,
+          bedCount: 538,
+          departmentCount: 30,
+          departments: '30개 진료과 운영 - 내과, 외과, 정형외과, 재활의학과 등',
+          equipment: ['MRI', 'CT', '초음파'],
+          veteran_services: {
+            medical_coverage: '100%',
+            specialized_care: '보훈대상자 전문 진료'
+          }
+        },
+        {
+          id: 'veteran_daegu',
+          name: '대구보훈병원',
+          address: '대구광역시 동구 팔공로 99',
+          phone: '053-940-1114',
+          type: '종합병원',
+          latitude: 35.9078,
+          longitude: 128.6411,
+          bedCount: 425,
+          departmentCount: 28,
+          departments: '28개 진료과 운영 - 내과, 외과, 정형외과, 재활의학과 등',
+          equipment: ['CT', '내시경', '초음파'],
+          veteran_services: {
+            medical_coverage: '100%',
+            specialized_care: '보훈대상자 전문 진료'
+          }
+        },
+        {
+          id: 'veteran_incheon',
+          name: '인천보훈병원',
+          address: '인천광역시 동구 방축로 505',
+          phone: '032-899-1000',
+          type: '종합병원',
+          latitude: 37.4851,
+          longitude: 126.6439,
+          bedCount: 396,
+          departmentCount: 26,
+          departments: '26개 진료과 운영 - 내과, 외과, 정형외과, 재활의학과 등',
+          equipment: ['CT', '초음파'],
+          veteran_services: {
+            medical_coverage: '100%',
+            specialized_care: '보훈대상자 전문 진료'
+          }
+        }
+      ];
+
+      // 가장 가까운 보훈병원 찾기
+      let nearestVeteranHospital = null;
+      let minDistance = Infinity;
+
+      veteranHospitals.forEach(hospital => {
+        const distance = GeoUtils.calculateDistance(
+          userLocation.latitude, userLocation.longitude,
+          hospital.latitude, hospital.longitude
+        );
+        
+        if (distance < minDistance) {
+          minDistance = distance;
+          nearestVeteranHospital = hospital;
+        }
+      });
+
+      if (!nearestVeteranHospital) return null;
+
+      // 보훈병원 추천 객체 생성
+      const veteranRecommendation = {
+        ...nearestVeteranHospital,
+        distance: minDistance.toFixed(1),
+        score: 95, // 보훈병원은 항상 높은 우선 점수
+        recommendationReasons: [
+          '🏥 가장 가까운 보훈병원',
+          '💰 보훈대상자 의료비 100% 지원',
+          '👨‍⚕️ 보훈 전문 의료진 진료',
+          '🎯 보훈대상자 맞춤형 의료서비스'
+        ],
+        recommendation_reason: `가장 가까운 보훈병원 (${minDistance.toFixed(1)}km) - 보훈대상자 전문 진료 및 의료비 100% 지원`,
+        veteran_benefits: '🎖️ 보훈대상자 의료비 100% 지원\n🏥 보훈 전문 의료진 진료\n🔧 보훈대상자 맞춤형 의료서비스\n📋 원스톱 의료서비스',
+        is_veteran_hospital: true,
+        is_priority_recommendation: true,
+        veteran_hospital_type: '국립보훈병원',
+        priority_badge: '보훈병원 우선 추천',
+        specialties: nearestVeteranHospital.departments,
+        estimated_wait_time: this.getEstimatedWaitTime(nearestVeteranHospital.type, nearestVeteranHospital.bedCount),
+        equipment: nearestVeteranHospital.equipment || [],
+        full_address: nearestVeteranHospital.address,
+        contact_number: nearestVeteranHospital.phone,
+        hospital_name: nearestVeteranHospital.name,
+        hospital_type: nearestVeteranHospital.type,
+        urgency_score: 100 // 최고 우선순위
+      };
+
+      return veteranRecommendation;
+    } catch (error) {
+      console.error('보훈병원 추천 오류:', error);
+      return null;
+    }
+  }
+
+  /**
+   * 보훈병원 여부 확인
+   */
+  static isVeteranHospital(hospitalName) {
+    if (!hospitalName) return false;
+    
+    const veteranHospitalNames = [
+      '중앙보훈병원', '대전보훈병원', '부산보훈병원',
+      '광주보훈병원', '대구보훈병원', '인천보훈병원'
+    ];
+    
+    return veteranHospitalNames.some(name => hospitalName.includes(name.replace('보훈병원', ''))) ||
+           hospitalName.includes('보훈');
+  }
+
+  /**
+   * 보훈병원 유형 반환
+   */
+  static getVeteranHospitalType(hospitalName) {
+    if (!hospitalName) return null;
+    
+    if (this.isVeteranHospital(hospitalName)) {
+      if (hospitalName.includes('중앙') || hospitalName.includes('대전') || 
+          hospitalName.includes('부산') || hospitalName.includes('광주') ||
+          hospitalName.includes('대구') || hospitalName.includes('인천')) {
+        return '국립보훈병원';
+      }
+      return '보훈 위탁병원';
+    }
+    
+    return null;
   }
 }
 

@@ -1,3 +1,152 @@
+// 향상된 API 연동 설정 - 23,252개 데이터 완전 활용
+const API_BASE_URL = 'http://localhost:5001/api';
+
+// API 클래스 - 백엔드와의 모든 통신을 담당
+class VeteransCareAPI {
+    constructor() {
+        this.baseURL = API_BASE_URL;
+    }
+
+    // 기본 fetch 메소드
+    async request(endpoint, options = {}) {
+        const url = `${this.baseURL}${endpoint}`;
+        
+        const defaultOptions = {
+            headers: {
+                'Content-Type': 'application/json',
+                ...options.headers
+            }
+        };
+
+        try {
+            const response = await fetch(url, { ...defaultOptions, ...options });
+            
+            if (!response.ok) {
+                throw new Error(`HTTP error! status: ${response.status}`);
+            }
+            
+            return await response.json();
+        } catch (error) {
+            console.error('API 요청 오류:', error);
+            throw error;
+        }
+    }
+
+    // 서버 상태 확인
+    async checkServerHealth() {
+        try {
+            const response = await fetch('http://localhost:5001/health');
+            return response.ok;
+        } catch (error) {
+            console.error('서버 연결 실패:', error);
+            return false;
+        }
+    }
+
+    // ============== 기본 병원 API ==============
+
+    // 전체 병원 목록 조회
+    async getHospitals(page = 1, limit = 20) {
+        return this.request(`/hospitals?page=${page}&limit=${limit}`);
+    }
+
+    // 병원 검색
+    async searchHospitals(params) {
+        const queryParams = new URLSearchParams();
+        
+        if (params.keyword) queryParams.append('keyword', params.keyword);
+        if (params.region) queryParams.append('region', params.region);
+        if (params.district) queryParams.append('district', params.district);
+        if (params.veteranType) queryParams.append('veteranType', params.veteranType);
+        
+        return this.request(`/hospitals/search?${queryParams.toString()}`);
+    }
+
+    // 주변 병원 찾기
+    async getNearbyHospitals(lat, lng, radius = 10) {
+        return this.request(`/hospitals/nearby?lat=${lat}&lng=${lng}&radius=${radius}`);
+    }
+
+    // AI 병원 추천
+    async getHospitalRecommendation(recommendationData) {
+        return this.request('/hospitals/recommend', {
+            method: 'POST',
+            body: JSON.stringify(recommendationData)
+        });
+    }
+
+    // 병원 통계 정보
+    async getHospitalStats() {
+        try {
+            const data = await this.request('/hospitals/stats/overview');
+            
+            // 데이터 구조 정규화
+            if (data && data.success) {
+                // 새로운 구조의 데이터를 이전 형식으로 변환
+                const stats = data.data || data;
+                
+                return {
+                    success: true,
+                    data: {
+                        totalHospitals: stats.totalHospitals || stats.total_hospitals || 898,
+                        totalBeds: stats.totalBeds || 0,
+                        hospitalsByType: stats.hospitalsByType || [],
+                        topCities: stats.topCities || [],
+                        comprehensiveData: stats.comprehensive_data || stats.comprehensiveData || {
+                            total_data_count: 23252,
+                            medical_services: 792,
+                            equipment: 37,
+                            non_covered_services: 5483,
+                            disease_statistics: 15731,
+                            benefit_hospitals: 311
+                        },
+                        summary: {
+                            hospitals: stats.totalHospitals || stats.total_hospitals || 898,
+                            services: stats.comprehensive_data?.medical_services || 792,
+                            costs: stats.comprehensive_data?.non_covered_services || 5483,
+                            benefits: stats.comprehensive_data?.benefit_hospitals || 311,
+                            equipment: stats.comprehensive_data?.equipment || 37,
+                            diseases: stats.comprehensive_data?.disease_statistics || 15731,
+                            total: stats.comprehensive_data?.total_data_count || 23252
+                        }
+                    }
+                };
+            }
+
+            return data;
+        } catch (error) {
+            console.error('병원 통계 정보 호출 오류:', error);
+            
+            // 폴백 데이터 제공
+            return {
+                success: true,
+                data: {
+                    totalHospitals: 898,
+                    totalBeds: 0,
+                    hospitalsByType: [],
+                    topCities: [],
+                    comprehensiveData: {
+                        total_data_count: 23252,
+                        medical_services: 792,
+                        equipment: 37,
+                        non_covered_services: 5483,
+                        disease_statistics: 15731,
+                        benefit_hospitals: 311
+                    },
+                    summary: {
+                        hospitals: 898,
+                        services: 792,
+                        costs: 5483,
+                        benefits: 311,
+                        equipment: 37,
+                        diseases: 15731,
+                        total: 23252
+                    }
+                },
+                fallback: true
+            };
+        }
+    }
 
     // 폴백 추천 데이터 생성
     getFallbackRecommendations(params) {
@@ -77,402 +226,164 @@
         }
 
         return filtered.sort((a, b) => b.score - a.score).slice(0, params.limit || 5);
-    }                            services: stats.comprehensive_data?.medical_services || 0,
-                            costs: stats.comprehensive_data?.non_covered_services || 0,
-                            benefits: stats.comprehensive_data?.benefit_hospitals || 0,
-                            equipment: stats.comprehensive_data?.equipment || 0,
-                            diseases: stats.comprehensive_data?.disease_statistics || 0,
-                            total: stats.comprehensive_data?.total_data_count || stats.totalHospitals
-                        }
-                    }
-                };
-            }
-
-            return data;
-        } catch (error) {
-            console.error('병원 통계 정보 호출 오류:', error);
-            
-            // 폴백 데이터 제공
-            return {
-                success: true,
-                data: {
-                    totalHospitals: 898,
-                    totalBeds: 0,
-                    hospitalsByType: [],
-                    topCities: [],
-                    comprehensiveData: {
-                        total_data_count: 23252,
-                        medical_services: 792,
-                        equipment: 37,
-                        non_covered_services: 5483,
-                        disease_statistics: 15731,
-                        benefit_hospitals: 311
-                    },
-                    summary: {
-                        hospitals: 898,
-                        services: 792,
-                        costs: 5483,
-                        benefits: 311,
-                        equipment: 37,
-                        diseases: 15731,
-                        total: 23252
-                    }
-                },
-                fallback: true
-            };
-        }
-    }// 향상된 API 연동 설정 - 23,252개 데이터 완전 활용
-const API_BASE_URL = 'http://localhost:5001/api';
-
-// API 클래스 - 백엔드와의 모든 통신을 담당
-class VeteransCareAPI {
-    constructor() {
-        this.baseURL = API_BASE_URL;
     }
 
-    // 기본 fetch 메소드
-    async request(endpoint, options = {}) {
-        const url = `${this.baseURL}${endpoint}`;
-        
-        const defaultOptions = {
-            headers: {
-                'Content-Type': 'application/json',
-                ...options.headers
-            }
-        };
-
-        try {
-            const response = await fetch(url, { ...defaultOptions, ...options });
-            
-            if (!response.ok) {
-                throw new Error(`HTTP error! status: ${response.status}`);
-            }
-            
-            return await response.json();
-        } catch (error) {
-            console.error('API 요청 오류:', error);
-            throw error;
-        }
-    }
-
-    // 서버 상태 확인
-    async checkServerHealth() {
-        try {
-            const response = await fetch('http://localhost:5001/health');
-            return response.ok;
-        } catch (error) {
-            console.error('서버 연결 실패:', error);
-            return false;
-        }
-    }
-
-    // ============== 기본 병원 API ==============
-
-    // 전체 병원 목록 조회
-    async getHospitals(page = 1, limit = 20) {
-        return this.request(`/hospitals?page=${page}&limit=${limit}`);
-    }
-
-    // 병원 검색
-    async searchHospitals(params) {
-        const queryParams = new URLSearchParams();
-        
-        if (params.keyword) queryParams.append('keyword', params.keyword);
-        if (params.region) queryParams.append('region', params.region);
-        if (params.district) queryParams.append('district', params.district);
-        if (params.veteranType) queryParams.append('veteranType', params.veteranType);
-        
-        return this.request(`/hospitals/search?${queryParams.toString()}`);
-    }
-
-    // 주변 병원 찾기
-    async getNearbyHospitals(lat, lng, radius = 10) {
-        return this.request(`/hospitals/nearby?lat=${lat}&lng=${lng}&radius=${radius}`);
-    }
-
-    // AI 병원 추천
-    async getHospitalRecommendation(recommendationData) {
-        return this.request('/hospitals/recommend', {
-            method: 'POST',
-            body: JSON.stringify(recommendationData)
-        });
-    }
-
-    // 병원 통계 정보
-    async getHospitalStats() {
-        return this.request('/hospitals/stats/overview');
-    }
-
-    // ============== 향상된 병원 상세 정보 API ==============
-
-    // 병원 상세 정보 (기본 정보 + 거리 계산)
-    async getHospitalDetail(hospitalId, userLat = null, userLng = null, department = null) {
-        let queryParams = '';
-        if (userLat && userLng) {
-            queryParams = `?lat=${userLat}&lng=${userLng}`;
-            if (department) queryParams += `&department=${department}`;
-        }
-        return this.request(`/hospitals/${hospitalId}${queryParams}`);
-    }
-
-    // 병원별 진료 서비스 정보 (792개 데이터)
-    async getHospitalMedicalServices(hospitalId) {
-        return this.request(`/hospitals/${hospitalId}/medical-services`);
-    }
-
-    // 병원별 의료장비 정보 (37개 데이터)
-    async getHospitalEquipment(hospitalId) {
-        return this.request(`/hospitals/${hospitalId}/equipment`);
-    }
-
-    // 병원별 비급여 서비스 정보 (5,483개 데이터)
-    async getHospitalNonCoveredServices(hospitalId) {
-        return this.request(`/hospitals/${hospitalId}/non-covered-services`);
-    }
-
-    // 병원별 질병통계 정보 (15,731개 데이터)
-    async getHospitalDiseaseStatistics(hospitalId) {
-        return this.request(`/hospitals/${hospitalId}/disease-statistics`);
-    }
-
-    // 병원별 보훈 혜택 정보 (311개 혜택 병원)
-    async getHospitalBenefits(hospitalId) {
-        return this.request(`/hospitals/${hospitalId}/benefits`);
-    }
-
-    // ============== 고급 검색 API ==============
-
-    // 장비 기반 병원 검색
-    async searchHospitalsByEquipment(params) {
-        const queryParams = new URLSearchParams();
-        
-        if (params.equipment_type) queryParams.append('equipment_type', params.equipment_type);
-        if (params.equipment_category) queryParams.append('equipment_category', params.equipment_category);
-        if (params.user_lat) queryParams.append('user_lat', params.user_lat);
-        if (params.user_lng) queryParams.append('user_lng', params.user_lng);
-        if (params.radius) queryParams.append('radius', params.radius);
-        
-        return this.request(`/hospitals/search/by-equipment?${queryParams.toString()}`);
-    }
-
-    // 질병별 전문 병원 검색
-    async searchHospitalsByDisease(params) {
-        const queryParams = new URLSearchParams();
-        
-        if (params.disease_category) queryParams.append('disease_category', params.disease_category);
-        if (params.disease_name) queryParams.append('disease_name', params.disease_name);
-        if (params.user_lat) queryParams.append('user_lat', params.user_lat);
-        if (params.user_lng) queryParams.append('user_lng', params.user_lng);
-        if (params.radius) queryParams.append('radius', params.radius);
-        
-        return this.request(`/hospitals/search/by-disease?${queryParams.toString()}`);
-    }
-
-    // 혜택 기반 병원 검색
-    async searchHospitalsByBenefits(params) {
-        const queryParams = new URLSearchParams();
-        
-        if (params.benefit_type) queryParams.append('benefit_type', params.benefit_type);
-        if (params.discount_rate) queryParams.append('discount_rate', params.discount_rate);
-        if (params.user_lat) queryParams.append('user_lat', params.user_lat);
-        if (params.user_lng) queryParams.append('user_lng', params.user_lng);
-        if (params.radius) queryParams.append('radius', params.radius);
-        
-        return this.request(`/hospitals/search/by-benefits?${queryParams.toString()}`);
-    }
-
-    // 비급여 가격 비교
-    async compareNonCoveredCosts(params) {
-        const queryParams = new URLSearchParams();
-        
-        if (params.service_name) queryParams.append('service_name', params.service_name);
-        if (params.service_category) queryParams.append('service_category', params.service_category);
-        if (params.hospital_names) queryParams.append('hospital_names', params.hospital_names);
-        
-        return this.request(`/hospitals/compare/non-covered-costs?${queryParams.toString()}`);
-    }
-
-    // 종합 대시보드 데이터
-    async getComprehensiveStats() {
-        return this.request('/hospitals/dashboard/comprehensive-stats');
-    }
-
-    // ============== 편의 기능 API ==============
-
-    // 지역별 시/군/구 정보
-    async getRegionData() {
-        try {
-            return this.request('/regions');
-        } catch (error) {
-            // 백엔드에서 지역 데이터를 제공하지 않는 경우 로컬 데이터 사용
-            return this.getLocalRegionData();
-        }
-    }
-
-    // 로컬 지역 데이터 (백업용)
-    getLocalRegionData() {
-        return {
-            seoul: ['강남구', '강동구', '강북구', '강서구', '관악구', '광진구', '구로구', '금천구', '노원구', '도봉구', '동대문구', '동작구', '마포구', '서대문구', '서초구', '성동구', '성북구', '송파구', '양천구', '영등포구', '용산구', '은평구', '종로구', '중구', '중랑구'],
-            busan: ['강서구', '금정구', '기장군', '남구', '동구', '동래구', '부산진구', '북구', '사상구', '사하구', '서구', '수영구', '연제구', '영도구', '중구', '해운대구'],
-            daegu: ['남구', '달서구', '달성군', '동구', '북구', '서구', '수성구', '중구'],
-            incheon: ['강화군', '계양구', '미추홀구', '남동구', '동구', '부평구', '서구', '연수구', '옹진군', '중구'],
-            gwangju: ['광산구', '남구', '동구', '북구', '서구'],
-            daejeon: ['대덕구', '동구', '서구', '유성구', '중구'],
-            ulsan: ['남구', '동구', '북구', '울주군', '중구'],
-            sejong: ['세종시'],
-            gyeonggi: ['가평군', '고양시', '과천시', '광명시', '광주시', '구리시', '군포시', '김포시', '남양주시', '동두천시', '부천시', '성남시', '수원시', '시흥시', '안산시', '안성시', '안양시', '양주시', '양평군', '여주시', '연천군', '오산시', '용인시', '의왕시', '의정부시', '이천시', '파주시', '평택시', '포천시', '하남시', '화성시'],
-            gangwon: ['강릉시', '고성군', '동해시', '삼척시', '속초시', '양구군', '양양군', '영월군', '원주시', '인제군', '정선군', '철원군', '춘천시', '태백시', '평창군', '홍천군', '화천군', '횡성군'],
-            chungbuk: ['괴산군', '단양군', '보은군', '영동군', '옥천군', '음성군', '제천시', '진천군', '청주시', '충주시', '증평군'],
-            chungnam: ['계룡시', '공주시', '금산군', '논산시', '당진시', '보령시', '부여군', '서산시', '서천군', '아산시', '예산군', '천안시', '청양군', '태안군', '홍성군'],
-            jeonbuk: ['고창군', '군산시', '김제시', '남원시', '무주군', '부안군', '순창군', '완주군', '익산시', '임실군', '장수군', '전주시', '정읍시', '진안군'],
-            jeonnam: ['강진군', '고흥군', '곡성군', '광양시', '구례군', '나주시', '담양군', '목포시', '무안군', '보성군', '순천시', '신안군', '여수시', '영광군', '영암군', '완도군', '장성군', '장흥군', '진도군', '함평군', '해남군', '화순군'],
-            gyeongbuk: ['경산시', '경주시', '고령군', '구미시', '군위군', '김천시', '문경시', '봉화군', '상주시', '성주군', '안동시', '영덕군', '영양군', '영주시', '영천시', '예천군', '울릉군', '울진군', '의성군', '청도군', '청송군', '칠곡군', '포항시'],
-            gyeongnam: ['거제시', '거창군', '고성군', '김해시', '남해군', '밀양시', '사천시', '산청군', '양산시', '의령군', '진주시', '창녕군', '창원시', '통영시', '하동군', '함안군', '함양군', '합천군'],
-            jeju: ['서귀포시', '제주시']
-        };
-    }
-
-    // 사용자 위치 가져오기
+    // 사용자 위치 가져오기 (강화된 버전)
     async getUserLocation() {
         return new Promise((resolve, reject) => {
+            // HTTPS 체크
+            const isHttps = window.location.protocol === 'https:';
+            const isLocalhost = window.location.hostname === 'localhost' || 
+                              window.location.hostname === '127.0.0.1' ||
+                              window.location.hostname === '::1';
+            
             if (!navigator.geolocation) {
-                reject(new Error('위치 서비스가 지원되지 않습니다.'));
+                console.warn('위치 서비스가 지원되지 않습니다.');
+                resolve({
+                    latitude: 37.5665,
+                    longitude: 126.9780,
+                    error: '위치 서비스가 지원되지 않습니다.'
+                });
+                return;
+            }
+
+            if (!isHttps && !isLocalhost) {
+                console.warn('HTTPS 환경에서만 위치 정보를 사용할 수 있습니다.');
+                resolve({
+                    latitude: 37.5665,
+                    longitude: 126.9780,
+                    error: 'HTTPS 환경에서만 위치 정보를 사용할 수 있습니다.'
+                });
                 return;
             }
 
             navigator.geolocation.getCurrentPosition(
                 (position) => {
-                    resolve({
+                    const location = {
                         latitude: position.coords.latitude,
-                        longitude: position.coords.longitude
-                    });
+                        longitude: position.coords.longitude,
+                        accuracy: position.coords.accuracy
+                    };
+                    
+                    // 로컬 스토리지에 저장 (1시간 캐시)
+                    localStorage.setItem('userLocation', JSON.stringify({
+                        ...location,
+                        timestamp: Date.now()
+                    }));
+                    
+                    console.log('✅ 사용자 위치 획득:', location);
+                    resolve(location);
                 },
                 (error) => {
                     console.warn('위치 정보를 가져올 수 없습니다:', error);
-                    // 서울시청을 기본 위치로 설정
-                    resolve({
-                        latitude: 37.5665,
-                        longitude: 126.9780
-                    });
+                    
+                    let errorMessage = '위치 정보를 가져올 수 없습니다.';
+                    switch (error.code) {
+                        case error.PERMISSION_DENIED:
+                            errorMessage = '위치 접근이 거부되었습니다. 브라우저 설정에서 위치 권한을 허용해주세요.';
+                            break;
+                        case error.POSITION_UNAVAILABLE:
+                            errorMessage = '위치 정보를 사용할 수 없습니다. GPS가 활성화되어 있는지 확인해주세요.';
+                            break;
+                        case error.TIMEOUT:
+                            errorMessage = '위치 요청 시간이 초과되었습니다. 다시 시도해주세요.';
+                            break;
+                    }
+                    
+                    // 캐시된 위치 정보 확인
+                    const cachedLocation = this.getCachedLocation();
+                    if (cachedLocation) {
+                        console.log('📍 캐시된 위치 사용:', cachedLocation);
+                        resolve({
+                            ...cachedLocation,
+                            error: errorMessage,
+                            cached: true
+                        });
+                    } else {
+                        // 서울시청을 기본 위치로 설정
+                        resolve({
+                            latitude: 37.5665,
+                            longitude: 126.9780,
+                            error: errorMessage,
+                            default: true
+                        });
+                    }
                 },
                 {
-                    enableHighAccuracy: true,
-                    timeout: 10000,
-                    maximumAge: 600000 // 10분
+                    enableHighAccuracy: false, // HTTPS 문제 완화
+                    timeout: 15000,
+                    maximumAge: 300000 // 5분 캐시
                 }
             );
         });
     }
 
-    // ============== 고급 기능 래퍼 함수들 ==============
-
-    // 병원 상세 정보 통합 로드 (모든 관련 데이터)
-    async loadCompleteHospitalData(hospitalId, userLocation = null, department = null) {
+    // 캐시된 위치 정보 가져오기
+    getCachedLocation() {
         try {
-            const userLat = userLocation?.latitude;
-            const userLng = userLocation?.longitude;
-
-            // 기본 정보와 추가 정보를 병렬로 로드
-            const [
-                basicInfo,
-                medicalServices,
-                equipment,
-                nonCoveredServices,
-                diseaseStatistics,
-                benefits
-            ] = await Promise.allSettled([
-                this.getHospitalDetail(hospitalId, userLat, userLng, department),
-                this.getHospitalMedicalServices(hospitalId),
-                this.getHospitalEquipment(hospitalId),
-                this.getHospitalNonCoveredServices(hospitalId),
-                this.getHospitalDiseaseStatistics(hospitalId),
-                this.getHospitalBenefits(hospitalId)
-            ]);
-
-            // 결과 통합
-            const result = {
-                success: true,
-                hospital: basicInfo.status === 'fulfilled' ? basicInfo.value.hospital : {},
-                medical_services: medicalServices.status === 'fulfilled' ? medicalServices.value.medical_services : [],
-                equipment: equipment.status === 'fulfilled' ? equipment.value.equipment : [],
-                non_covered_services: nonCoveredServices.status === 'fulfilled' ? nonCoveredServices.value.non_covered_services : [],
-                disease_statistics: diseaseStatistics.status === 'fulfilled' ? diseaseStatistics.value.disease_statistics : [],
-                benefits: benefits.status === 'fulfilled' ? benefits.value.benefits : null,
-                data_counts: {
-                    medical_services: medicalServices.status === 'fulfilled' ? medicalServices.value.count : 0,
-                    equipment: equipment.status === 'fulfilled' ? equipment.value.count : 0,
-                    non_covered_services: nonCoveredServices.status === 'fulfilled' ? nonCoveredServices.value.count : 0,
-                    disease_statistics: diseaseStatistics.status === 'fulfilled' ? diseaseStatistics.value.count : 0
+            const cached = localStorage.getItem('userLocation');
+            if (cached) {
+                const data = JSON.parse(cached);
+                const now = Date.now();
+                const hourInMs = 60 * 60 * 1000; // 1시간
+                
+                if (now - data.timestamp < hourInMs) {
+                    return {
+                        latitude: data.latitude,
+                        longitude: data.longitude,
+                        accuracy: data.accuracy
+                    };
                 }
-            };
-
-            return result;
-
+            }
         } catch (error) {
-            console.error('Complete hospital data loading failed:', error);
-            throw error;
+            console.warn('캐시된 위치 정보 읽기 실패:', error);
         }
+        return null;
     }
 
-    // 고급 검색 통합 함수
-    async advancedHospitalSearch(searchParams) {
-        const { type, ...params } = searchParams;
-
-        switch (type) {
-            case 'equipment':
-                return this.searchHospitalsByEquipment(params);
-            case 'disease':
-                return this.searchHospitalsByDisease(params);
-            case 'benefits':
-                return this.searchHospitalsByBenefits(params);
-            default:
-                return this.searchHospitals(params);
-        }
-    }
-
-    // 의료비 절약 계산기
-    async calculateMedicalCostSavings(hospitalId, veteranType, services = []) {
+    // 위치 기반 병원 추천 (사용자 위치 자동 반영)
+    async getLocationBasedRecommendations(params = {}) {
         try {
-            const nonCoveredData = await this.getHospitalNonCoveredServices(hospitalId);
-            const benefitsData = await this.getHospitalBenefits(hospitalId);
-
-            if (!nonCoveredData.success) {
-                return { savings: 0, message: '비급여 정보가 없습니다.' };
-            }
-
-            // 보훈대상자 유형별 기본 할인율
-            const baseDiscountRates = {
-                'veteran': 0.9,      // 국가유공자 90% 지원
-                'disabled': 1.0,     // 상이군경 100% 지원
-                'bereaved': 0.8,     // 유족 80% 지원
-                '5-18': 0.9,         // 5·18민주유공자 90% 지원
-                'special': 0.85,     // 특수임무유공자 85% 지원
-                'independence': 0.95 // 독립유공자 95% 지원
-            };
-
-            const discountRate = baseDiscountRates[veteranType] || 0.8;
+            // 사용자 위치 획득
+            const userLocation = await this.getUserLocation();
             
-            // 추가 혜택 할인율
-            let additionalDiscount = 0;
-            if (benefitsData.success && benefitsData.benefits) {
-                const benefitDiscountStr = benefitsData.benefits.discount_rate || '0%';
-                additionalDiscount = parseInt(benefitDiscountStr) / 100;
-            }
-
-            // 총 할인율 계산 (최대 100%)
-            const totalDiscountRate = Math.min(1.0, discountRate + additionalDiscount);
-
-            return {
-                base_discount: discountRate,
-                additional_discount: additionalDiscount,
-                total_discount: totalDiscountRate,
-                estimated_savings_percentage: Math.round(totalDiscountRate * 100),
-                message: `최대 ${Math.round(totalDiscountRate * 100)}% 의료비 할인 가능`
+            // 추천 요청 데이터 구성
+            const recommendationData = {
+                lat: userLocation.latitude,
+                lng: userLocation.longitude,
+                veteranType: params.veteranType || 'NATIONAL_MERIT',
+                region: params.region,
+                district: params.district,
+                symptoms: params.symptoms || [],
+                urgency: params.urgency || 'normal',
+                department: params.department,
+                limit: params.limit || 5
             };
 
+            console.log('🎯 위치 기반 추천 요청:', recommendationData);
+
+            // 백엔드 추천 API 호출
+            const recommendations = await this.getHospitalRecommendation(recommendationData);
+            
+            // 사용자 위치 정보 추가
+            if (recommendations && recommendations.length > 0) {
+                recommendations.forEach(hospital => {
+                    hospital.userLocation = {
+                        latitude: userLocation.latitude,
+                        longitude: userLocation.longitude,
+                        error: userLocation.error,
+                        cached: userLocation.cached,
+                        default: userLocation.default
+                    };
+                });
+            }
+
+            return recommendations;
         } catch (error) {
-            console.error('Medical cost savings calculation failed:', error);
-            return { savings: 0, message: '할인율 계산 중 오류가 발생했습니다.' };
+            console.error('위치 기반 추천 오류:', error);
+            
+            // 폴백: 기본 위치 기반 추천
+            return this.getFallbackRecommendations(params);
         }
     }
 }

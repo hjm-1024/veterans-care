@@ -1,0 +1,590 @@
+/* 보훈케어 내비게이터 - 지도 페이지 전용 스타일 */
+
+/* 기존 style.css 색상 변수 확장 */
+:root {
+    /* 기존 색상 유지 */
+    --primary-color: #2E8B57;
+    --secondary-color: #3CB371;
+    --accent-color: #FFD700;
+    --veteran-hospital-color: #FF6B35;
+    --background: #f8f9fa;
+    --text-primary: #333333;
+    --text-secondary: #666666;
+    --border: #e9ecef;
+    
+    /* 지도 전용 색상 추가 */
+    --map-bg: #ffffff;
+    --control-bg: rgba(255, 255, 255, 0.95);
+    --control-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+    --marker-cluster: #3CB371;
+    --heatmap-start: rgba(0, 255, 255, 0.8);
+    --heatmap-end: rgba(255, 0, 0, 0.8);
+    --panel-bg: #ffffff;
+    --panel-border: #e9ecef;
+}
+
+/* 간소화된 헤더 */
+.map-header {
+    height: 10vh;
+    background: #fff;
+    box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+    display: flex;
+    align-items: center;
+    position: sticky;
+    top: 0;
+    z-index: 1000;
+}
+
+.map-header-content {
+    width: 100%;
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 0 20px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+}
+
+.logo-small h1 {
+    color: #2c5aa0;
+    font-size: 18px;
+    font-weight: 700;
+    margin: 0;
+}
+
+.nav-buttons {
+    display: flex;
+    gap: 10px;
+}
+
+.nav-btn {
+    padding: 8px 16px;
+    border: 2px solid #2c5aa0;
+    border-radius: 6px;
+    background: white;
+    color: #2c5aa0;
+    font-size: 14px;
+    font-weight: 500;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    display: flex;
+    align-items: center;
+    gap: 4px;
+}
+
+.nav-btn:hover {
+    background: #2c5aa0;
+    color: white;
+}
+
+.nav-btn.primary {
+    background: #2c5aa0;
+    color: white;
+}
+
+.nav-btn.primary:hover {
+    background: #1e3d72;
+    border-color: #1e3d72;
+}
+
+/* 메인 레이아웃 */
+.main-container {
+    padding: 0;
+    margin: 0;
+}
+
+.map-wrapper {
+    width: 100%;
+    height: 90vh; /* 헤더 10%, 지도 90% */
+    position: relative;
+}
+
+/* 플로팅 컨트롤 패널 */
+.map-controls-floating {
+    position: absolute;
+    top: 20px;
+    left: 20px;
+    width: 280px;
+    background: var(--control-bg);
+    border-radius: 12px;
+    padding: 20px;
+    box-shadow: var(--control-shadow);
+    z-index: 1000;
+    max-height: calc(100vh - 160px);
+    overflow-y: auto;
+    backdrop-filter: blur(10px);
+}
+
+.control-section {
+    margin-bottom: 25px;
+    padding-bottom: 20px;
+    border-bottom: 1px solid var(--border);
+}
+
+.control-section:last-child {
+    border-bottom: none;
+    margin-bottom: 0;
+}
+
+.control-section h3 {
+    color: var(--primary-color);
+    font-size: 16px;
+    font-weight: 600;
+    margin-bottom: 12px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+/* 필터 그룹 */
+.filter-group {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+}
+
+.filter-group select {
+    padding: 12px;
+    border: 2px solid var(--border);
+    border-radius: 8px;
+    font-size: 14px;
+    background: white;
+    color: var(--text-primary);
+    cursor: pointer;
+    transition: all 0.3s ease;
+}
+
+.filter-group select:hover {
+    border-color: var(--primary-color);
+}
+
+.filter-group select:focus {
+    outline: none;
+    border-color: var(--primary-color);
+    box-shadow: 0 0 0 3px rgba(46, 139, 87, 0.1);
+}
+
+/* 모드 버튼 */
+.mode-buttons {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+
+.mode-btn {
+    padding: 12px 16px;
+    border: 2px solid var(--border);
+    border-radius: 8px;
+    background: white;
+    color: var(--text-primary);
+    font-size: 14px;
+    font-weight: 500;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.mode-btn:hover {
+    background: var(--background);
+    border-color: var(--primary-color);
+}
+
+.mode-btn.active {
+    background: var(--primary-color);
+    color: white;
+    border-color: var(--primary-color);
+}
+
+/* 통계 표시 */
+.stats-display {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+
+.stat-item {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 8px 12px;
+    background: var(--background);
+    border-radius: 6px;
+}
+
+.stat-label {
+    font-size: 14px;
+    color: var(--text-secondary);
+}
+
+.stat-value {
+    font-size: 14px;
+    font-weight: 600;
+    color: var(--primary-color);
+}
+
+/* 지도 컨테이너 */
+.map-container {
+    width: 100%;
+    height: 100%;
+    position: relative;
+    background: var(--map-bg);
+    overflow: hidden;
+}
+
+.map-display {
+    width: 100%;
+    height: 100%;
+    border: none;
+    outline: none;
+}
+
+/* 로딩 및 오류 상태 */
+.loading-overlay {
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: rgba(255, 255, 255, 0.9);
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    z-index: 1000;
+}
+
+.loading-spinner {
+    width: 40px;
+    height: 40px;
+    border: 4px solid var(--border);
+    border-top: 4px solid var(--primary-color);
+    border-radius: 50%;
+    animation: spin 1s linear infinite;
+    margin-bottom: 16px;
+}
+
+@keyframes spin {
+    0% { transform: rotate(0deg); }
+    100% { transform: rotate(360deg); }
+}
+
+.error-message {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    background: white;
+    padding: 30px;
+    border-radius: 12px;
+    box-shadow: var(--control-shadow);
+    text-align: center;
+    z-index: 1000;
+}
+
+.retry-btn {
+    margin-top: 16px;
+    padding: 12px 24px;
+    background: var(--primary-color);
+    color: white;
+    border: none;
+    border-radius: 8px;
+    cursor: pointer;
+    font-size: 14px;
+    font-weight: 500;
+    transition: all 0.3s ease;
+}
+
+.retry-btn:hover {
+    background: var(--secondary-color);
+}
+
+/* 병원 정보 패널 */
+.hospital-info-panel {
+    position: absolute;
+    top: 20px;
+    right: 20px;
+    width: 350px;
+    background: var(--panel-bg);
+    border: 1px solid var(--panel-border);
+    border-radius: 12px;
+    box-shadow: var(--control-shadow);
+    z-index: 1000;
+    overflow: hidden;
+}
+
+.panel-header {
+    background: var(--primary-color);
+    color: white;
+    padding: 16px 20px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.panel-header h3 {
+    margin: 0;
+    font-size: 16px;
+    font-weight: 600;
+}
+
+.close-btn {
+    background: none;
+    border: none;
+    color: white;
+    font-size: 20px;
+    cursor: pointer;
+    padding: 0;
+    width: 24px;
+    height: 24px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 4px;
+    transition: background 0.3s ease;
+}
+
+.close-btn:hover {
+    background: rgba(255, 255, 255, 0.2);
+}
+
+.panel-content {
+    padding: 20px;
+}
+
+.panel-actions {
+    display: flex;
+    gap: 12px;
+    margin-top: 20px;
+}
+
+.action-btn {
+    flex: 1;
+    padding: 12px 16px;
+    border: 2px solid var(--primary-color);
+    border-radius: 8px;
+    background: white;
+    color: var(--primary-color);
+    font-size: 14px;
+    font-weight: 500;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 6px;
+}
+
+.action-btn.primary {
+    background: var(--primary-color);
+    color: white;
+}
+
+.action-btn:hover {
+    background: var(--primary-color);
+    color: white;
+}
+
+.action-btn.primary:hover {
+    background: var(--secondary-color);
+    border-color: var(--secondary-color);
+}
+
+/* 커스텀 마커 스타일 */
+.custom-marker {
+    background-color: var(--primary-color);
+    border: 2px solid white;
+    border-radius: 50%;
+    width: 20px;
+    height: 20px;
+    position: relative;
+}
+
+.custom-marker.veteran-hospital {
+    background-color: var(--veteran-hospital-color);
+    border: 3px solid var(--accent-color);
+    width: 24px;
+    height: 24px;
+}
+
+.custom-marker.recommended {
+    background-color: var(--accent-color);
+    border: 3px solid var(--primary-color);
+    width: 26px;
+    height: 26px;
+    box-shadow: 0 0 10px rgba(255, 215, 0, 0.5);
+}
+
+/* 팝업 스타일 커스터마이징 */
+.leaflet-popup-content-wrapper {
+    border-radius: 8px;
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.15);
+}
+
+.leaflet-popup-content {
+    margin: 16px;
+    line-height: 1.5;
+}
+
+.popup-hospital-name {
+    font-size: 16px;
+    font-weight: 600;
+    color: var(--primary-color);
+    margin-bottom: 8px;
+}
+
+.popup-hospital-type {
+    font-size: 12px;
+    background: var(--primary-color);
+    color: white;
+    padding: 2px 8px;
+    border-radius: 12px;
+    display: inline-block;
+    margin-bottom: 8px;
+}
+
+.popup-hospital-details {
+    font-size: 14px;
+    color: var(--text-primary);
+    margin-bottom: 12px;
+}
+
+.popup-distance {
+    font-size: 13px;
+    color: var(--text-secondary);
+    font-style: italic;
+}
+
+/* 반응형 디자인 */
+@media (max-width: 1024px) {
+    .map-controls-floating {
+        width: 250px;
+        padding: 15px;
+    }
+    
+    .hospital-info-panel {
+        width: 300px;
+    }
+}
+
+@media (max-width: 768px) {
+    .map-wrapper {
+        height: calc(100vh - 70px);
+    }
+    
+    .map-controls-floating {
+        position: fixed;
+        top: 80px;
+        left: 10px;
+        right: 10px;
+        width: auto;
+        max-height: 200px;
+        z-index: 1001;
+    }
+    
+    .hospital-info-panel {
+        position: fixed;
+        top: auto;
+        bottom: 20px;
+        left: 20px;
+        right: 20px;
+        width: auto;
+    }
+    
+    .mode-buttons {
+        flex-direction: row;
+        gap: 8px;
+    }
+    
+    .mode-btn {
+        flex: 1;
+        padding: 10px 8px;
+        font-size: 12px;
+    }
+}
+
+@media (max-width: 480px) {
+    .map-controls-floating {
+        padding: 12px;
+        top: 70px;
+        left: 5px;
+        right: 5px;
+    }
+    
+    .filter-group {
+        gap: 8px;
+    }
+    
+    .control-section {
+        margin-bottom: 15px;
+        padding-bottom: 15px;
+    }
+    
+    .control-section h3 {
+        font-size: 14px;
+    }
+    
+    .hospital-info-panel {
+        bottom: 10px;
+        left: 10px;
+        right: 10px;
+    }
+    
+    .panel-content {
+        padding: 15px;
+    }
+    
+    .action-btn {
+        padding: 10px 12px;
+        font-size: 12px;
+    }
+}
+
+/* 클러스터 마커 커스터마이징 */
+.marker-cluster-small {
+    background-color: rgba(60, 179, 113, 0.6);
+    border: 2px solid rgba(60, 179, 113, 0.8);
+}
+
+.marker-cluster-medium {
+    background-color: rgba(46, 139, 87, 0.6);
+    border: 2px solid rgba(46, 139, 87, 0.8);
+}
+
+.marker-cluster-large {
+    background-color: rgba(34, 105, 65, 0.6);
+    border: 2px solid rgba(34, 105, 65, 0.8);
+}
+
+.marker-cluster {
+    border-radius: 50%;
+    text-align: center;
+    color: white;
+    font-weight: bold;
+    font-size: 12px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+/* 접근성 개선 */
+@media (prefers-reduced-motion: reduce) {
+    * {
+        animation-duration: 0.01ms !important;
+        animation-iteration-count: 1 !important;
+        transition-duration: 0.01ms !important;
+    }
+}
+
+/* 고대비 모드 지원 */
+@media (prefers-contrast: high) {
+    :root {
+        --primary-color: #000000;
+        --secondary-color: #333333;
+        --background: #ffffff;
+        --text-primary: #000000;
+        --text-secondary: #333333;
+        --border: #000000;
+    }
+}

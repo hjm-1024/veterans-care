@@ -199,12 +199,12 @@ router.get('/search', async (req, res) => {
   }
 });
 
-// 병원 추천 API (프론트엔드 연동 최적화)
+// 병원 추천 API (보훈병원 우선 추천 포함)
 router.post('/recommend', async (req, res) => {
   try {
     console.log('추천 API 요청 데이터:', req.body);
     
-    // 프론트엔드에서 전송되는 모든 데이터 수용
+    // 프론트엔드에서 전송되는 모든 데이터 수용 (보훈병원 우선 추천 설정 포함)
     const recommendationRequest = {
       lat: req.body.lat || req.body.latitude,
       lng: req.body.lng || req.body.longitude,
@@ -214,6 +214,7 @@ router.post('/recommend', async (req, res) => {
       symptoms: req.body.symptoms || [],
       urgency: req.body.urgency || 'normal',
       department: req.body.department,
+      prioritizeVeteranHospitals: req.body.prioritizeVeteranHospitals || false,
       limit: req.body.limit || 5
     };
     

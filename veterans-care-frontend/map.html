@@ -1,0 +1,697 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>보훈케어 내비게이터 - 지도</title>
+    
+    <!-- 기존 스타일 -->
+    <link rel="stylesheet" href="css/style.css">
+    <link rel="stylesheet" href="css/map-styles.css">
+    
+    <style>
+        /* 간단한 맵 전용 스타일 */
+        body {
+            margin: 0;
+            padding: 0;
+            font-family: 'Noto Sans KR', sans-serif;
+        }
+        
+        .map-header {
+            height: 10vh;
+            background: #fff;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+            display: flex;
+            align-items: center;
+            position: relative;
+            z-index: 1000;
+        }
+        
+        .map-header-content {
+            width: 100%;
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 0 20px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+        
+        .logo-small h1 {
+            color: #2c5aa0;
+            font-size: 18px;
+            font-weight: 700;
+            margin: 0;
+        }
+        
+        .nav-buttons {
+            display: flex;
+            gap: 10px;
+        }
+        
+        .nav-btn {
+            padding: 8px 16px;
+            border: 2px solid #2c5aa0;
+            border-radius: 6px;
+            background: white;
+            color: #2c5aa0;
+            font-size: 14px;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            text-decoration: none;
+        }
+        
+        .nav-btn:hover {
+            background: #2c5aa0;
+            color: white;
+        }
+        
+        .nav-btn.primary {
+            background: #2c5aa0;
+            color: white;
+        }
+        
+        .nav-btn.primary:hover {
+            background: #1e3d72;
+            border-color: #1e3d72;
+        }
+        
+        .map-container {
+            width: 100%;
+            height: 90vh;
+            position: relative;
+        }
+        
+        #map {
+            width: 100%;
+            height: 100%;
+        }
+        
+        .map-controls {
+            position: absolute;
+            top: 20px;
+            left: 20px;
+            background: rgba(255, 255, 255, 0.95);
+            border-radius: 12px;
+            padding: 20px;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
+            z-index: 1000;
+            min-width: 250px;
+            backdrop-filter: blur(10px);
+        }
+        
+        .control-section {
+            margin-bottom: 20px;
+        }
+        
+        .control-section:last-child {
+            margin-bottom: 0;
+        }
+        
+        .control-section h3 {
+            color: #2c5aa0;
+            font-size: 16px;
+            font-weight: 600;
+            margin-bottom: 12px;
+        }
+        
+        .status-info {
+            background: #f8f9fa;
+            padding: 12px;
+            border-radius: 8px;
+            margin-bottom: 12px;
+            font-size: 14px;
+        }
+        
+        .status-success {
+            background: #d4edda;
+            color: #155724;
+        }
+        
+        .status-error {
+            background: #f8d7da;
+            color: #721c24;
+        }
+        
+        .loading-overlay {
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(255, 255, 255, 0.9);
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            z-index: 2000;
+        }
+        
+        .loading-spinner {
+            width: 40px;
+            height: 40px;
+            border: 4px solid #f3f3f3;
+            border-top: 4px solid #2c5aa0;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+            margin-bottom: 16px;
+        }
+        
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+    </style>
+</head>
+<body>
+    <!-- 간소화된 헤더 -->
+    <header class="map-header">
+        <div class="map-header-content">
+            <div class="logo-small">
+                <h1>🏥 보훈케어 내비게이터</h1>
+            </div>
+            <nav class="nav-buttons">
+                <a href="index.html" class="nav-btn">🏠 메인</a>
+                <button onclick="getUserLocation()" class="nav-btn primary" id="locationBtn">
+                    📍 내 위치
+                </button>
+            </nav>
+        </div>
+    </header>
+
+    <!-- 메인 지도 컨테이너 -->
+    <div class="map-container">
+        <!-- 로딩 오버레이 -->
+        <div id="loading-overlay" class="loading-overlay">
+            <div class="loading-spinner"></div>
+            <p>지도를 불러오는 중...</p>
+        </div>
+        
+        <!-- 지도 -->
+        <div id="map"></div>
+        
+        <!-- 컨트롤 패널 -->
+        <div class="map-controls">
+            <div class="control-section">
+                <h3>🗺 지도 상태</h3>
+                <div id="map-status" class="status-info">지도 로딩 중...</div>
+            </div>
+            
+            <div class="control-section">
+                <h3>📍 위치 정보</h3>
+                <div id="location-status" class="status-info">위치 정보 없음</div>
+            </div>
+            
+            <div class="control-section">
+                <h3>🏥 병원 정보</h3>
+                <div id="hospital-status" class="status-info">병원 정보 없음</div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 설정 파일 먼저 로드 -->
+    <script src="config.js"></script>
+    
+    <!-- 카카오맵 API (직접 로딩) -->
+    <script type="text/javascript" src="//dapi.kakao.com/v2/maps/sdk.js?appkey=796a42e6ccbb3a6ae2f7268a24f574ee&libraries=services"></script>
+    
+    <script>
+        // 전역 변수
+        let map = null;
+        let userLocation = null;
+        let selectedHospital = null;
+        
+        // 상태 업데이트 함수들
+        function updateMapStatus(message, isSuccess = true) {
+            const statusEl = document.getElementById('map-status');
+            statusEl.textContent = message;
+            statusEl.className = `status-info ${isSuccess ? 'status-success' : 'status-error'}`;
+        }
+        
+        function updateLocationStatus(message, isSuccess = true) {
+            const statusEl = document.getElementById('location-status');
+            statusEl.textContent = message;
+            statusEl.className = `status-info ${isSuccess ? 'status-success' : 'status-error'}`;
+        }
+        
+        function updateHospitalStatus(message, isSuccess = true) {
+            const statusEl = document.getElementById('hospital-status');
+            statusEl.textContent = message;
+            statusEl.className = `status-info ${isSuccess ? 'status-success' : 'status-error'}`;
+        }
+        
+        // 지도 초기화 (카카오 레퍼런스 기반)
+        function initializeMap() {
+            try {
+                console.log('🗺 지도 초기화 시작');
+                
+                const container = document.getElementById('map');
+                const options = {
+                    center: new kakao.maps.LatLng(36.5, 127.5), // 한국 중심
+                    level: 8
+                };
+
+                map = new kakao.maps.Map(container, options);
+                
+                // 로딩 오버레이 숨기기
+                document.getElementById('loading-overlay').style.display = 'none';
+                
+                console.log('✅ 지도 초기화 완료');
+                updateMapStatus('지도 로딩 완료', true);
+                
+                // 사용자 위치 자동 요청
+                setTimeout(() => {
+                    getUserLocation();
+                }, 1000);
+                
+                // URL 파라미터 처리
+                processUrlParameters();
+                
+            } catch (error) {
+                console.error('❌ 지도 초기화 실패:', error);
+                updateMapStatus('지도 로딩 실패: ' + error.message, false);
+                useAlternativeMap();
+            }
+        }
+        
+        // 사용자 위치 가져오기 (HTTPS 문제 대응)
+        function getUserLocation() {
+            console.log('📍 사용자 위치 요청 시작');
+            
+            const locationBtn = document.getElementById('locationBtn');
+            const originalText = locationBtn.innerHTML;
+            
+            // HTTPS 체크
+            const isHttps = window.location.protocol === 'https:';
+            const isLocalhost = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1';
+            
+            if (!navigator.geolocation) {
+                updateLocationStatus('이 브라우저는 위치 정보를 지원하지 않습니다.', false);
+                showLocationAlternatives();
+                return;
+            }
+            
+            if (!isHttps && !isLocalhost) {
+                updateLocationStatus('⚠️ HTTPS 환경에서만 위치 정보를 사용할 수 있습니다.', false);
+                showLocationAlternatives();
+                return;
+            }
+            
+            // 버튼 상태 변경
+            locationBtn.innerHTML = '🔄 위치 찾는 중...';
+            locationBtn.disabled = true;
+            updateLocationStatus('위치 정보를 가져오는 중...', true);
+            
+            navigator.geolocation.getCurrentPosition(
+                (position) => {
+                    userLocation = {
+                        lat: position.coords.latitude,
+                        lng: position.coords.longitude
+                    };
+                    
+                    console.log('✅ 사용자 위치 획득:', userLocation);
+                    updateLocationStatus(`위치: ${userLocation.lat.toFixed(4)}, ${userLocation.lng.toFixed(4)}`, true);
+                    
+                    // 지도 중심 이동
+                    if (map) {
+                        const userPos = new kakao.maps.LatLng(userLocation.lat, userLocation.lng);
+                        map.setCenter(userPos);
+                        map.setLevel(5);
+                        
+                        // 사용자 위치 마커 추가
+                        const marker = new kakao.maps.Marker({
+                            position: userPos,
+                            map: map
+                        });
+                        
+                        const infowindow = new kakao.maps.InfoWindow({
+                            content: '<div style="padding:5px;">📍 내 위치</div>'
+                        });
+                        infowindow.open(map, marker);
+                    }
+                    
+                    // 버튼 복원
+                    locationBtn.innerHTML = '✅ 위치 확인됨';
+                    setTimeout(() => {
+                        locationBtn.innerHTML = originalText;
+                        locationBtn.disabled = false;
+                    }, 3000);
+                },
+                (error) => {
+                    console.error('❌ 위치 획득 실패:', error);
+                    
+                    let errorMessage = '위치 정보를 가져올 수 없습니다.';
+                    switch (error.code) {
+                        case error.PERMISSION_DENIED:
+                            errorMessage = '위치 접근이 거부되었습니다.';
+                            break;
+                        case error.POSITION_UNAVAILABLE:
+                            errorMessage = '위치 정보를 사용할 수 없습니다.';
+                            break;
+                        case error.TIMEOUT:
+                            errorMessage = '위치 요청 시간이 초과되었습니다.';
+                            break;
+                    }
+                    
+                    updateLocationStatus(errorMessage, false);
+                    showLocationAlternatives();
+                    
+                    // 버튼 복원
+                    locationBtn.innerHTML = '❌ 위치 실패';
+                    setTimeout(() => {
+                        locationBtn.innerHTML = originalText;
+                        locationBtn.disabled = false;
+                    }, 3000);
+                },
+                {
+                    enableHighAccuracy: false, // HTTPS 문제 완화
+                    timeout: 15000,
+                    maximumAge: 300000 // 5분 캐시
+                }
+            );
+        }
+        
+        // 위치 대안 옵션 표시
+        function showLocationAlternatives() {
+            const locationSection = document.querySelector('.control-section:nth-child(2)');
+            
+            if (!document.getElementById('location-alternatives')) {
+                const alternativesDiv = document.createElement('div');
+                alternativesDiv.id = 'location-alternatives';
+                alternativesDiv.innerHTML = `
+                    <div style="margin-top: 10px; padding: 10px; background: #fff3cd; border-radius: 6px; font-size: 12px;">
+                        <strong>📍 위치 설정 방법:</strong><br>
+                        <button onclick="useDefaultLocation()" style="margin: 5px 2px; padding: 4px 8px; background: #007bff; color: white; border: none; border-radius: 4px; cursor: pointer; font-size: 11px;">서울 기본위치</button>
+                        <button onclick="useHospitalLocation()" style="margin: 5px 2px; padding: 4px 8px; background: #28a745; color: white; border: none; border-radius: 4px; cursor: pointer; font-size: 11px;">병원 위치로</button>
+                        <button onclick="showManualLocation()" style="margin: 5px 2px; padding: 4px 8px; background: #6c757d; color: white; border: none; border-radius: 4px; cursor: pointer; font-size: 11px;">직접 입력</button>
+                    </div>
+                `;
+                locationSection.appendChild(alternativesDiv);
+            }
+        }
+        
+        // 기본 위치 사용 (서울)
+        function useDefaultLocation() {
+            userLocation = { lat: 37.5665, lng: 126.9780 }; // 서울시청
+            updateLocationStatus('기본 위치: 서울시청', true);
+            
+            if (map) {
+                const pos = new kakao.maps.LatLng(userLocation.lat, userLocation.lng);
+                map.setCenter(pos);
+                map.setLevel(5);
+                
+                const marker = new kakao.maps.Marker({
+                    position: pos,
+                    map: map
+                });
+                
+                const infowindow = new kakao.maps.InfoWindow({
+                    content: '<div style="padding:5px;">📍 기본 위치 (서울)</div>'
+                });
+                infowindow.open(map, marker);
+            }
+        }
+        
+        // 병원 위치를 사용자 위치로 설정
+        function useHospitalLocation() {
+            if (selectedHospital && selectedHospital.lat && selectedHospital.lng) {
+                userLocation = { lat: selectedHospital.lat, lng: selectedHospital.lng };
+                updateLocationStatus(`병원 위치: ${selectedHospital.name}`, true);
+            } else {
+                updateLocationStatus('병원 위치 정보가 없습니다.', false);
+            }
+        }
+        
+        // 수동 위치 입력
+        function showManualLocation() {
+            const lat = prompt('위도를 입력하세요 (예: 37.5665)');
+            const lng = prompt('경도를 입력하세요 (예: 126.9780)');
+            
+            if (lat && lng && !isNaN(lat) && !isNaN(lng)) {
+                userLocation = { lat: parseFloat(lat), lng: parseFloat(lng) };
+                updateLocationStatus(`수동 입력: ${lat}, ${lng}`, true);
+                
+                if (map) {
+                    const pos = new kakao.maps.LatLng(userLocation.lat, userLocation.lng);
+                    map.setCenter(pos);
+                    map.setLevel(5);
+                    
+                    const marker = new kakao.maps.Marker({
+                        position: pos,
+                        map: map
+                    });
+                    
+                    const infowindow = new kakao.maps.InfoWindow({
+                        content: '<div style="padding:5px;">📍 수동 입력 위치</div>'
+                    });
+                    infowindow.open(map, marker);
+                }
+            } else {
+                updateLocationStatus('잘못된 좌표입니다.', false);
+            }
+        }
+        
+        // URL 파라미터 처리
+        function processUrlParameters() {
+            const urlParams = new URLSearchParams(window.location.search);
+            const hospitalId = urlParams.get('hospital');
+            const hospitalName = urlParams.get('name');
+            const hospitalLat = parseFloat(urlParams.get('lat'));
+            const hospitalLng = parseFloat(urlParams.get('lng'));
+            
+            if (hospitalId && hospitalName) {
+                console.log('🏥 특정 병원 표시:', hospitalName);
+                updateHospitalStatus(`병원: ${hospitalName}`, true);
+                
+                if (hospitalLat && hospitalLng && !isNaN(hospitalLat) && !isNaN(hospitalLng)) {
+                    // 병원 위치로 지도 이동
+                    const hospitalPos = new kakao.maps.LatLng(hospitalLat, hospitalLng);
+                    map.setCenter(hospitalPos);
+                    map.setLevel(3);
+                    
+                    // 병원 마커 추가
+                    const marker = new kakao.maps.Marker({
+                        position: hospitalPos,
+                        map: map
+                    });
+                    
+                    const infowindow = new kakao.maps.InfoWindow({
+                        content: `<div style="padding:10px;"><strong>🏥 ${hospitalName}</strong><br><button onclick="startNavigation('${hospitalName}', ${hospitalLat}, ${hospitalLng})" style="margin-top:5px; padding:5px 10px; background:#2c5aa0; color:white; border:none; border-radius:4px; cursor:pointer;">길찾기</button></div>`
+                    });
+                    infowindow.open(map, marker);
+                    
+                    selectedHospital = {
+                        id: hospitalId,
+                        name: hospitalName,
+                        lat: hospitalLat,
+                        lng: hospitalLng
+                    };
+                } else {
+                    updateHospitalStatus(`병원: ${hospitalName} (좌표 없음)`, false);
+                }
+            }
+        }
+        
+        // 길찾기 시작 (개선된 버전)
+        function startNavigation(hospitalName, lat, lng) {
+            if (!userLocation) {
+                alert('먼저 내 위치를 확인해주세요.');
+                getUserLocation();
+                return;
+            }
+            
+            // 사용자 위치에서 병원까지의 거리 계산
+            const distance = calculateDistance(userLocation.lat, userLocation.lng, lat, lng);
+            const distanceText = distance < 1 ? `${Math.round(distance * 1000)}m` : `${distance.toFixed(1)}km`;
+            
+            // 네비게이션 옵션 표시
+            const navOptions = `
+                <div style="text-align: center; padding: 10px;">
+                    <h3>🗺️ 길찾기 앱 선택</h3>
+                    <p><strong>${hospitalName}</strong> (약 ${distanceText})</p>
+                    <div style="margin: 10px 0;">
+                        <button onclick="openNavigation('kakao', '${hospitalName}', ${lat}, ${lng})" class="nav-btn" style="margin: 5px;">카카오맵</button>
+                        <button onclick="openNavigation('naver', '${hospitalName}', ${lat}, ${lng})" class="nav-btn" style="margin: 5px;">네이버맵</button>
+                        <button onclick="openNavigation('google', '${hospitalName}', ${lat}, ${lng})" class="nav-btn" style="margin: 5px;">구글맵</button>
+                    </div>
+                    <button onclick="closeNavigationModal()" class="nav-btn" style="background: #6c757d; margin-top: 10px;">취소</button>
+                </div>
+            `;
+            
+            // 모달 표시
+            showModal(navOptions);
+        }
+        
+        // 거리 계산 함수 (Haversine formula)
+        function calculateDistance(lat1, lng1, lat2, lng2) {
+            const R = 6371; // 지구 반지름 (km)
+            const dLat = (lat2 - lat1) * Math.PI / 180;
+            const dLng = (lng2 - lng1) * Math.PI / 180;
+            const a = Math.sin(dLat/2) * Math.sin(dLat/2) +
+                     Math.cos(lat1 * Math.PI / 180) * Math.cos(lat2 * Math.PI / 180) *
+                     Math.sin(dLng/2) * Math.sin(dLng/2);
+            const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
+            return R * c;
+        }
+        
+        // 특정 네비게이션 앱으로 열기
+        function openNavigation(service, hospitalName, lat, lng) {
+            const config = window.VeteransCareConfig;
+            let url = '';
+            
+            switch(service) {
+                case 'kakao':
+                    url = `${config.navigation.kakao.web}/${encodeURIComponent(hospitalName)},${lat},${lng}`;
+                    break;
+                case 'naver':
+                    url = `${config.navigation.naver.web}?c=${lng},${lat},${encodeURIComponent(hospitalName)}`;
+                    break;
+                case 'google':
+                    url = `${config.navigation.google.web}/${userLocation.lat},${userLocation.lng}/${lat},${lng}`;
+                    break;
+            }
+            
+            if (url) {
+                window.open(url, '_blank');
+                closeNavigationModal();
+            }
+        }
+        
+        // 모달 표시
+        function showModal(content) {
+            const modal = document.createElement('div');
+            modal.id = 'navigation-modal';
+            modal.style.cssText = `
+                position: fixed;
+                top: 0;
+                left: 0;
+                width: 100%;
+                height: 100%;
+                background: rgba(0,0,0,0.5);
+                display: flex;
+                justify-content: center;
+                align-items: center;
+                z-index: 3000;
+            `;
+            
+            const modalContent = document.createElement('div');
+            modalContent.style.cssText = `
+                background: white;
+                padding: 20px;
+                border-radius: 12px;
+                max-width: 400px;
+                width: 90%;
+                box-shadow: 0 4px 20px rgba(0,0,0,0.3);
+            `;
+            modalContent.innerHTML = content;
+            
+            modal.appendChild(modalContent);
+            document.body.appendChild(modal);
+        }
+        
+        // 모달 닫기
+        function closeNavigationModal() {
+            const modal = document.getElementById('navigation-modal');
+            if (modal) {
+                modal.remove();
+            }
+        }
+        
+        // 대안 지도 사용 (OpenStreetMap 기반 - API 키 불필요)
+        function useAlternativeMap() {
+            document.getElementById('loading-overlay').style.display = 'none';
+            updateMapStatus('OpenStreetMap으로 전환됨', true);
+            
+            // URL 파라미터에서 병원 정보 추출
+            const urlParams = new URLSearchParams(window.location.search);
+            const hospitalName = decodeURIComponent(urlParams.get('name') || '병원');
+            const hospitalLat = parseFloat(urlParams.get('lat')) || 36.5;
+            const hospitalLng = parseFloat(urlParams.get('lng')) || 127.5;
+            
+            // OpenStreetMap iframe 생성 (API 키 불필요)
+            const mapContainer = document.getElementById('map');
+            mapContainer.innerHTML = `
+                <div style="width: 100%; height: 100%; position: relative; background: #f0f0f0;">
+                    <iframe 
+                        width="100%" 
+                        height="100%" 
+                        frameborder="0" 
+                        style="border:0"
+                        src="https://www.openstreetmap.org/export/embed.html?bbox=${hospitalLng-0.01},${hospitalLat-0.01},${hospitalLng+0.01},${hospitalLat+0.01}&layer=mapnik&marker=${hospitalLat},${hospitalLng}"
+                        allowfullscreen>
+                    </iframe>
+                    <div style="position: absolute; top: 10px; left: 10px; background: rgba(255,255,255,0.9); padding: 10px; border-radius: 8px; font-size: 14px; box-shadow: 0 2px 10px rgba(0,0,0,0.1);">
+                        📍 ${hospitalName}<br>
+                        <small>위도: ${hospitalLat.toFixed(4)}, 경도: ${hospitalLng.toFixed(4)}</small>
+                    </div>
+                </div>
+            `;
+            
+            updateHospitalStatus(`병원: ${hospitalName} (OpenStreetMap)`, true);
+            
+            // 길찾기 버튼 추가
+            const controlsDiv = document.querySelector('.map-controls');
+            if (!document.getElementById('alternative-navigation')) {
+                const navSection = document.createElement('div');
+                navSection.className = 'control-section';
+                navSection.innerHTML = `
+                    <h3>🗺️ 길찾기 옵션</h3>
+                    <div style="display: flex; flex-direction: column; gap: 8px;">
+                        <button onclick="openGoogleMapsNavigation('${hospitalName}', ${hospitalLat}, ${hospitalLng})" 
+                                class="nav-btn" style="width: 100%; padding: 8px;">
+                            🔍 Google Maps로 보기
+                        </button>
+                        <button onclick="openNaverMapNavigation('${hospitalName}', ${hospitalLat}, ${hospitalLng})" 
+                                class="nav-btn" style="width: 100%; padding: 8px;">
+                            🗺️ 네이버지도로 보기
+                        </button>
+                        <button onclick="openKakaoMapNavigation('${hospitalName}', ${hospitalLat}, ${hospitalLng})" 
+                                class="nav-btn" style="width: 100%; padding: 8px;">
+                            🛣️ 카카오맵으로 보기
+                        </button>
+                    </div>
+                `;
+                controlsDiv.appendChild(navSection);
+            }
+        }
+        
+        // 다양한 지도 서비스로 길찾기 (API 키 불필요)
+        function openGoogleMapsNavigation(hospitalName, lat, lng) {
+            const googleUrl = `https://www.google.com/maps/search/${encodeURIComponent(hospitalName)}/@${lat},${lng},15z`;
+            window.open(googleUrl, '_blank');
+        }
+        
+        function openNaverMapNavigation(hospitalName, lat, lng) {
+            const naverUrl = `https://map.naver.com/v5/search/${encodeURIComponent(hospitalName)}`;
+            window.open(naverUrl, '_blank');
+        }
+        
+        function openKakaoMapNavigation(hospitalName, lat, lng) {
+            const kakaoUrl = `https://map.kakao.com/link/search/${encodeURIComponent(hospitalName)}`;
+            window.open(kakaoUrl, '_blank');
+        }
+        
+        // 페이지 로드 시 초기화
+        window.onload = function() {
+            console.log('🚀 페이지 로드 완료, 지도 초기화 시작');
+            
+            // 카카오맵 API 로드 확인 및 초기화
+            if (typeof kakao !== 'undefined' && kakao.maps) {
+                console.log('✅ 카카오맵 API 로드 확인');
+                initializeMap();
+            } else if (typeof kakao !== 'undefined') {
+                console.log('🔄 카카오맵 API 로딩 대기 중...');
+                kakao.maps.load(function() {
+                    console.log('✅ 카카오맵 API 로드 완료');
+                    initializeMap();
+                });
+            } else {
+                console.error('❌ 카카오맵 API가 로드되지 않았습니다.');
+                console.log('🔄 대안 지도로 전환합니다.');
+                useAlternativeMap();
+            }
+        };
+    </script>
+</body>
+</html>

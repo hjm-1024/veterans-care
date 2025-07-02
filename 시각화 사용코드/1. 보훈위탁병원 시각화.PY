@@ -27,8 +27,8 @@ def safe_read_csv(file_path, **kwargs):
     raise ValueError(f"파일을 읽을 수 없습니다: {file_path}")
 
 # 1. 데이터 파일 경로 설정
-base_path = r"C:\Users\JongMin\Desktop\충북대학교\충대 4학년 1학기\5. 기타\국가보훈부\지도 및 접근성 데이터"
-hospital_csv_path = os.path.join(base_path, "국가보훈부_보훈의료 위탁병원 현황_20250101.csv")
+base_path = "/Users/jm/Desktop/충북대학교/충대 4학년 1학기/5. 기타/국가보훈부/지도 및 접근성 데이터"
+hospital_csv_path = os.path.join("/Users/jm/Desktop/충북대학교/충대 4학년 1학기/5. 기타/국가보훈부/전처리된 보훈병원/국가보훈부_보훈의료 위탁병원 현황_20250101.csv")
 admin_codes_path = os.path.join(base_path, "admin_codes.csv")
 geojson_path = os.path.join(base_path, "admin_dong.geojson")
 shp_path = os.path.join(base_path, "BND_ADM_DONG_PG.shp")

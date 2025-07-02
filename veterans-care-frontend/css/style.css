@@ -807,6 +807,229 @@ body {
     }
 }
 
+/* 🔥 보훈병원 우선 추천 스타일 */
+.veteran-hospital-special {
+    background: linear-gradient(135deg, #ffd700 0%, #ffed4e 100%);
+    border: 3px solid #ff6b35;
+    position: relative;
+    overflow: hidden;
+    animation: veteranGlow 2s ease-in-out infinite alternate;
+    box-shadow: 0 8px 25px rgba(255, 107, 53, 0.3);
+}
+
+.veteran-hospital-special::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: -100%;
+    width: 100%;
+    height: 100%;
+    background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.4), transparent);
+    animation: veteranShine 3s infinite;
+}
+
+@keyframes veteranGlow {
+    0% { box-shadow: 0 8px 25px rgba(255, 107, 53, 0.3); }
+    100% { box-shadow: 0 12px 35px rgba(255, 107, 53, 0.5); }
+}
+
+@keyframes veteranShine {
+    0% { left: -100%; }
+    100% { left: 100%; }
+}
+
+.veteran-badge {
+    background: #ff6b35;
+    color: white;
+    padding: 8px 16px;
+    border-radius: 20px;
+    font-size: 14px;
+    font-weight: 700;
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    margin-bottom: 12px;
+    box-shadow: 0 2px 8px rgba(255, 107, 53, 0.3);
+    animation: badgePulse 2s ease-in-out infinite;
+}
+
+@keyframes badgePulse {
+    0%, 100% { transform: scale(1); }
+    50% { transform: scale(1.05); }
+}
+
+.veteran-badge i {
+    font-size: 16px;
+    color: #ffd700;
+}
+
+.veteran-highlight {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 16px;
+    padding: 12px;
+    background: rgba(255, 255, 255, 0.9);
+    border-radius: 8px;
+    border-left: 4px solid #ff6b35;
+}
+
+.veteran-highlight h3 {
+    font-size: 22px;
+    font-weight: 700;
+    color: #2c3e50;
+    margin: 0;
+}
+
+.veteran-highlight .distance {
+    background: #ff6b35;
+    color: white;
+    padding: 6px 12px;
+    border-radius: 15px;
+    font-size: 14px;
+    font-weight: 600;
+}
+
+.veteran-benefits {
+    background: rgba(255, 255, 255, 0.95);
+    padding: 16px;
+    border-radius: 8px;
+    border: 2px solid #27ae60;
+}
+
+.veteran-benefits p {
+    margin: 0;
+    color: #2c3e50;
+    font-weight: 500;
+    line-height: 1.6;
+}
+
+.veteran-benefits .benefit-item {
+    display: flex;
+    align-items: center;
+    margin-bottom: 8px;
+    padding: 4px 0;
+}
+
+.veteran-benefits .benefit-item:last-child {
+    margin-bottom: 0;
+}
+
+.veteran-benefits .benefit-item i {
+    color: #27ae60;
+    margin-right: 8px;
+    font-size: 16px;
+    width: 20px;
+    text-align: center;
+}
+
+/* 일반 병원 카드와 구분을 위한 스타일 */
+.hospital-result:not(.veteran-hospital-special) {
+    border-left: 4px solid #2c5aa0;
+    background: #ffffff;
+}
+
+.hospital-result:not(.veteran-hospital-special) .hospital-name {
+    color: #2c5aa0;
+}
+
+/* 보훈병원 우선 표시 라벨 */
+.priority-label {
+    position: absolute;
+    top: -2px;
+    right: -2px;
+    background: #e74c3c;
+    color: white;
+    padding: 4px 8px;
+    border-radius: 0 8px 0 8px;
+    font-size: 12px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    box-shadow: 0 2px 6px rgba(231, 76, 60, 0.3);
+}
+
+/* 보훈 혜택 강조 박스 */
+.veteran-benefits-box {
+    background: linear-gradient(135deg, #e8f5e8 0%, #f0f8ff 100%);
+    border: 2px solid #27ae60;
+    border-radius: 12px;
+    padding: 20px;
+    margin: 16px 0;
+    position: relative;
+}
+
+.veteran-benefits-box::before {
+    content: '🎖️';
+    position: absolute;
+    top: -10px;
+    left: 20px;
+    background: white;
+    padding: 0 8px;
+    font-size: 20px;
+}
+
+.veteran-benefits-box h5 {
+    color: #27ae60;
+    margin-bottom: 12px;
+    font-size: 18px;
+    font-weight: 700;
+}
+
+.veteran-benefits-box .benefit-list {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+}
+
+.veteran-benefits-box .benefit-list li {
+    padding: 6px 0;
+    border-bottom: 1px solid rgba(39, 174, 96, 0.2);
+    display: flex;
+    align-items: center;
+}
+
+.veteran-benefits-box .benefit-list li:last-child {
+    border-bottom: none;
+}
+
+.veteran-benefits-box .benefit-list li i {
+    color: #27ae60;
+    margin-right: 12px;
+    font-size: 16px;
+    width: 20px;
+}
+
+/* 상호작용 효과 */
+.veteran-hospital-special:hover {
+    transform: translateY(-4px);
+    box-shadow: 0 15px 40px rgba(255, 107, 53, 0.4);
+    transition: all 0.3s ease;
+}
+
+/* 모바일 최적화 */
+@media (max-width: 768px) {
+    .veteran-highlight {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 8px;
+    }
+    
+    .veteran-highlight .distance {
+        align-self: flex-end;
+    }
+    
+    .veteran-badge {
+        font-size: 12px;
+        padding: 6px 12px;
+    }
+    
+    .veteran-benefits-box {
+        padding: 16px;
+        margin: 12px 0;
+    }
+}
+
 /* 접근성 개선 */
 .visually-hidden {
     position: absolute;
@@ -850,5 +1073,896 @@ input:focus {
         animation-duration: 0.01ms !important;
         animation-iteration-count: 1 !important;
         transition-duration: 0.01ms !important;
+    }
+}
+
+/* ==========================================
+   🗺 길찾기 시스템 스타일 (기존 스타일과 독립)
+   ========================================== */
+
+/* 길찾기 모달 오버레이 */
+.nav-modal-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0, 0, 0, 0.6);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    z-index: 2000; /* 기존 모달보다 높게 */
+    backdrop-filter: blur(2px);
+    animation: navModalFadeIn 0.3s ease;
+}
+
+/* 길찾기 모달 컨텐츠 */
+.nav-modal-content {
+    background: white;
+    border-radius: 16px;
+    padding: 0;
+    max-width: 500px;
+    width: 90vw;
+    max-height: 90vh;
+    overflow-y: auto;
+    box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+    position: relative;
+    animation: navModalSlideIn 0.3s ease;
+    outline: none; /* 포커스 시 기본 아웃라인 제거 */
+}
+
+/* 모달 헤더 */
+.nav-modal-header {
+    background: linear-gradient(135deg, #2c5aa0 0%, #1e3f73 100%);
+    color: white;
+    padding: 20px 24px;
+    border-radius: 16px 16px 0 0;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.nav-modal-header h3 {
+    margin: 0;
+    font-size: 20px;
+    font-weight: 600;
+}
+
+.nav-close-btn {
+    background: none;
+    border: none;
+    color: white;
+    font-size: 24px;
+    cursor: pointer;
+    padding: 8px;
+    border-radius: 50%;
+    width: 40px;
+    height: 40px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.3s ease;
+}
+
+.nav-close-btn:hover {
+    background: rgba(255, 255, 255, 0.2);
+    transform: scale(1.1);
+}
+
+.nav-close-btn:focus {
+    outline: 2px solid #ffd700;
+    outline-offset: 2px;
+}
+
+/* 병원 정보 섹션 */
+.nav-hospital-info {
+    padding: 24px;
+    border-bottom: 1px solid #e9ecef;
+}
+
+.nav-hospital-info h4 {
+    color: #2c5aa0;
+    margin: 0 0 12px 0;
+    font-size: 18px;
+    font-weight: 600;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.nav-hospital-info h4 i {
+    color: #e74c3c;
+}
+
+.nav-hospital-info p {
+    color: #666;
+    margin: 0 0 16px 0;
+    font-size: 14px;
+    display: flex;
+    align-items: flex-start;
+    gap: 8px;
+    line-height: 1.5;
+}
+
+.nav-hospital-info p i {
+    color: #2c5aa0;
+    margin-top: 2px;
+}
+
+/* 거리 및 시간 정보 */
+.nav-distance-info {
+    display: flex;
+    gap: 16px;
+    margin-top: 12px;
+}
+
+.nav-distance, .nav-time {
+    background: #f8f9fa;
+    padding: 8px 12px;
+    border-radius: 20px;
+    font-size: 14px;
+    font-weight: 500;
+    border: 1px solid #dee2e6;
+}
+
+.nav-distance {
+    color: #2c5aa0;
+    border-color: #2c5aa0;
+    background: rgba(44, 90, 160, 0.1);
+}
+
+.nav-time {
+    color: #e74c3c;
+    border-color: #e74c3c;
+    background: rgba(231, 76, 60, 0.1);
+}
+
+/* 안내 문구 */
+.nav-subtitle {
+    padding: 16px 24px 0;
+    text-align: center;
+}
+
+.nav-subtitle p {
+    margin: 0;
+    color: #666;
+    font-size: 14px;
+    font-weight: 500;
+}
+
+/* 네비게이션 버튼 그리드 */
+.nav-buttons {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 16px;
+    padding: 20px 24px;
+}
+
+/* 각 네비게이션 앱 버튼 */
+.nav-btn {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: 20px 16px;
+    border: 2px solid transparent;
+    border-radius: 12px;
+    background: white;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    min-height: 100px;
+    font-size: 14px;
+    font-weight: 600;
+    text-align: center;
+    position: relative;
+    overflow: hidden;
+}
+
+.nav-btn:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 8px 25px rgba(0, 0, 0, 0.15);
+}
+
+.nav-btn:active {
+    transform: translateY(0);
+}
+
+.nav-btn:focus {
+    outline: 3px solid #2c5aa0;
+    outline-offset: 2px;
+}
+
+.nav-btn i {
+    font-size: 24px;
+    margin-bottom: 8px;
+    transition: all 0.3s ease;
+}
+
+.nav-btn span {
+    display: block;
+    line-height: 1.2;
+}
+
+/* 카카오내비 버튼 */
+.nav-btn.kakao {
+    background: linear-gradient(135deg, #FEE500 0%, #FFED4E 100%);
+    color: #3C1E1E;
+    border-color: #FDD835;
+}
+
+.nav-btn.kakao:hover {
+    background: linear-gradient(135deg, #FDD835 0%, #FEE500 100%);
+    color: #2E1414;
+}
+
+.nav-btn.kakao i {
+    color: #8B4513;
+}
+
+/* 네이버지도 버튼 */
+.nav-btn.naver {
+    background: linear-gradient(135deg, #03C75A 0%, #00B04F 100%);
+    color: white;
+    border-color: #00A047;
+}
+
+.nav-btn.naver:hover {
+    background: linear-gradient(135deg, #00B04F 0%, #009641 100%);
+}
+
+/* 티맵 버튼 */
+.nav-btn.tmap {
+    background: linear-gradient(135deg, #1B1C1D 0%, #2C2D2E 100%);
+    color: white;
+    border-color: #404142;
+}
+
+.nav-btn.tmap:hover {
+    background: linear-gradient(135deg, #2C2D2E 0%, #3D3E3F 100%);
+}
+
+/* 구글지도 버튼 */
+.nav-btn.google {
+    background: linear-gradient(135deg, #4285F4 0%, #357AE8 100%);
+    color: white;
+    border-color: #2C5AE8;
+}
+
+.nav-btn.google:hover {
+    background: linear-gradient(135deg, #357AE8 0%, #2C5AE8 100%);
+}
+
+/* 추가 정보 섹션 */
+.nav-additional-info {
+    padding: 16px 24px 24px;
+    text-align: center;
+    background: #f8f9fa;
+    border-radius: 0 0 16px 16px;
+}
+
+.nav-additional-info p {
+    margin: 0;
+    color: #6c757d;
+    font-size: 12px;
+    line-height: 1.4;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 6px;
+}
+
+.nav-additional-info i {
+    color: #007bff;
+}
+
+/* 병원 상세 정보의 길찾기 버튼 */
+.nav-action-btn {
+    background: linear-gradient(135deg, #28a745 0%, #20c997 100%);
+    color: white;
+    border: none;
+    padding: 10px 16px;
+    border-radius: 8px;
+    font-size: 14px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    min-height: 40px;
+}
+
+.nav-action-btn:hover {
+    background: linear-gradient(135deg, #20c997 0%, #17a2b8 100%);
+    transform: translateY(-1px);
+    box-shadow: 0 4px 12px rgba(40, 167, 69, 0.3);
+}
+
+.nav-action-btn:focus {
+    outline: 2px solid #20c997;
+    outline-offset: 2px;
+}
+
+.nav-action-btn i {
+    font-size: 16px;
+}
+
+/* 애니메이션 */
+@keyframes navModalFadeIn {
+    from {
+        opacity: 0;
+    }
+    to {
+        opacity: 1;
+    }
+}
+
+@keyframes navModalSlideIn {
+    from {
+        opacity: 0;
+        transform: translateY(-50px) scale(0.9);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0) scale(1);
+    }
+}
+
+/* 호버 효과 강화 */
+.nav-btn:hover i {
+    transform: scale(1.1);
+}
+
+/* 길찾기 버튼 로딩 상태 */
+.nav-btn.loading {
+    pointer-events: none;
+    opacity: 0.7;
+}
+
+.nav-btn.loading i {
+    animation: navButtonSpin 1s linear infinite;
+}
+
+@keyframes navButtonSpin {
+    from {
+        transform: rotate(0deg);
+    }
+    to {
+        transform: rotate(360deg);
+    }
+}
+
+/* 모바일 최적화 */
+@media (max-width: 768px) {
+    .nav-modal-content {
+        width: 95vw;
+        max-width: none;
+        margin: 20px;
+    }
+    
+    .nav-buttons {
+        grid-template-columns: 1fr;
+        gap: 12px;
+        padding: 16px 20px;
+    }
+    
+    .nav-btn {
+        min-height: 80px;
+        padding: 16px 12px;
+    }
+    
+    .nav-btn i {
+        font-size: 20px;
+        margin-bottom: 6px;
+    }
+    
+    .nav-btn span {
+        font-size: 13px;
+    }
+    
+    .nav-modal-header {
+        padding: 16px 20px;
+    }
+    
+    .nav-modal-header h3 {
+        font-size: 18px;
+    }
+    
+    .nav-hospital-info {
+        padding: 20px;
+    }
+    
+    .nav-distance-info {
+        flex-direction: column;
+        gap: 8px;
+    }
+    
+    .nav-distance, .nav-time {
+        text-align: center;
+    }
+}
+
+@media (max-width: 480px) {
+    .nav-modal-content {
+        margin: 10px;
+        width: calc(100vw - 20px);
+    }
+    
+    .nav-btn {
+        min-height: 70px;
+        padding: 12px 8px;
+    }
+    
+    .nav-btn i {
+        font-size: 18px;
+    }
+    
+    .nav-btn span {
+        font-size: 12px;
+    }
+    
+    .nav-hospital-info h4 {
+        font-size: 16px;
+    }
+    
+    .nav-hospital-info p {
+        font-size: 13px;
+    }
+}
+
+/* 다크모드 지원 */
+@media (prefers-color-scheme: dark) {
+    .nav-modal-content {
+        background: #2c3e50;
+        color: white;
+    }
+    
+    .nav-hospital-info {
+        border-bottom-color: #34495e;
+    }
+    
+    .nav-hospital-info h4 {
+        color: #74b9ff;
+    }
+    
+    .nav-hospital-info p {
+        color: #bdc3c7;
+    }
+    
+    .nav-additional-info {
+        background: #34495e;
+    }
+    
+    .nav-additional-info p {
+        color: #95a5a6;
+    }
+}
+
+/* 접근성 향상 */
+.nav-btn:focus-visible {
+    outline: 3px solid #ffd700;
+    outline-offset: 2px;
+}
+
+/* 고대비 모드 지원 */
+@media (prefers-contrast: high) {
+    .nav-btn {
+        border-width: 3px;
+    }
+    
+    .nav-modal-content {
+        border: 2px solid #000;
+    }
+    
+    .nav-btn.kakao {
+        border-color: #000;
+        color: #000;
+    }
+    
+    .nav-btn.naver, .nav-btn.tmap, .nav-btn.google {
+        border-color: #fff;
+    }
+}
+
+/* 길찾기 기능 비활성화 상태 */
+.nav-btn:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+    transform: none !important;
+}
+
+.nav-btn:disabled:hover {
+    transform: none;
+    box-shadow: none;
+}
+
+/* 터치 디바이스 최적화 */
+@media (hover: none) and (pointer: coarse) {
+    .nav-btn:hover {
+        transform: none;
+    }
+    
+    .nav-btn:active {
+        transform: scale(0.95);
+        transition: transform 0.1s ease;
+    }
+}
+
+/* 길찾기 성공 피드백 */
+.nav-success-message {
+    background: #d4edda;
+    color: #155724;
+    padding: 12px 16px;
+    border-radius: 8px;
+    margin: 16px 24px 0;
+    border: 1px solid #c3e6cb;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 14px;
+}
+
+.nav-success-message i {
+    color: #28a745;
+    font-size: 16px;
+}
+
+/* 오류 메시지 */
+.nav-error-message {
+    background: #f8d7da;
+    color: #721c24;
+    padding: 12px 16px;
+    border-radius: 8px;
+    margin: 16px 24px 0;
+    border: 1px solid #f5c6cb;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 14px;
+}
+
+.nav-error-message i {
+    color: #dc3545;
+    font-size: 16px;
+}
+
+/* ==============================================
+   네비게이션 UI 스타일
+   ============================================== */
+
+/* 지도에서 보기 버튼 */
+.btn-map, .btn-map-small {
+    background: linear-gradient(135deg, #007bff, #0056b3);
+    color: white;
+    border: none;
+    padding: 10px 16px;
+    border-radius: 8px;
+    font-size: 14px;
+    font-weight: 500;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    text-decoration: none;
+}
+
+.btn-map:hover, .btn-map-small:hover {
+    background: linear-gradient(135deg, #0056b3, #003d82);
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(0, 123, 255, 0.3);
+}
+
+.btn-map-small {
+    padding: 6px 12px;
+    font-size: 12px;
+}
+
+/* 네비게이션 모달 */
+.navigation-modal {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0, 0, 0, 0.7);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 10000;
+    animation: fadeIn 0.3s ease;
+}
+
+.navigation-modal .modal-content {
+    background: white;
+    border-radius: 16px;
+    padding: 0;
+    max-width: 500px;
+    width: 90%;
+    max-height: 80vh;
+    overflow: hidden;
+    box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+    animation: slideUp 0.3s ease;
+}
+
+.navigation-modal .modal-header {
+    background: linear-gradient(135deg, #2c5aa0, #1e3d72);
+    color: white;
+    padding: 20px 24px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+}
+
+.navigation-modal .modal-header h3 {
+    font-size: 18px;
+    font-weight: 600;
+    margin: 0;
+}
+
+.navigation-modal .modal-header button {
+    background: none;
+    border: none;
+    color: white;
+    font-size: 24px;
+    cursor: pointer;
+    padding: 0;
+    width: 30px;
+    height: 30px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 50%;
+    transition: background 0.2s ease;
+}
+
+.navigation-modal .modal-header button:hover {
+    background: rgba(255, 255, 255, 0.2);
+}
+
+.navigation-modal .modal-body {
+    padding: 24px;
+}
+
+/* 네비게이션 옵션 */
+.nav-options {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+    gap: 16px;
+}
+
+.nav-option {
+    background: white;
+    border: 2px solid #e9ecef;
+    border-radius: 12px;
+    padding: 20px 16px;
+    cursor: pointer;
+    text-align: center;
+    transition: all 0.3s ease;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 12px;
+    text-decoration: none;
+    color: #333;
+}
+
+.nav-option:hover {
+    border-color: #007bff;
+    background: #f8f9ff;
+    transform: translateY(-2px);
+    box-shadow: 0 8px 24px rgba(0, 123, 255, 0.15);
+}
+
+.nav-option img {
+    width: 32px;
+    height: 32px;
+    object-fit: contain;
+}
+
+.nav-option span {
+    font-weight: 500;
+    font-size: 14px;
+}
+
+/* 네비게이션 앱별 색상 */
+.nav-option.kakao:hover {
+    border-color: #ffce00;
+    background: #fffbef;
+}
+
+.nav-option.tmap:hover {
+    border-color: #007aff;
+    background: #f0f7ff;
+}
+
+.nav-option.naver:hover {
+    border-color: #00c73c;
+    background: #f0fff5;
+}
+
+/* 병원 오버레이 */
+.hospital-overlay {
+    background: white;
+    border-radius: 12px;
+    padding: 0;
+    min-width: 250px;
+    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.2);
+    border: 2px solid #007bff;
+    overflow: hidden;
+}
+
+.hospital-overlay-header {
+    background: linear-gradient(135deg, #007bff, #0056b3);
+    color: white;
+    padding: 16px 20px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+}
+
+.hospital-overlay-header h4 {
+    margin: 0;
+    font-size: 16px;
+    font-weight: 600;
+}
+
+.hospital-overlay-header .close-btn {
+    background: none;
+    border: none;
+    color: white;
+    font-size: 20px;
+    cursor: pointer;
+    padding: 0;
+    width: 24px;
+    height: 24px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 50%;
+    transition: background 0.2s ease;
+}
+
+.hospital-overlay-header .close-btn:hover {
+    background: rgba(255, 255, 255, 0.2);
+}
+
+.hospital-overlay-body {
+    padding: 20px;
+}
+
+.overlay-actions {
+    display: flex;
+    gap: 12px;
+    flex-wrap: wrap;
+}
+
+.nav-btn {
+    background: #007bff;
+    color: white;
+    border: none;
+    padding: 12px 16px;
+    border-radius: 8px;
+    font-size: 14px;
+    font-weight: 500;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    text-decoration: none;
+    flex: 1;
+    justify-content: center;
+    min-width: 100px;
+}
+
+.nav-btn:hover {
+    background: #0056b3;
+    transform: translateY(-1px);
+    box-shadow: 0 4px 12px rgba(0, 123, 255, 0.3);
+}
+
+.nav-btn.primary {
+    background: linear-gradient(135deg, #28a745, #1e7e34);
+}
+
+.nav-btn.primary:hover {
+    background: linear-gradient(135deg, #1e7e34, #155724);
+}
+
+/* 사용자 위치 오버레이 */
+.user-location-overlay {
+    background: #007bff;
+    color: white;
+    padding: 8px 12px;
+    border-radius: 20px;
+    font-size: 12px;
+    font-weight: 500;
+    box-shadow: 0 4px 12px rgba(0, 123, 255, 0.3);
+    white-space: nowrap;
+}
+
+/* 병원 액션 버튼들 */
+.hospital-actions {
+    display: flex;
+    gap: 8px;
+    flex-wrap: wrap;
+    margin-top: 12px;
+}
+
+.btn-nav-small {
+    background: #28a745;
+    color: white;
+    border: none;
+    padding: 6px 12px;
+    border-radius: 6px;
+    font-size: 12px;
+    font-weight: 500;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    text-decoration: none;
+}
+
+.btn-nav-small:hover {
+    background: #1e7e34;
+    transform: translateY(-1px);
+    box-shadow: 0 3px 8px rgba(40, 167, 69, 0.3);
+}
+
+/* 애니메이션 */
+@keyframes fadeIn {
+    from {
+        opacity: 0;
+    }
+    to {
+        opacity: 1;
+    }
+}
+
+@keyframes slideUp {
+    from {
+        opacity: 0;
+        transform: translateY(30px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+/* 반응형 디자인 */
+@media (max-width: 768px) {
+    .navigation-modal .modal-content {
+        width: 95%;
+        margin: 20px;
+    }
+    
+    .nav-options {
+        grid-template-columns: repeat(2, 1fr);
+        gap: 12px;
+    }
+    
+    .nav-option {
+        padding: 16px 12px;
+    }
+    
+    .hospital-overlay {
+        min-width: 200px;
+    }
+    
+    .overlay-actions {
+        flex-direction: column;
+    }
+    
+    .nav-btn {
+        flex: none;
+        width: 100%;
+    }
+    
+    .hospital-actions {
+        justify-content: center;
     }
 }
